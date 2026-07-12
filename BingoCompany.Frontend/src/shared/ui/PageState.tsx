@@ -1,0 +1,1 @@
+export function PageState({loading,error}:{loading?:boolean;error?:string}){if(loading)return <main><p>Carregando...</p></main>;if(error)return <main><p className="error" role="alert">{error}</p></main>;return null}

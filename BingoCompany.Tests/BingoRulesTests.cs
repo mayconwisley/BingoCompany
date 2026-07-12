@@ -1,0 +1,14 @@
+using BingoCompany.Application;
+using BingoCompany.Domain;
+
+namespace BingoCompany.Tests;
+
+public sealed class BingoRulesTests
+{
+    private static readonly int[,] Card = { { 1, 16, 31, 46, 61 }, { 2, 17, 32, 47, 62 }, { 3, 18, 0, 48, 63 }, { 4, 19, 34, 49, 64 }, { 5, 20, 35, 50, 65 } };
+    [Fact] public void Full_card_requires_all_non_free_cells() => Assert.False(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int>(Enumerable.Range(1, 75).Where(x => x != 65)), WinningPattern.FullCard));
+    [Fact] public void Horizontal_line_is_completed_when_all_values_are_drawn() => Assert.True(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int> { 1, 16, 31, 46, 61 }, WinningPattern.HorizontalLine));
+    [Fact] public void Four_corners_requires_every_corner() => Assert.True(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int> { 1, 61, 5, 65 }, WinningPattern.FourCorners));
+    [Fact] public void Secure_sequence_contains_each_bingo_number_once() { var sequence = SecureDrawSequence.Generate(); Assert.Equal(75, sequence.Distinct().Count()); Assert.Equal(Enumerable.Range(1, 75), sequence.Order()); }
+    [Fact] public void Generated_card_obeys_bingo_column_ranges() { var card = new Bingo75CardGenerator().Generate(); for (var c = 0; c < 5; c++) for (var r = 0; r < 5; r++) if (r != 2 || c != 2) Assert.InRange(card[r, c], c * 15 + 1, c * 15 + 15); }
+}
