@@ -6,7 +6,7 @@ MVP de bingo corporativo com uma cartela por participante, rodadas progressivas,
 
 - `BingoCompany.Domain`: entidades e regras de negócio.
 - `BingoCompany.Application`: geração segura de cartelas/sequências e avaliação dos padrões.
-- `BingoCompany.Infrastructure`: EF Core e SQLite.
+- `BingoCompany.Infrastructure`: EF Core, PostgreSQL e migrations.
 - `BingoCompany.Api`: REST, SignalR e Swagger.
 - `BingoCompany.Frontend`: React/Vite para a cartela do participante.
 - `BingoCompany.Tests`: testes unitários e integração de persistência.
@@ -20,7 +20,8 @@ npm install
 npm run dev
 ```
 
-A API cria o banco SQLite `bingo.db` automaticamente e disponibiliza Swagger em `/swagger`.
+A API aplica as migrations do PostgreSQL automaticamente e disponibiliza Swagger em `/swagger`.
+Configure `DBBingoUser` e `DBBingoPass` antes de iniciar a API. Host, porta e banco ficam em `BingoCompany.Api/appsettings.json` e podem ser substituídos por `ConnectionStrings__Bingo`.
 
 ## Fluxo básico da API
 

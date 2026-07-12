@@ -1,6 +1,7 @@
 using BingoCompany.Application;
 using BingoCompany.Domain;
 using BingoCompany.Infrastructure;
+using BingoCompany.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;

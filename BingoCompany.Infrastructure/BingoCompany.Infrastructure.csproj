@@ -3,11 +3,13 @@
   <ItemGroup>
     <ProjectReference Include="../BingoCompany.Domain/BingoCompany.Domain.csproj" />
     <ProjectReference Include="../BingoCompany.Application/BingoCompany.Application.csproj" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.9" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Services\" />
-    <Folder Include="Persistence\Configurations\" />
     <Folder Include="Persistence\Migrations\" />
     <Folder Include="Persistence\Repositories\" />
   </ItemGroup>

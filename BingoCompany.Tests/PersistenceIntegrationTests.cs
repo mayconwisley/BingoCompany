@@ -1,5 +1,6 @@
 using BingoCompany.Domain;
 using BingoCompany.Infrastructure;
+using BingoCompany.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace BingoCompany.Tests;
