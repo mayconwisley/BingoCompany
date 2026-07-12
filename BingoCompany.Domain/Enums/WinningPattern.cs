@@ -1,9 +1,13 @@
-﻿namespace BingoCompany.Domain.Enums;
+namespace BingoCompany.Domain.Enums;
 
 public enum WinningPattern
 {
 	HorizontalLine,
 	TwoHorizontalLines,
 	FourCorners,
-	FullCard
+	FullCard,
+	MainDiagonal,
+	SecondaryDiagonal,
+	BColumn,
+	OColumn
 }

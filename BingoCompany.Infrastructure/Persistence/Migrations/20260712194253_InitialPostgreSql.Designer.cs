@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BingoCompany.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(BingoDbContext))]
-    [Migration("20260712190934_InitialPostgreSql")]
+    [Migration("20260712194253_InitialPostgreSql")]
     partial class InitialPostgreSql
     {
         /// <inheritdoc />
@@ -20,6 +20,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("bingo")
                 .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
@@ -61,7 +62,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                     b.HasIndex("PublicCode")
                         .IsUnique();
 
-                    b.ToTable("Cards");
+                    b.ToTable("Cards", "bingo");
                 });
 
             modelBuilder.Entity("BingoCompany.Domain.Models.BingoEvent", b =>
@@ -95,7 +96,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                     b.HasIndex("PublicCode")
                         .IsUnique();
 
-                    b.ToTable("Events");
+                    b.ToTable("Events", "bingo");
                 });
 
             modelBuilder.Entity("BingoCompany.Domain.Models.BingoRound", b =>
@@ -127,7 +128,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.ToTable("Rounds");
+                    b.ToTable("Rounds", "bingo");
                 });
 
             modelBuilder.Entity("BingoCompany.Domain.Models.CardMark", b =>
@@ -156,7 +157,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                     b.HasIndex("RoundId", "CardId", "Number")
                         .IsUnique();
 
-                    b.ToTable("CardMarks");
+                    b.ToTable("CardMarks", "bingo");
                 });
 
             modelBuilder.Entity("BingoCompany.Domain.Models.DrawnNumber", b =>
@@ -181,7 +182,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("RoundId");
 
-                    b.ToTable("DrawnNumbers");
+                    b.ToTable("DrawnNumbers", "bingo");
                 });
 
             modelBuilder.Entity("BingoCompany.Domain.Models.Participant", b =>
@@ -207,7 +208,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("EventId");
 
-                    b.ToTable("Participants");
+                    b.ToTable("Participants", "bingo");
                 });
 
             modelBuilder.Entity("BingoCompany.Domain.Models.PrizeStage", b =>
@@ -239,7 +240,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("RoundId");
 
-                    b.ToTable("PrizeStages");
+                    b.ToTable("PrizeStages", "bingo");
                 });
 
             modelBuilder.Entity("BingoCompany.Domain.Models.RoundEligibleCard", b =>
@@ -265,7 +266,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                     b.HasIndex("RoundId", "CardId")
                         .IsUnique();
 
-                    b.ToTable("RoundEligibleCards");
+                    b.ToTable("RoundEligibleCards", "bingo");
                 });
 
             modelBuilder.Entity("BingoCompany.Domain.Models.RoundWinner", b =>
@@ -306,7 +307,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                     b.HasIndex("StageId", "CardId")
                         .IsUnique();
 
-                    b.ToTable("RoundWinners");
+                    b.ToTable("RoundWinners", "bingo");
                 });
 
             modelBuilder.Entity("BingoCompany.Domain.Models.BingoCard", b =>

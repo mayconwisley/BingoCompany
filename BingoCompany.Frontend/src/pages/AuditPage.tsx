@@ -1,2 +1,14 @@
-import { useParams } from "react-router-dom";import { bingoApi } from "../features/bingo/bingoApi";import { useAsyncResource } from "../shared/hooks/useAsyncResource";import { AppShell } from "../shared/ui/AppShell";import { PageState } from "../shared/ui/PageState";
-export function AuditPage(){const{publicCode=""}=useParams();const event=useAsyncResource(()=>bingoApi.getPublicEvent(publicCode),[publicCode]);return <AppShell><main><PageState loading={event.loading} error={event.error}/>{event.data&&<><p className="eyebrow">Consulta pública</p><h1>Auditoria do evento</h1><section className="panel"><h2>{event.data.name}</h2><p>{event.data.participants} participantes · {event.data.cards} cartelas emitidas</p><p>Modo de marcação: {event.data.markingMode}</p><p>Hash SHA-256</p><code className="hash">{event.data.round?.sequenceHash||"Disponível após o início"}</code><ol>{event.data.round?.stages.map(stage=><li key={stage.prizeName}>{stage.prizeName} — {stage.pattern} {stage.isCompleted?"✓":""}</li>)}</ol></section></>}</main></AppShell>}
+import { useParams } from "react-router-dom";
+import { bingoApi } from "../features/bingo/bingoApi";
+import { markingModeLabel, winningPatternLabel } from "../features/bingo/winningPatternLabel";
+import { useAsyncResource } from "../shared/hooks/useAsyncResource";
+import { AppShell } from "../shared/ui/AppShell";
+import { PageState } from "../shared/ui/PageState";
+
+export function AuditPage()
+{
+    const { publicCode = "" } = useParams();
+    const event = useAsyncResource(() => bingoApi.getPublicEvent(publicCode), [publicCode]);
+
+    return <AppShell><main><PageState loading={event.loading} error={event.error} />{event.data && <><p className="eyebrow">Consulta pública</p><h1>Auditoria do evento</h1><section className="panel"><h2>{event.data.name}</h2><p>{event.data.participants} participantes · {event.data.cards} cartelas emitidas</p><p>Modo de marcação: {markingModeLabel(event.data.markingMode)}</p><p>Hash SHA-256</p><code className="hash">{event.data.round?.sequenceHash || "Disponível após o início"}</code><ol>{event.data.round?.stages.map(stage => <li key={stage.prizeName}>{stage.prizeName} — {winningPatternLabel(stage.pattern)} {stage.isCompleted ? "✓" : ""}</li>)}</ol></section></>}</main></AppShell>;
+}

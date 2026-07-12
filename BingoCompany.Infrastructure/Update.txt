@@ -1,0 +1,1 @@
+﻿Update-Database -Project BingoCompany.Infrastructure -StartupProject BingoCompany.Api -Context BingoDbContext

@@ -1,3 +1,8 @@
 import type { PropsWithChildren } from "react";
 import { Link } from "react-router-dom";
-export function AppShell({children}:PropsWithChildren){return <><nav><Link className="brand" to="/">BINGO<span>COMPANY</span></Link><Link className="navlink" to="/admin">Administração</Link></nav>{children}</>}
+type Props = PropsWithChildren<{ showAdministration?: boolean }>;
+
+export function AppShell({ children, showAdministration = true }: Props)
+{
+    return <><nav><Link className="brand" to="/">BINGO<span>COMPANY</span></Link>{showAdministration && <Link className="navlink" to="/admin">Administração</Link>}</nav>{children}</>;
+}

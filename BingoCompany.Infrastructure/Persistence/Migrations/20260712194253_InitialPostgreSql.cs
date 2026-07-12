@@ -11,8 +11,12 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.EnsureSchema(
+                name: "bingo");
+
             migrationBuilder.CreateTable(
                 name: "CardMarks",
+                schema: "bingo",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -29,6 +33,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "Events",
+                schema: "bingo",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -46,6 +51,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "RoundWinners",
+                schema: "bingo",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -66,6 +72,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "Cards",
+                schema: "bingo",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -83,6 +90,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_Cards_Events_EventId",
                         column: x => x.EventId,
+                        principalSchema: "bingo",
                         principalTable: "Events",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -90,6 +98,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "Participants",
+                schema: "bingo",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -104,6 +113,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_Participants_Events_EventId",
                         column: x => x.EventId,
+                        principalSchema: "bingo",
                         principalTable: "Events",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -111,6 +121,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "Rounds",
+                schema: "bingo",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -127,6 +138,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_Rounds_Events_EventId",
                         column: x => x.EventId,
+                        principalSchema: "bingo",
                         principalTable: "Events",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -134,6 +146,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "DrawnNumbers",
+                schema: "bingo",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -148,6 +161,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_DrawnNumbers_Rounds_RoundId",
                         column: x => x.RoundId,
+                        principalSchema: "bingo",
                         principalTable: "Rounds",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -155,6 +169,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "PrizeStages",
+                schema: "bingo",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -171,6 +186,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_PrizeStages_Rounds_RoundId",
                         column: x => x.RoundId,
+                        principalSchema: "bingo",
                         principalTable: "Rounds",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -178,6 +194,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateTable(
                 name: "RoundEligibleCards",
+                schema: "bingo",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -192,6 +209,7 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                     table.ForeignKey(
                         name: "FK_RoundEligibleCards_Rounds_RoundId",
                         column: x => x.RoundId,
+                        principalSchema: "bingo",
                         principalTable: "Rounds",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -199,55 +217,65 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_CardMarks_RoundId_CardId_Number",
+                schema: "bingo",
                 table: "CardMarks",
                 columns: new[] { "RoundId", "CardId", "Number" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Cards_EventId",
+                schema: "bingo",
                 table: "Cards",
                 column: "EventId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Cards_PublicCode",
+                schema: "bingo",
                 table: "Cards",
                 column: "PublicCode",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_DrawnNumbers_RoundId",
+                schema: "bingo",
                 table: "DrawnNumbers",
                 column: "RoundId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Events_PublicCode",
+                schema: "bingo",
                 table: "Events",
                 column: "PublicCode",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Participants_EventId",
+                schema: "bingo",
                 table: "Participants",
                 column: "EventId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PrizeStages_RoundId",
+                schema: "bingo",
                 table: "PrizeStages",
                 column: "RoundId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoundEligibleCards_RoundId_CardId",
+                schema: "bingo",
                 table: "RoundEligibleCards",
                 columns: new[] { "RoundId", "CardId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Rounds_EventId",
+                schema: "bingo",
                 table: "Rounds",
                 column: "EventId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoundWinners_StageId_CardId",
+                schema: "bingo",
                 table: "RoundWinners",
                 columns: new[] { "StageId", "CardId" },
                 unique: true);
@@ -257,31 +285,40 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "CardMarks");
+                name: "CardMarks",
+                schema: "bingo");
 
             migrationBuilder.DropTable(
-                name: "Cards");
+                name: "Cards",
+                schema: "bingo");
 
             migrationBuilder.DropTable(
-                name: "DrawnNumbers");
+                name: "DrawnNumbers",
+                schema: "bingo");
 
             migrationBuilder.DropTable(
-                name: "Participants");
+                name: "Participants",
+                schema: "bingo");
 
             migrationBuilder.DropTable(
-                name: "PrizeStages");
+                name: "PrizeStages",
+                schema: "bingo");
 
             migrationBuilder.DropTable(
-                name: "RoundEligibleCards");
+                name: "RoundEligibleCards",
+                schema: "bingo");
 
             migrationBuilder.DropTable(
-                name: "RoundWinners");
+                name: "RoundWinners",
+                schema: "bingo");
 
             migrationBuilder.DropTable(
-                name: "Rounds");
+                name: "Rounds",
+                schema: "bingo");
 
             migrationBuilder.DropTable(
-                name: "Events");
+                name: "Events",
+                schema: "bingo");
         }
     }
 }

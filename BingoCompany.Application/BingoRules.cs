@@ -35,6 +35,10 @@ public static class WinningPatternEvaluator
             WinningPattern.TwoHorizontalLines => rows.Count(x => x) >= 2,
             WinningPattern.FourCorners => Marked(card[0, 0]) && Marked(card[0, 4]) && Marked(card[4, 0]) && Marked(card[4, 4]),
             WinningPattern.FullCard => Enumerable.Range(0, 5).All(r => Enumerable.Range(0, 5).All(c => Marked(card[r, c]))),
+			WinningPattern.MainDiagonal => Enumerable.Range(0, 5).All(index => Marked(card[index, index])),
+			WinningPattern.SecondaryDiagonal => Enumerable.Range(0, 5).All(index => Marked(card[index, 4 - index])),
+			WinningPattern.BColumn => Enumerable.Range(0, 5).All(row => Marked(card[row, 0])),
+			WinningPattern.OColumn => Enumerable.Range(0, 5).All(row => Marked(card[row, 4])),
             _ => false
         };
     }

@@ -1,28 +1,20 @@
 using BingoCompany.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 
 namespace BingoCompany.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddBingoInfrastructure(this IServiceCollection services, IConfiguration configuration)
-    {
-        var configuredConnectionString = configuration.GetConnectionString("Bingo")
-            ?? throw new InvalidOperationException("A connection string 'Bingo' não foi configurada.");
-        var username = Environment.GetEnvironmentVariable("DBBingoUser")
-            ?? throw new InvalidOperationException("A variável de ambiente DBBingoUser não foi configurada.");
-        var password = Environment.GetEnvironmentVariable("DBBingoPass")
-            ?? throw new InvalidOperationException("A variável de ambiente DBBingoPass não foi configurada.");
-        var connectionString = new NpgsqlConnectionStringBuilder(configuredConnectionString)
-        {
-            Username = username,
-            Password = password
-        }.ConnectionString;
+	public static IServiceCollection AddBingoInfrastructure(this IServiceCollection services, IConfiguration configuration)
+	{
+		PostgresDatabaseBootstrapper.EnsureDatabaseExists(configuration);
+		var connectionString = PostgresConfiguration.CreateConnectionString(configuration);
+		var poolSize = int.TryParse(configuration["Database:DbContextPoolSize"], out var configuredPoolSize)
+			? Math.Max(configuredPoolSize, 1)
+			: 128;
 
-        services.AddDbContext<BingoDbContext>(options => options.UseNpgsql(connectionString));
-        return services;
-    }
+		services.AddDbContextPool<BingoDbContext>(options => PostgresConfiguration.Configure(options, connectionString), poolSize);
+		return services;
+	}
 }

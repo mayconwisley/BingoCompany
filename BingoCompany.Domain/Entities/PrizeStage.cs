@@ -1,4 +1,4 @@
-﻿namespace BingoCompany.Domain.Models;
+namespace BingoCompany.Domain.Models;
 
 public sealed class PrizeStage
 {
@@ -18,6 +18,14 @@ public sealed class PrizeStage
 	public WinningPattern Pattern { get; private set; }
 	public bool IsActive { get; private set; }
 	public bool IsCompleted { get; private set; }
+	public bool IsWinnerPresentationClosed { get; private set; }
 	public void Activate() { IsActive = true; }
 	public void Complete() { IsActive = false; IsCompleted = true; }
+	public void CloseWinnerPresentation()
+	{
+		if (!IsCompleted) throw new InvalidOperationException("A apresentação do vencedor só pode ser encerrada após a etapa ser concluída.");
+		if (IsWinnerPresentationClosed) throw new InvalidOperationException("A apresentação deste vencedor já foi encerrada.");
+
+		IsWinnerPresentationClosed = true;
+	}
 }
