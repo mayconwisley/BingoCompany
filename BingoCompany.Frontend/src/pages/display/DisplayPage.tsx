@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { bingoApi, DrawSuspense, useLiveBingo, winningPatternLabel } from "../../features/bingo";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
@@ -9,7 +9,8 @@ const winnerSuspenseDelayInMilliseconds = 10000;
 
 export function DisplayPage() {
     const { publicCode = "" } = useParams();
-    const event = useAsyncResource(() => bingoApi.getPublicEvent(publicCode), [publicCode]);
+    const loader = useCallback(() => bingoApi.getPublicEvent(publicCode), [publicCode]);
+    const event = useAsyncResource(loader);
     useLiveBingo(event.data?.id, event.data?.round?.id, event.reload);
 
     const round = event.data?.round;
@@ -34,7 +35,6 @@ export function DisplayPage() {
     const isWinnerSuspense = hasPendingWinner && isWinnerSuspenseVisible;
     const prizeImage =
         winner?.prizeImageDataUrl ?? (isWinnerSuspense ? round?.presentationPrizeImageDataUrl : round?.currentPrizeImageDataUrl);
-    const winnerCardCodes = round?.winnerCardCodes ?? [];
 
     return (
         <main className="display">
@@ -57,11 +57,6 @@ export function DisplayPage() {
                     <strong className="winning-stone">{round?.drawnNumbers.at(-1) ?? "—"}</strong>
                     <p className="winnerprize">{round?.currentPrize}</p>
                     {prizeImage && <img className="display-prize-image" src={prizeImage} alt={`Prêmio: ${round?.currentPrize}`} />}
-                    {winnerCardCodes.length > 0 && (
-                        <p className="winnerpattern">
-                            {winnerCardCodes.length === 1 ? `Cartela ${winnerCardCodes[0]}` : `Cartelas: ${winnerCardCodes.join(" · ")}`}
-                        </p>
-                    )}
                     <p className="winnerpattern">
                         {round?.tieBreakerRequired ? `${winnerDetectedCount} cartelas empataram` : "O nome será revelado pelo operador."}
                     </p>

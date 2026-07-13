@@ -18,4 +18,9 @@ public sealed class CompanyUser
     public string Email { get; private set; } = null!;
     public string PasswordHash { get; private set; } = null!;
     public DateTimeOffset CreatedAt { get; private set; }
+
+    public void UpdatePasswordHash(string passwordHash)
+    {
+        PasswordHash = passwordHash;
+    }
 }

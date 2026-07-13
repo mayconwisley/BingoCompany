@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getErrorMessage } from "../api/getErrorMessage";
 
-export function useAsyncResource<T>(loader: () => Promise<T>, dependencies: unknown[]) {
+export function useAsyncResource<T>(loader: () => Promise<T>) {
     const [data, setData] = useState<T>();
     const [error, setError] = useState<string>();
     const [loading, setLoading] = useState(true);
@@ -15,7 +15,7 @@ export function useAsyncResource<T>(loader: () => Promise<T>, dependencies: unkn
         } finally {
             setLoading(false);
         }
-    }, dependencies);
+    }, [loader]);
 
     useEffect(() => {
         void reload();

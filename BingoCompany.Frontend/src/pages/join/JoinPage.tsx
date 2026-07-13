@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { bingoApi } from "../../features/bingo";
 import type { ParticipantType } from "../../features/bingo";
@@ -16,7 +16,8 @@ export function JoinPage() {
     const [responsible, setResponsible] = useState("");
     const [error, setError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const event = useAsyncResource(() => bingoApi.getPublicEvent(publicCode), [publicCode]);
+    const loader = useCallback(() => bingoApi.getPublicEvent(publicCode), [publicCode]);
+    const event = useAsyncResource(loader);
 
     const createCard = async () => {
         try {

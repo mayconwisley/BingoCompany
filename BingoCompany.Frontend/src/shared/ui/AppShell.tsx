@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { clearSession, getSession } from "../auth/session";
+import { authApi } from "../../features/bingo";
 import { useApplicationInfo } from "../../app/ApplicationInfoContext";
 import { ApplicationFooter } from "./ApplicationFooter";
 import { ThemeToggle } from "./ThemeToggle";
@@ -10,11 +11,21 @@ export function AppShell({ children, showAdministration = true }: Props) {
     const navigate = useNavigate();
     const session = getSession();
     const application = useApplicationInfo();
+
+    const logout = async () => {
+        try {
+            await authApi.logout();
+        } finally {
+            clearSession();
+            navigate("/");
+        }
+    };
+
     return (
         <>
             <nav className="topbar">
                 <Link className="brand" to="/" aria-label="Bingo Company, página inicial">
-                    <img className="brand-logo" src="/assets/bingo-company-logo.png" alt="" />
+                    <img className="brand-logo" src={`${import.meta.env.BASE_URL}assets/bingo-company-logo.png`} alt="" />
                     <span>
                         BINGO <b>COMPANY</b>
                     </span>
@@ -29,13 +40,7 @@ export function AppShell({ children, showAdministration = true }: Props) {
                                 <Link className="navlink" to="/admin">
                                     {session.companyName}
                                 </Link>
-                                <button
-                                    className="navlink"
-                                    onClick={() => {
-                                        clearSession();
-                                        navigate("/");
-                                    }}
-                                >
+                                <button className="navlink" onClick={logout}>
                                     Sair
                                 </button>
                             </>

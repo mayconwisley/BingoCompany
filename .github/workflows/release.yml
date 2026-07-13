@@ -105,6 +105,7 @@ jobs:
           VITE_BASE_PATH: /bingo/
         run: |
           npm ci
+          npm audit --omit=dev --audit-level=high
           npm run eslint
           npm run typecheck
           npm run typeformat

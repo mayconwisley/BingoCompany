@@ -41,7 +41,6 @@ describe("DisplayPage", () => {
                 stages: [],
                 drawnNumbers: [10],
                 winnerDetectedCount: 1,
-                winnerCardCodes: ["ABC123"],
                 tieBreakerRequired: false
             }
         });
@@ -67,7 +66,7 @@ describe("DisplayPage", () => {
         expect(screen.getByText("Confira a cartela!")).toBeInTheDocument();
         expect(screen.getByText("PEDRA VENCEDORA")).toBeInTheDocument();
         expect(screen.getByText("10", { selector: "strong" })).toBeInTheDocument();
-        expect(screen.getByText("Cartela ABC123")).toBeInTheDocument();
+        expect(screen.queryByText(/Cartela ABC123/)).not.toBeInTheDocument();
     });
 
     it("mostra o prêmio e a regra que deram a vitória", async () => {

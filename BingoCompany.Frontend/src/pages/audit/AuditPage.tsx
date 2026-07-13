@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { bingoApi, winningPatternLabel } from "../../features/bingo";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
@@ -6,7 +7,8 @@ import { PageState } from "../../shared/ui/PageState";
 
 export function AuditPage() {
     const { publicCode = "" } = useParams();
-    const audit = useAsyncResource(() => bingoApi.getAudit(publicCode), [publicCode]);
+    const loader = useCallback(() => bingoApi.getAudit(publicCode), [publicCode]);
+    const audit = useAsyncResource(loader);
 
     return (
         <AppShell>

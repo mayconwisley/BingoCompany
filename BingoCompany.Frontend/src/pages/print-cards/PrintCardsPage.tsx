@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useParams } from "react-router-dom";
 import { bingoApi } from "../../features/bingo";
@@ -11,7 +11,8 @@ type PrintableCard = { publicCode: string; fingerprint: string; companyName: str
 
 export function PrintCardsPage() {
     const { eventId = "" } = useParams();
-    const cards = useAsyncResource(() => bingoApi.getPrintedCards(eventId), [eventId]);
+    const loader = useCallback(() => bingoApi.getPrintedCards(eventId), [eventId]);
+    const cards = useAsyncResource(loader);
     const [printableCards, setPrintableCards] = useState<PrintableCard[]>([]);
 
     useEffect(() => {

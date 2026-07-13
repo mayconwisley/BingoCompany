@@ -54,7 +54,6 @@ export type PublicEvent = {
         stages: PrizeStage[];
         drawnNumbers: number[];
         winnerDetectedCount: number;
-        winnerCardCodes?: string[];
         tieBreakerRequired: boolean;
         statistics?: RoundStatistics;
         winner?: { participantName: string; prizeName: string; pattern: string; prizeImageDataUrl?: string };

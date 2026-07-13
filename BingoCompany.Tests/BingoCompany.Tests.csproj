@@ -4,6 +4,8 @@
     <ProjectReference Include="../BingoCompany.Domain/BingoCompany.Domain.csproj" />
     <ProjectReference Include="../BingoCompany.Application/BingoCompany.Application.csproj" />
     <ProjectReference Include="../BingoCompany.Infrastructure/BingoCompany.Infrastructure.csproj" />
+
+    <ProjectReference Include="../BingoCompany.Api/BingoCompany.Api.csproj" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.9" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />

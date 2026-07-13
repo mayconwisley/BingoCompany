@@ -18,7 +18,8 @@ export function EventSetupPage() {
     const displayPath = `/display/${code}`;
     const auditPath = `/auditoria/${code}`;
     const printCardsPath = `/admin/eventos/${eventId}/impressao`;
-    const event = useAsyncResource(() => bingoApi.getEvent(eventId), [eventId]);
+    const loader = useCallback(() => bingoApi.getEvent(eventId), [eventId]);
+    const event = useAsyncResource(loader);
     const action = useAsyncAction();
     const [roundName, setRoundName] = useState("Rodada 1");
     const [stages, setStages] = useState<PrizeDraft[]>([

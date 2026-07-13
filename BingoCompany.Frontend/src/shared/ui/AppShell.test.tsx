@@ -34,4 +34,16 @@ describe("AppShell", () => {
 
         expect(document.documentElement.dataset.theme).toBe("dark");
     });
+
+    it("carrega a logo a partir da base pública configurada", () => {
+        const { container } = render(
+            <MemoryRouter>
+                <AppShell>
+                    <p>Conteúdo</p>
+                </AppShell>
+            </MemoryRouter>
+        );
+
+        expect(container.querySelector(".brand-logo")).toHaveAttribute("src", `${import.meta.env.BASE_URL}assets/bingo-company-logo.png`);
+    });
 });

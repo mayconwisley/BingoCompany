@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { BingoCardGrid, bingoApi, useLiveBingo, winningPatternLabel } from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
@@ -10,7 +10,8 @@ import { PageState } from "../../shared/ui/PageState";
 export function CardPage() {
     const { eventId = "", cardCode = "" } = useParams();
     const navigate = useNavigate();
-    const card = useAsyncResource(() => bingoApi.getCard(eventId, cardCode), [eventId, cardCode]);
+    const loader = useCallback(() => bingoApi.getCard(eventId, cardCode), [eventId, cardCode]);
+    const card = useAsyncResource(loader);
     const connection = useLiveBingo(eventId, card.data?.roundId, card.reload);
     const [isGeneratingNextCard, setIsGeneratingNextCard] = useState(false);
     const [nextCardError, setNextCardError] = useState("");

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import { bingoApi, eventStatusLabel } from "../../features/bingo";
 import type { CardMarkingMode } from "../../features/bingo";
@@ -11,7 +11,8 @@ import { PageState } from "../../shared/ui/PageState";
 export function AdminPage() {
     const [name, setName] = useState("");
     const [mode, setMode] = useState<CardMarkingMode>("Automatic");
-    const events = useAsyncResource(() => bingoApi.listEvents(), []);
+    const loader = useCallback(() => bingoApi.listEvents(), []);
+    const events = useAsyncResource(loader);
     const createEvent = useAsyncAction();
 
     const submit = async () => {

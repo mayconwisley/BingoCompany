@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { bingoApi, useLiveBingo } from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
@@ -12,7 +12,8 @@ export function OperatorPage() {
     const navigate = useNavigate();
     const [error, setError] = useState("");
     const code = query.get("code") ?? "";
-    const event = useAsyncResource(() => bingoApi.getPublicEvent(code), [code]);
+    const loader = useCallback(() => bingoApi.getPublicEvent(code), [code]);
+    const event = useAsyncResource(loader);
     useLiveBingo(eventId, roundId, event.reload);
 
     if (!event.data?.round)

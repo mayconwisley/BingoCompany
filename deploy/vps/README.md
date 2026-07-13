@@ -37,6 +37,8 @@ sudo chown ubuntu:ubuntu /opt/bingo/.env
 sudo chmod 600 /opt/bingo/.env
 ```
 
+Gere `BingoJwtKey` com pelo menos 32 bytes aleatórios (por exemplo, `openssl rand -base64 48`). Em produção, mantenha também `Authentication__CookiePath=/bingo`, as duas origens HTTPS em `Cors__AllowedOrigins__0` e `Cors__AllowedOrigins__1`, e os hosts em `AllowedHosts`, como no arquivo de exemplo. A API não inicia em produção sem a chave JWT.
+
 Instale a unidade e a configuração Nginx, validando ambas antes de ativá-las:
 
 ```bash
@@ -48,6 +50,8 @@ sudo nginx -t
 sudo systemctl enable bingo-api
 sudo systemctl reload nginx
 ```
+
+A configuração Nginx incluída contém HSTS, CSP e outros cabeçalhos de proteção. Após copiá-la, valide com `sudo nginx -t` antes de recarregar. Não exponha a porta da API (`5138`) ou do PgBouncer (`6432`) na internet; ambas devem continuar vinculadas a `127.0.0.1`.
 
 Em seguida, obtenha o certificado TLS com Certbot e inclua os blocos `listen 443 ssl` no virtual host. A API recebe `X-Forwarded-Proto` do Nginx, portanto reconhece corretamente a requisição HTTPS.
 

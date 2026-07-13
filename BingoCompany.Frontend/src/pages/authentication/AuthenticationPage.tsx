@@ -69,7 +69,7 @@ export function AuthenticationPage({ mode }: Props) {
                         <input
                             aria-label="Senha"
                             type="password"
-                            minLength={8}
+                            minLength={12}
                             value={password}
                             onChange={(event) => setPassword(event.target.value)}
                         />
@@ -77,7 +77,10 @@ export function AuthenticationPage({ mode }: Props) {
                     <button
                         className="primary"
                         disabled={
-                            isSubmitting || !email.trim() || password.length < 8 || (isRegistering && (!companyName.trim() || !name.trim()))
+                            isSubmitting ||
+                            !email.trim() ||
+                            password.length < 12 ||
+                            (isRegistering && (!companyName.trim() || !name.trim()))
                         }
                         onClick={submit}
                     >

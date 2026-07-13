@@ -31,7 +31,7 @@ describe("HomePage", () => {
     });
 
     it("mostra a administração em vez de cadastro e login para empresa autenticada", () => {
-        getSession.mockReturnValue({ token: "token", name: "Ana", companyName: "Empresa" });
+        getSession.mockReturnValue({ name: "Ana", companyName: "Empresa" });
         render(
             <MemoryRouter>
                 <HomePage />

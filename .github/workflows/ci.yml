@@ -29,6 +29,9 @@ jobs:
       - name: Build API
         run: dotnet build BingoCompany.Api/BingoCompany.Api.csproj --no-restore -v minimal
 
+      - name: Report vulnerable NuGet packages
+        run: dotnet list BingoCompany.sln package --vulnerable --include-transitive
+
   frontend:
     name: Frontend quality
     runs-on: ubuntu-latest
@@ -48,6 +51,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
 
       - name: ESLint
         run: npm run eslint
