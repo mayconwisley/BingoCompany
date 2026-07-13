@@ -11,7 +11,7 @@ describe("OperatorPage", () =>
 {
     beforeEach(() =>
     {
-        vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({ id: "event-1", name: "Festa", publicCode: "ABC", status: "Running", markingMode: "Automatic", participants: 1, cards: 1, round: { id: "round-1", name: "Rodada 1", sequence: 1, status: "Drawing", stages: [], drawnNumbers: [] } });
+        vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({ id: "event-1", name: "Festa", publicCode: "ABC", status: "Running", markingMode: "Automatic", participants: 1, cards: 1, round: { id: "round-1", name: "Rodada 1", sequence: 1, status: "Drawing", stages: [], drawnNumbers: [], winnerDetectedCount: 0, tieBreakerRequired: false } });
     });
 
     it("sorteia a primeira pedra de uma rodada já iniciada sem tentar iniciá-la novamente", async () =>
@@ -26,7 +26,7 @@ describe("OperatorPage", () =>
 
     it("mantém o sorteio bloqueado enquanto o telão apresenta o vencedor", async () =>
     {
-        vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({ id: "event-1", name: "Festa", publicCode: "ABC", status: "Running", markingMode: "Automatic", participants: 1, cards: 1, round: { id: "round-1", name: "Rodada 1", sequence: 1, status: "Drawing", stages: [], drawnNumbers: [10], winner: { participantName: "Ana", prizeName: "Linha", pattern: "HorizontalLine" } } });
+        vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({ id: "event-1", name: "Festa", publicCode: "ABC", status: "Running", markingMode: "Automatic", participants: 1, cards: 1, round: { id: "round-1", name: "Rodada 1", sequence: 1, status: "Drawing", stages: [], drawnNumbers: [10], winnerDetectedCount: 0, tieBreakerRequired: false, winner: { participantName: "Ana", prizeName: "Linha", pattern: "HorizontalLine" } } });
 
         render(<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}><Routes><Route path="/operacao/:eventId/:roundId" element={<OperatorPage />} /></Routes></MemoryRouter>);
 

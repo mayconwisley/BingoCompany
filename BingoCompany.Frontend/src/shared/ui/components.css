@@ -1,1 +1,2 @@
-.button{border:1px solid #ffffff24;background:#ffffff0a;color:inherit;border-radius:12px;padding:.8rem 1rem;cursor:pointer;text-decoration:none;display:inline-block}.button:hover{background:#ffffff16}.brand,.navlink{color:inherit;text-decoration:none}
+.connection-badge{display:inline-flex;align-items:center;gap:.4rem;border-radius:999px;padding:.38rem .7rem;font-size:.78rem;font-weight:700;background:var(--surface-alt);color:var(--muted);border:1px solid var(--line)}
+.connection-badge--connected{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 35%,transparent);color:var(--accent)}

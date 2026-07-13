@@ -1,3 +1,47 @@
+import { orderPrizeStages } from "../prizeStageOrder";
 import type { PrizeDraft } from "../types";
-const patterns=[['HorizontalLine','Uma linha'],['TwoHorizontalLines','Duas linhas'],['FourCorners','Quatro cantos'],['FullCard','Cartela cheia'],['MainDiagonal','Diagonal B-I-N-G-O'],['SecondaryDiagonal','Diagonal O-G-N-I-B'],['BColumn','Vertical B'],['OColumn','Vertical O']];
-export function PrizeStageEditor({stages,onChange}:{stages:PrizeDraft[];onChange:(value:PrizeDraft[])=>void}){const update=(index:number,patch:Partial<PrizeDraft>)=>onChange(stages.map((stage,i)=>i===index?{...stage,...patch}:stage));return <div>{stages.map((stage,index)=><div className="prize" key={stage.sequence}><input aria-label={`Prêmio ${index+1}`} value={stage.prizeName} onChange={e=>update(index,{prizeName:e.target.value})}/><select aria-label={`Regra do prêmio ${index+1}`} value={stage.pattern} onChange={e=>update(index,{pattern:e.target.value})}>{patterns.map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></div>)}<button type="button" onClick={()=>onChange([...stages,{sequence:stages.length+1,prizeName:"Novo prêmio",pattern:"FullCard"}])}>+ Adicionar prêmio</button></div>}
+
+const patterns = [
+    ["BColumn", "Coluna B"],
+    ["IColumn", "Coluna I"],
+    ["NColumn", "Coluna N"],
+    ["GColumn", "Coluna G"],
+    ["OColumn", "Coluna O"],
+    ["FourCorners", "Quatro cantos"],
+    ["HorizontalLine", "Uma linha"],
+    ["TwoHorizontalLines", "Duas linhas"],
+    ["FullCard", "Cartela cheia"]
+] as const;
+
+const maximumStagesPerPattern = 2;
+const maximumPrizeImageSize = 2 * 1024 * 1024;
+
+export function PrizeStageEditor({ stages, onChange }: { stages: PrizeDraft[]; onChange: (value: PrizeDraft[]) => void })
+{
+    const patternCount = (pattern: string) => stages.filter(stage => stage.pattern === pattern).length;
+    const update = (index: number, patch: Partial<PrizeDraft>) => onChange(orderPrizeStages(stages.map((stage, stageIndex) => stageIndex === index ? { ...stage, ...patch } : stage)));
+    const updatePattern = (index: number, selectedPattern: string) =>
+    {
+        const pattern = patterns.find(([value]) => value === selectedPattern)?.[0];
+        if (pattern) update(index, { pattern });
+    };
+    const nextPattern = patterns.find(([pattern]) => patternCount(pattern) < maximumStagesPerPattern)?.[0];
+    const updateImage = (index: number, file?: File) =>
+    {
+        if (!file || !file.type.match(/^image\/(jpeg|png|webp)$/) || file.size > maximumPrizeImageSize) return;
+        const reader = new FileReader();
+        reader.addEventListener("load", () => typeof reader.result === "string" && update(index, { prizeImageDataUrl: reader.result }));
+        reader.readAsDataURL(file);
+    };
+
+    return <div>
+        {stages.map((stage, index) => <div className="prize" key={`${stage.sequence}-${stage.pattern}`}>
+            <input aria-label={`Prêmio ${index + 1}`} value={stage.prizeName} onChange={event => update(index, { prizeName: event.target.value })} />
+            <select aria-label={`Regra do prêmio ${index + 1}`} value={stage.pattern} onChange={event => updatePattern(index, event.target.value)}>
+                {patterns.map(([value, label]) => <option value={value} key={value} disabled={value !== stage.pattern && patternCount(value) >= maximumStagesPerPattern}>{label}</option>)}
+            </select>
+            <label className="prize-image-input">Foto do prêmio<input aria-label={`Foto do prêmio ${index + 1}`} type="file" accept="image/jpeg,image/png,image/webp" onChange={event => updateImage(index, event.target.files?.[0])} />{stage.prizeImageDataUrl && <><img src={stage.prizeImageDataUrl} alt={`Prévia de ${stage.prizeName}`} /><button type="button" onClick={() => update(index, { prizeImageDataUrl: undefined })}>Remover foto</button></>}</label>
+        </div>)}
+        <button type="button" disabled={!nextPattern} onClick={() => nextPattern && onChange(orderPrizeStages([...stages, { sequence: stages.length + 1, prizeName: "Novo prêmio", pattern: nextPattern }]))}>+ Adicionar prêmio</button>
+    </div>;
+}

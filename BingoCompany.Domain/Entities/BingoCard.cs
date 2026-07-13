@@ -1,3 +1,6 @@
+	using System.Security.Cryptography;
+	using System.Text;
+
 namespace BingoCompany.Domain.Models;
 
 public sealed class BingoCard
@@ -11,7 +14,8 @@ public sealed class BingoCard
 		Type = type;
 		Numbers = numbers;
 		PublicCode = Convert.ToHexString(Guid.NewGuid().ToByteArray())[..12];
-		Status = participantId.HasValue ? CardStatus.Active : CardStatus.Generated;
+		Status = participantId.HasValue ? CardStatus.Active : type == CardType.Printed ? CardStatus.Printed : CardStatus.Generated;
+		Fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{eventId:N}|{string.Join(',', Enumerable.Range(0, 5).SelectMany(row => Enumerable.Range(0, 5).Select(column => numbers[row, column])))}")));
 		CreatedAt = DateTimeOffset.UtcNow;
 	}
 	public Guid Id { get; private set; }
@@ -22,13 +26,19 @@ public sealed class BingoCard
 	public string PublicCode { get; private set; } = null!;
 	public int[,] Numbers { get; private set; } = null!;
 	public DateTimeOffset CreatedAt { get; private set; }
+	public string Fingerprint { get; private set; } = null!;
 	public Guid? ReplacementCardId { get; private set; }
 	public bool IsEligible => Status == CardStatus.Active && ParticipantId.HasValue;
 	public void Assign(Guid participantId)
 	{
-		if (IsEligible)
+		if (Status is not (CardStatus.Printed or CardStatus.Generated))
 			throw new InvalidOperationException("Cartela já associada.");
 		ParticipantId = participantId;
+		Status = CardStatus.Assigned;
+	}
+	public void Activate()
+	{
+		if (Status != CardStatus.Assigned || !ParticipantId.HasValue) throw new InvalidOperationException("A cartela precisa estar associada antes de ser ativada.");
 		Status = CardStatus.Active;
 	}
 	public bool IsComplete(IEnumerable<int> markedNumbers)

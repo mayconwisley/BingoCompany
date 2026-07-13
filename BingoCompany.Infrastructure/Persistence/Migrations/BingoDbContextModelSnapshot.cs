@@ -18,10 +18,39 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("bingo")
+                .HasAnnotation("BingoCompany:WinningPatternsRevision", "2")
                 .HasAnnotation("ProductVersion", "10.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("BingoCompany.Domain.Models.AuditEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId", "OccurredAt");
+
+                    b.ToTable("AuditEntries", "bingo");
+                });
 
             modelBuilder.Entity("BingoCompany.Domain.Models.BingoCard", b =>
                 {
@@ -34,6 +63,10 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("EventId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("Numbers")
                         .IsRequired()
@@ -191,6 +224,9 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("EmployeeRegistration")
+                        .HasColumnType("text");
+
                     b.Property<Guid>("EventId")
                         .HasColumnType("uuid");
 
@@ -203,6 +239,9 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("ResponsibleEmployeeName")
                         .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

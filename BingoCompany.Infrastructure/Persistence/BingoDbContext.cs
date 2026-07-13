@@ -14,10 +14,12 @@ public sealed class BingoDbContext(DbContextOptions<BingoDbContext> options) : D
 	public DbSet<CardMark> CardMarks => Set<CardMark>();
 	public DbSet<RoundEligibleCard> RoundEligibleCards => Set<RoundEligibleCard>();
 	public DbSet<RoundWinner> RoundWinners => Set<RoundWinner>();
+	public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		modelBuilder.HasDefaultSchema("bingo");
+		modelBuilder.HasAnnotation("BingoCompany:WinningPatternsRevision", "2");
 		modelBuilder.ApplyConfigurationsFromAssembly(typeof(BingoDbContext).Assembly);
 		base.OnModelCreating(modelBuilder);
 	}

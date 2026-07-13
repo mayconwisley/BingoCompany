@@ -1,9 +1,10 @@
-﻿namespace BingoCompany.Domain.Enums;
+namespace BingoCompany.Domain.Enums;
 
 public enum CardStatus
 {
 	Generated,
 	Printed,
 	Active,
-	Cancelled
+	Cancelled,
+	Assigned
 }

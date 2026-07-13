@@ -27,19 +27,25 @@ public static class WinningPatternEvaluator
 {
     public static bool IsCompleted(int[,] card, IReadOnlySet<int> drawn, WinningPattern pattern)
     {
-        bool Marked(int n) => n == 0 || drawn.Contains(n);
-        var rows = Enumerable.Range(0, 5).Select(r => Enumerable.Range(0, 5).All(c => Marked(card[r, c]))).ToArray();
+        return RemainingNumbers(card, drawn, pattern) == 0;
+    }
+    public static int RemainingNumbers(int[,] card, IReadOnlySet<int> markedNumbers, WinningPattern pattern)
+    {
+        bool Marked(int number) => number == 0 || markedNumbers.Contains(number);
+        int Missing(IEnumerable<(int Row, int Column)> positions) => positions.Count(position => !Marked(card[position.Row, position.Column]));
+        var rows = Enumerable.Range(0, 5).Select(row => Missing(Enumerable.Range(0, 5).Select(column => (row, column)))).ToArray();
         return pattern switch
         {
-            WinningPattern.HorizontalLine => rows.Any(x => x),
-            WinningPattern.TwoHorizontalLines => rows.Count(x => x) >= 2,
-            WinningPattern.FourCorners => Marked(card[0, 0]) && Marked(card[0, 4]) && Marked(card[4, 0]) && Marked(card[4, 4]),
-            WinningPattern.FullCard => Enumerable.Range(0, 5).All(r => Enumerable.Range(0, 5).All(c => Marked(card[r, c]))),
-			WinningPattern.MainDiagonal => Enumerable.Range(0, 5).All(index => Marked(card[index, index])),
-			WinningPattern.SecondaryDiagonal => Enumerable.Range(0, 5).All(index => Marked(card[index, 4 - index])),
-			WinningPattern.BColumn => Enumerable.Range(0, 5).All(row => Marked(card[row, 0])),
-			WinningPattern.OColumn => Enumerable.Range(0, 5).All(row => Marked(card[row, 4])),
-            _ => false
+            WinningPattern.HorizontalLine => rows.Min(),
+            WinningPattern.TwoHorizontalLines => rows.Order().Take(2).Sum(),
+            WinningPattern.FourCorners => Missing([(0, 0), (0, 4), (4, 0), (4, 4)]),
+            WinningPattern.FullCard => Missing(Enumerable.Range(0, 5).SelectMany(row => Enumerable.Range(0, 5).Select(column => (row, column)))),
+			WinningPattern.BColumn => Missing(Enumerable.Range(0, 5).Select(row => (row, 0))),
+			WinningPattern.IColumn => Missing(Enumerable.Range(0, 5).Select(row => (row, 1))),
+			WinningPattern.NColumn => Missing(Enumerable.Range(0, 5).Select(row => (row, 2))),
+			WinningPattern.GColumn => Missing(Enumerable.Range(0, 5).Select(row => (row, 3))),
+			WinningPattern.OColumn => Missing(Enumerable.Range(0, 5).Select(row => (row, 4))),
+            _ => throw new InvalidOperationException("Regra de premiação inválida.")
         };
     }
 }

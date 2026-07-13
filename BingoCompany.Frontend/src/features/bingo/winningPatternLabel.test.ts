@@ -8,10 +8,11 @@ describe("winningPatternLabel", () =>
         ["TwoHorizontalLines", "Duas linhas"],
     ["FourCorners", "Quatro cantos"],
 	["FullCard", "Cartela cheia"],
-	["MainDiagonal", "Diagonal B-I-N-G-O"],
-	["SecondaryDiagonal", "Diagonal O-G-N-I-B"],
-	["BColumn", "Vertical B"],
-	["OColumn", "Vertical O"]
+	["BColumn", "Coluna B"],
+	["IColumn", "Coluna I"],
+	["NColumn", "Coluna N"],
+	["GColumn", "Coluna G"],
+	["OColumn", "Coluna O"]
     ])("traduz %s para português brasileiro", (pattern, label) =>
     {
         expect(winningPatternLabel(pattern)).toBe(label);

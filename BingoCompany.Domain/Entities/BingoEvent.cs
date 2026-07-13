@@ -1,4 +1,4 @@
-﻿namespace BingoCompany.Domain.Models;
+namespace BingoCompany.Domain.Models;
 
 public sealed class BingoEvent
 {
@@ -37,6 +37,12 @@ public sealed class BingoEvent
 		if (Status is not EventStatus.RegistrationOpen)
 			throw new InvalidOperationException("Abra as inscrições antes de iniciar.");
 		Status = EventStatus.Running;
+	}
+	public void Finish()
+	{
+		if (Status != EventStatus.Running) throw new InvalidOperationException("O evento não está em andamento.");
+		if (_rounds.Any(round => round.Status != RoundStatus.Finished)) throw new InvalidOperationException("Finalize todas as rodadas antes de encerrar o evento.");
+		Status = EventStatus.Finished;
 	}
 	public void AddRound(BingoRound round) => _rounds.Add(round);
 	public void AddParticipant(Participant participant) => _participants.Add(participant);

@@ -25,7 +25,13 @@ public sealed class BingoRound
 	public IReadOnlyCollection<DrawnNumber> DrawnNumbers => _drawnNumbers;
 	public IReadOnlyCollection<RoundEligibleCard> EligibleCards => _eligibleCards;
 	public bool HasWinnerPresentationPending => _stages.Any(stage => stage.IsCompleted && !stage.IsWinnerPresentationClosed);
-	public void AddStage(PrizeStage stage) => _stages.Add(stage);
+	public void AddStage(PrizeStage stage)
+	{
+		if (_stages.Any(item => item.Sequence == stage.Sequence)) throw new InvalidOperationException("A sequência das etapas de prêmio não pode se repetir.");
+		if (_stages.Count(item => item.Pattern == stage.Pattern) >= 2) throw new InvalidOperationException("Uma rodada permite no máximo duas etapas com a mesma regra de premiação.");
+
+		_stages.Add(stage);
+	}
 	public void FreezeEligibility(IEnumerable<BingoCard> cards)
 	{
 		if (_eligibleCards.Count != 0) throw new InvalidOperationException("A elegibilidade desta rodada já foi congelada.");
@@ -46,15 +52,21 @@ public sealed class BingoRound
 	{
 		if (Status != RoundStatus.Drawing || DrawSequence is null) throw new InvalidOperationException("Rodada não está em sorteio.");
 		if (HasWinnerPresentationPending) throw new InvalidOperationException("Encerre a apresentação do vencedor antes de sortear a próxima pedra.");
-		if (_drawnNumbers.Count == DrawSequence.Length) throw new InvalidOperationException("Todas as pedras desta rodada já foram sorteadas.");
+		var drawnNumbers = _drawnNumbers.Select(item => item.Number).ToHashSet();
+		var next = DrawSequence.FirstOrDefault(number => !drawnNumbers.Contains(number) && IsEligibleForActiveStage(number));
+		if (next == 0) throw new InvalidOperationException("Não há mais pedras elegíveis para a etapa de prêmio ativa.");
 
-		var next = DrawSequence[_drawnNumbers.Count];
 		var drawn = new DrawnNumber(Id, next, _drawnNumbers.Count + 1);
 		_drawnNumbers.Add(drawn);
 		return drawn;
 	}
 	public PrizeStage ActiveStage => _stages.Single(x => x.IsActive);
 	public void DetectWinner() => Status = RoundStatus.WinnerDetected;
+	public void StartTieBreaker()
+	{
+		if (Status != RoundStatus.WinnerDetected) throw new InvalidOperationException("O desempate só pode iniciar após a detecção de vencedores.");
+		Status = RoundStatus.TieBreaker;
+	}
 	public void FinishStage() { ActiveStage.Complete(); var next = _stages.OrderBy(x => x.Sequence).FirstOrDefault(x => !x.IsCompleted); if (next is null) Status = RoundStatus.Finished; else { next.Activate(); Status = RoundStatus.Drawing; } }
 	public void CloseWinnerPresentation()
 	{
@@ -62,4 +74,13 @@ public sealed class BingoRound
 			?? throw new InvalidOperationException("Não há apresentação de vencedor aguardando encerramento.");
 		stage.CloseWinnerPresentation();
 	}
+	private bool IsEligibleForActiveStage(int number) => ActiveStage.Pattern switch
+	{
+		WinningPattern.BColumn => number is >= 1 and <= 15,
+		WinningPattern.IColumn => number is >= 16 and <= 30,
+		WinningPattern.NColumn => number is >= 31 and <= 45,
+		WinningPattern.GColumn => number is >= 46 and <= 60,
+		WinningPattern.OColumn => number is >= 61 and <= 75,
+		_ => true
+	};
 }

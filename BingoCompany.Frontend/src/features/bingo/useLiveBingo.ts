@@ -11,7 +11,7 @@ export function useLiveBingo(eventId?: string, roundId?: string, onChange?: () =
         if (!eventId) return;
 
         const connection = new HubConnectionBuilder().withUrl(`${API_URL}/hubs/bingo`).withAutomaticReconnect().build();
-        ["NumberDrawn", "WinningCardDetected", "WinnerRevealed", "WinnerPresentationClosed", "RoundStarted"].forEach(event => connection.on(event, () => onChange?.()));
+        ["NumberDrawn", "WinnerDetected", "WinningCardDetected", "TieBreakerStarted", "WinnerRevealed", "WinnerPresentationClosed", "PrizeStageChanged", "RoundFinished", "RoundStarted"].forEach(event => connection.on(event, () => onChange?.()));
         connection.onreconnecting(() => setState("Reconectando"));
         connection.onreconnected(() => { setState("Conectado"); onChange?.(); });
         connection.onclose(() => setState("Desconectado"));
