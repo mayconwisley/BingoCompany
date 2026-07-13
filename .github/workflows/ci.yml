@@ -1,0 +1,65 @@
+name: Project CI
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore BingoCompany.sln
+
+      - name: Test
+        run: dotnet test BingoCompany.sln --no-restore -v minimal
+
+      - name: Build API
+        run: dotnet build BingoCompany.Api/BingoCompany.Api.csproj --no-restore -v minimal
+
+  frontend:
+    name: Frontend quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: BingoCompany.Frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: BingoCompany.Frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run eslint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Check TypeScript formatting
+        run: npm run typeformat
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build

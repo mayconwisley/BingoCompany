@@ -3,24 +3,32 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it } from "vitest";
 import { AppShell } from "./AppShell";
 
-describe("AppShell", () =>
-{
-    beforeEach(() =>
-    {
+describe("AppShell", () => {
+    beforeEach(() => {
         document.documentElement.dataset.theme = "";
     });
 
-    it("oculta o acesso administrativo quando a tela é de participante", () =>
-    {
-        render(<MemoryRouter><AppShell showAdministration={false}><p>Minha cartela</p></AppShell></MemoryRouter>);
+    it("oculta o acesso administrativo quando a tela é de participante", () => {
+        render(
+            <MemoryRouter>
+                <AppShell showAdministration={false}>
+                    <p>Minha cartela</p>
+                </AppShell>
+            </MemoryRouter>
+        );
 
         expect(screen.queryByRole("link", { name: "Administração" })).not.toBeInTheDocument();
         expect(screen.getByText("Minha cartela")).toBeInTheDocument();
     });
 
-    it("alterna o tema escolhido", () =>
-    {
-        render(<MemoryRouter><AppShell><p>Conteúdo</p></AppShell></MemoryRouter>);
+    it("alterna o tema escolhido", () => {
+        render(
+            <MemoryRouter>
+                <AppShell>
+                    <p>Conteúdo</p>
+                </AppShell>
+            </MemoryRouter>
+        );
 
         fireEvent.click(screen.getByRole("button", { name: /ativar tema/i }));
 

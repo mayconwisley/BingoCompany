@@ -2,10 +2,8 @@ import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DrawSuspense } from "./DrawSuspense";
 
-describe("DrawSuspense", () =>
-{
-    it("apresenta suspense antes de revelar uma nova pedra recebida", () =>
-    {
+describe("DrawSuspense", () => {
+    it("apresenta suspense antes de revelar uma nova pedra recebida", () => {
         vi.useFakeTimers();
         const view = render(<DrawSuspense number={10} />);
 

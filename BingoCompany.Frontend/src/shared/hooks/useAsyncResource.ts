@@ -1,29 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
 import { getErrorMessage } from "../api/getErrorMessage";
 
-export function useAsyncResource<T>(loader: () => Promise<T>, dependencies: unknown[])
-{
+export function useAsyncResource<T>(loader: () => Promise<T>, dependencies: unknown[]) {
     const [data, setData] = useState<T>();
     const [error, setError] = useState<string>();
     const [loading, setLoading] = useState(true);
-    const reload = useCallback(async () =>
-    {
+    const reload = useCallback(async () => {
         setLoading(true);
-        try
-        {
+        try {
             setData(await loader());
             setError(undefined);
-        }
-        catch (error)
-        {
+        } catch (error) {
             setError(getErrorMessage(error, "Não foi possível carregar estas informações. Tente novamente."));
-        }
-        finally
-        {
+        } finally {
             setLoading(false);
         }
     }, dependencies);
 
-    useEffect(() => { void reload(); }, [reload]);
+    useEffect(() => {
+        void reload();
+    }, [reload]);
     return { data, error, loading, reload, setData };
 }

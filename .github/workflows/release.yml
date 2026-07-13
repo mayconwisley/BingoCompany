@@ -1,0 +1,215 @@
+name: Release Production
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: release-production-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: 10.0.x
+  NODE_VERSION: 22.x
+  SOLUTION_PATH: BingoCompany.sln
+  FRONTEND_PATH: BingoCompany.Frontend
+  API_PROJECT: BingoCompany.Api/BingoCompany.Api.csproj
+
+jobs:
+  verify-ci:
+    name: Verify CI approval
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure CI passed for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          commit_sha="$(git rev-parse HEAD)"
+          successful_runs="$(gh run list --workflow frontend-ci.yml --commit "$commit_sha" --status success --limit 1 --json databaseId --jq 'length')"
+          [[ "$successful_runs" != "0" ]] || { echo "Nenhuma execução bem-sucedida do CI foi encontrada para o commit $commit_sha."; exit 1; }
+
+  build:
+    name: Build, deploy and publish release
+    runs-on: ubuntu-latest
+    needs: verify-ci
+    environment: production
+    concurrency:
+      group: production-vps-deploy
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve configured release version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          configured_version="$(grep -m 1 '<Version>' "$API_PROJECT" | sed -E 's/.*<Version>([^<]+)<\/Version>.*/\1/' | xargs)"
+          [[ "$configured_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo "A versão da API deve seguir SemVer. Valor atual: $configured_version"; exit 1; }
+          tag="v$configured_version"
+          assembly_version="$(echo "$configured_version" | sed -E 's/^([0-9]+)\.([0-9]+)\.([0-9]+).*/\1.\2.\3.0/')"
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_name }}" != "$tag" ]]; then
+            echo "A tag publicada (${{ github.ref_name }}) não corresponde à versão da API ($tag)."
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "semver=$configured_version" >> "$GITHUB_OUTPUT"
+          echo "assembly_version=$assembly_version" >> "$GITHUB_OUTPUT"
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: |
+            **/*.csproj
+            **/*.props
+            **/*.targets
+
+      - name: Restore and publish API
+        run: |
+          dotnet restore "$SOLUTION_PATH"
+          dotnet publish "$API_PROJECT" --configuration Release --runtime linux-arm64 --self-contained false --output publish/api \
+            /p:Version=${{ steps.version.outputs.semver }} \
+            /p:AssemblyVersion=${{ steps.version.outputs.assembly_version }} \
+            /p:FileVersion=${{ steps.version.outputs.assembly_version }} \
+            /p:InformationalVersion=${{ steps.version.outputs.semver }}+${{ github.sha }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.FRONTEND_PATH }}/package-lock.json
+
+      - name: Validate and build frontend
+        working-directory: ${{ env.FRONTEND_PATH }}
+        env:
+          VITE_API_URL: /bingo
+          VITE_BASE_PATH: /bingo/
+        run: |
+          npm ci
+          npm run eslint
+          npm run typecheck
+          npm run typeformat
+          npm test
+          npm run build
+
+      - name: Write release metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_date="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          printf 'version=%s\ntag=%s\ncommit=%s\nreleased_at=%s\n' \
+            '${{ steps.version.outputs.semver }}' \
+            '${{ steps.version.outputs.tag }}' \
+            '${{ github.sha }}' \
+            "$release_date" > publish/api/RELEASE
+          printf 'version=%s\ntag=%s\ncommit=%s\nreleased_at=%s\n' \
+            '${{ steps.version.outputs.semver }}' \
+            '${{ steps.version.outputs.tag }}' \
+            '${{ github.sha }}' \
+            "$release_date" > "$FRONTEND_PATH/dist/RELEASE"
+
+      - name: Package release artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-packages
+          tar -czf "release-packages/bingo-company-api-${{ steps.version.outputs.tag }}.tar.gz" -C publish/api .
+          tar -czf "release-packages/bingo-company-frontend-${{ steps.version.outputs.tag }}.tar.gz" -C "$FRONTEND_PATH/dist" .
+          (cd release-packages && sha256sum *.tar.gz > SHA256SUMS.txt)
+
+      - name: Set up SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$VPS_PORT" "$VPS_HOST" >> ~/.ssh/known_hosts
+
+      - name: Install rsync
+        run: sudo apt-get update && sudo apt-get install -y rsync
+
+      - name: Create directories on VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh -p "$VPS_PORT" -i ~/.ssh/id_ed25519 "$VPS_USER@$VPS_HOST" \
+            "mkdir -p /opt/bingo/api /opt/bingo/frontend"
+
+      - name: Deploy API
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          rsync -az --delete -e "ssh -p $VPS_PORT -i ~/.ssh/id_ed25519" publish/api/ \
+            "$VPS_USER@$VPS_HOST:/opt/bingo/api/"
+
+      - name: Deploy frontend
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          rsync -az --delete -e "ssh -p $VPS_PORT -i ~/.ssh/id_ed25519" "$FRONTEND_PATH/dist/" \
+            "$VPS_USER@$VPS_HOST:/opt/bingo/frontend/"
+
+      - name: Restart API and verify
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh -p "$VPS_PORT" -i ~/.ssh/id_ed25519 "$VPS_USER@$VPS_HOST" \
+            "sudo systemctl restart bingo-api && sleep 3 && systemctl is-active --quiet bingo-api && echo 'API running' || (journalctl -u bingo-api -n 40 --no-pager && exit 1)"
+
+      - name: Write release notes
+        shell: bash
+        run: |
+          {
+            echo "## Bingo Company ${{ steps.version.outputs.tag }}"
+            echo
+            echo "Release de produção publicada com sucesso."
+            echo
+            echo "- Versão: ${{ steps.version.outputs.semver }}"
+            echo "- Commit: ${{ github.sha }}"
+            echo "- Ambiente: production"
+            echo
+            echo "Os pacotes anexados contêm os artefatos publicados na VPS e seus hashes SHA-256."
+          } > RELEASE_NOTES.md
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --title "Bingo Company $RELEASE_TAG" --notes-file RELEASE_NOTES.md
+            gh release upload "$RELEASE_TAG" release-packages/* --clobber
+          else
+            gh release create "$RELEASE_TAG" release-packages/* --title "Bingo Company $RELEASE_TAG" --target "${{ github.sha }}" --notes-file RELEASE_NOTES.md
+          fi

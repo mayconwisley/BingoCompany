@@ -6,14 +6,12 @@ import { useAsyncResource } from "../shared/hooks/useAsyncResource";
 
 const ApplicationInfoContext = createContext<ApplicationInfo | undefined>(undefined);
 
-export function ApplicationInfoProvider({ children }: PropsWithChildren)
-{
+export function ApplicationInfoProvider({ children }: PropsWithChildren) {
     const application = useAsyncResource(() => applicationInfoApi.get(), []);
 
     return <ApplicationInfoContext.Provider value={application.data}>{children}</ApplicationInfoContext.Provider>;
 }
 
-export function useApplicationInfo(): ApplicationInfo | undefined
-{
+export function useApplicationInfo(): ApplicationInfo | undefined {
     return useContext(ApplicationInfoContext);
 }

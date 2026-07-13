@@ -3,6 +3,7 @@ using BingoCompany.Infrastructure;
 using BingoCompany.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -21,6 +22,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddAuthorization();
 builder.Services.AddBingoInfrastructure(builder.Configuration);
 builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.AllowAnyHeader().AllowAnyMethod().AllowCredentials().SetIsOriginAllowed(_ => true)));
+builder.Services.Configure<ForwardedHeadersOptions>(options => options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto);
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
@@ -30,6 +32,7 @@ using (var scope = app.Services.CreateScope())
 }
 app.UseSwagger(); app.UseSwaggerUI();
 app.UseCors();
+app.UseForwardedHeaders();
 if (!app.Environment.IsDevelopment()) app.UseHttpsRedirection();
 app.UseAuthentication(); app.UseAuthorization(); app.MapControllers(); app.MapHub<BingoCompany.Api.Hubs.BingoHub>("/hubs/bingo");
 app.Run();

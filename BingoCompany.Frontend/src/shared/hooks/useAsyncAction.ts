@@ -6,29 +6,22 @@ type AsyncActionState = {
     success?: string;
 };
 
-export function useAsyncAction()
-{
+export function useAsyncAction() {
     const [state, setState] = useState<AsyncActionState>({});
     const [isPending, setIsPending] = useState(false);
 
-    const execute = useCallback(async <T,>(action: () => Promise<T>, success?: string, fallback?: string): Promise<T | undefined> =>
-    {
+    const execute = useCallback(async <T>(action: () => Promise<T>, success?: string, fallback?: string): Promise<T | undefined> => {
         setIsPending(true);
         setState({});
 
-        try
-        {
+        try {
             const result = await action();
             setState(success ? { success } : {});
             return result;
-        }
-        catch (error)
-        {
+        } catch (error) {
             setState({ error: getErrorMessage(error, fallback) });
             return undefined;
-        }
-        finally
-        {
+        } finally {
             setIsPending(false);
         }
     }, []);

@@ -2,12 +2,12 @@ const labels: Record<string, string> = {
     HorizontalLine: "Uma linha",
     TwoHorizontalLines: "Duas linhas",
     FourCorners: "Quatro cantos",
-	FullCard: "Cartela cheia",
-	BColumn: "Coluna B",
-	IColumn: "Coluna I",
-	NColumn: "Coluna N",
-	GColumn: "Coluna G",
-	OColumn: "Coluna O"
+    FullCard: "Cartela cheia",
+    BColumn: "Coluna B",
+    IColumn: "Coluna I",
+    NColumn: "Coluna N",
+    GColumn: "Coluna G",
+    OColumn: "Coluna O"
 };
 
 const markingModeLabels: Record<string, string> = {
@@ -20,7 +20,7 @@ const roundStatusLabels: Record<string, string> = {
     Ready: "Pronta para iniciar",
     Drawing: "Em sorteio",
     WinnerDetected: "Vencedor aguardando revelação",
-	TieBreaker: "Desempate em andamento",
+    TieBreaker: "Desempate em andamento",
     Finished: "Finalizada"
 };
 
@@ -31,22 +31,18 @@ const eventStatusLabels: Record<string, string> = {
     Finished: "Finalizado"
 };
 
-export function winningPatternLabel(pattern: string): string
-{
+export function winningPatternLabel(pattern: string): string {
     return labels[pattern] ?? "Regra de bingo";
 }
 
-export function markingModeLabel(markingMode: string): string
-{
+export function markingModeLabel(markingMode: string): string {
     return markingModeLabels[markingMode] ?? "Não informado";
 }
 
-export function roundStatusLabel(status: string): string
-{
+export function roundStatusLabel(status: string): string {
     return roundStatusLabels[status] ?? "Status não informado";
 }
 
-export function eventStatusLabel(status: string): string
-{
+export function eventStatusLabel(status: string): string {
     return eventStatusLabels[status] ?? "Status não informado";
 }

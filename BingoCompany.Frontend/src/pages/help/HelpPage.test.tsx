@@ -3,11 +3,13 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { HelpPage } from "./HelpPage";
 
-describe("HelpPage", () =>
-{
-    it("explica o fluxo para organizadores e participantes", () =>
-    {
-        render(<MemoryRouter><HelpPage /></MemoryRouter>);
+describe("HelpPage", () => {
+    it("explica o fluxo para organizadores e participantes", () => {
+        render(
+            <MemoryRouter>
+                <HelpPage />
+            </MemoryRouter>
+        );
 
         expect(screen.getByRole("heading", { name: "Como usar o Bingo Company" })).toBeInTheDocument();
         expect(screen.getByRole("heading", { name: "Organize um evento do começo ao fim" })).toBeInTheDocument();

@@ -5,7 +5,11 @@ import { App } from "./App";
 
 describe("App", () => {
     it("carrega a tela inicial pela rota", async () => {
-        render(<MemoryRouter initialEntries={["/"]}><App /></MemoryRouter>);
+        render(
+            <MemoryRouter initialEntries={["/"]}>
+                <App />
+            </MemoryRouter>
+        );
 
         expect(await screen.findByRole("heading", { name: /a festa inteira/i })).toBeInTheDocument();
     });
