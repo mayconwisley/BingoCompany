@@ -1,4 +1,4 @@
-import type { AuthSession } from "../../features/bingo/authApi";
+import type { AuthSession } from "../../features/bingo/api/authApi";
 
 const sessionKey = "bingo-company-session";
 

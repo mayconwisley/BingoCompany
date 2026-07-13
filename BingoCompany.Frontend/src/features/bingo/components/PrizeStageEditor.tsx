@@ -1,5 +1,5 @@
-import { orderPrizeStages } from "../prizeStageOrder";
-import type { PrizeDraft, WinningPattern } from "../types";
+import { orderPrizeStages } from "../model/prizeStageOrder";
+import type { PrizeDraft, WinningPattern } from "../model/types";
 
 const patterns = [
     ["BColumn", "Coluna B"],

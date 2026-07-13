@@ -2,18 +2,18 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "../shared/ui/ProtectedRoute";
 
-const AdminPage = lazy(() => import("../pages/AdminPage").then(({ AdminPage: page }) => ({ default: page })));
-const AuditPage = lazy(() => import("../pages/AuditPage").then(({ AuditPage: page }) => ({ default: page })));
-const AuthenticationPage = lazy(() => import("../pages/AuthenticationPage").then(({ AuthenticationPage: page }) => ({ default: page })));
-const CardPage = lazy(() => import("../pages/CardPage").then(({ CardPage: page }) => ({ default: page })));
-const DisplayPage = lazy(() => import("../pages/DisplayPage").then(({ DisplayPage: page }) => ({ default: page })));
-const EventSetupPage = lazy(() => import("../pages/EventSetupPage").then(({ EventSetupPage: page }) => ({ default: page })));
-const HelpPage = lazy(() => import("../pages/HelpPage").then(({ HelpPage: page }) => ({ default: page })));
-const HomePage = lazy(() => import("../pages/HomePage").then(({ HomePage: page }) => ({ default: page })));
-const JoinPage = lazy(() => import("../pages/JoinPage").then(({ JoinPage: page }) => ({ default: page })));
-const OperatorPage = lazy(() => import("../pages/OperatorPage").then(({ OperatorPage: page }) => ({ default: page })));
-const PrintCardsPage = lazy(() => import("../pages/PrintCardsPage").then(({ PrintCardsPage: page }) => ({ default: page })));
-const RegistrationSharePage = lazy(() => import("../pages/RegistrationSharePage").then(({ RegistrationSharePage: page }) => ({ default: page })));
+const AdminPage = lazy(() => import("../pages/admin/AdminPage").then(({ AdminPage: page }) => ({ default: page })));
+const AuditPage = lazy(() => import("../pages/audit/AuditPage").then(({ AuditPage: page }) => ({ default: page })));
+const AuthenticationPage = lazy(() => import("../pages/authentication/AuthenticationPage").then(({ AuthenticationPage: page }) => ({ default: page })));
+const CardPage = lazy(() => import("../pages/card/CardPage").then(({ CardPage: page }) => ({ default: page })));
+const DisplayPage = lazy(() => import("../pages/display/DisplayPage").then(({ DisplayPage: page }) => ({ default: page })));
+const EventSetupPage = lazy(() => import("../pages/event-setup/EventSetupPage").then(({ EventSetupPage: page }) => ({ default: page })));
+const HelpPage = lazy(() => import("../pages/help/HelpPage").then(({ HelpPage: page }) => ({ default: page })));
+const HomePage = lazy(() => import("../pages/home/HomePage").then(({ HomePage: page }) => ({ default: page })));
+const JoinPage = lazy(() => import("../pages/join/JoinPage").then(({ JoinPage: page }) => ({ default: page })));
+const OperatorPage = lazy(() => import("../pages/operator/OperatorPage").then(({ OperatorPage: page }) => ({ default: page })));
+const PrintCardsPage = lazy(() => import("../pages/print-cards/PrintCardsPage").then(({ PrintCardsPage: page }) => ({ default: page })));
+const RegistrationSharePage = lazy(() => import("../pages/registration-share/RegistrationSharePage").then(({ RegistrationSharePage: page }) => ({ default: page })));
 
 export function App() {
     return (

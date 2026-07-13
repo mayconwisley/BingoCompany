@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { ApplicationInfo } from "../../features/bingo/applicationInfoApi";
+import type { ApplicationInfo } from "../../features/bingo/api/applicationInfoApi";
 
 type Props = {
     application?: ApplicationInfo;

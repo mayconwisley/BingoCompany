@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import type { PropsWithChildren } from "react";
-import { applicationInfoApi } from "../features/bingo/applicationInfoApi";
-import type { ApplicationInfo } from "../features/bingo/applicationInfoApi";
+import { applicationInfoApi } from "../features/bingo/api/applicationInfoApi";
+import type { ApplicationInfo } from "../features/bingo/api/applicationInfoApi";
 import { useAsyncResource } from "../shared/hooks/useAsyncResource";
 
 const ApplicationInfoContext = createContext<ApplicationInfo | undefined>(undefined);
