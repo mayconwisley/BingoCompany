@@ -10,10 +10,23 @@ Instale .NET SDK/runtime 10, Nginx, PostgreSQL, `rsync` e Certbot. Crie os diret
 sudo install -d -o ubuntu -g ubuntu /opt/bingo/frontend /opt/bingo/api
 ```
 
-Crie o usuário PostgreSQL. Ele precisa criar o banco na primeira inicialização da API:
+Crie o usuário e o banco diretamente no PostgreSQL, não pelo PgBouncer. A API de produção se conecta ao pooler local na porta `6432` e não executa bootstrap de banco:
 
 ```bash
-sudo -u postgres createuser --pwprompt --createdb bingo
+sudo -u postgres psql -p 5432
+```
+
+No prompt do PostgreSQL:
+
+```sql
+CREATE ROLE bingo LOGIN PASSWORD 'defina-uma-senha-forte';
+CREATE DATABASE bingo OWNER bingo;
+```
+
+Registre o banco e o usuário `bingo` na configuração existente do PgBouncer, seguindo o mesmo método de autenticação usado pelo AssinaFlux. Depois recarregue o pooler:
+
+```bash
+sudo systemctl reload pgbouncer
 ```
 
 Copie `api.env.example` para `/opt/bingo/.env`, preencha os segredos e limite a leitura ao usuário de publicação:

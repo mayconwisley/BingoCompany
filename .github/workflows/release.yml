@@ -139,9 +139,13 @@ jobs:
       - name: Set up SSH
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          VPS_USER: ${{ secrets.VPS_USER }}
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
         run: |
+          [[ -n "$VPS_HOST" ]] || { echo "Configure o secret VPS_HOST no ambiente production."; exit 1; }
+          [[ -n "$VPS_USER" ]] || { echo "Configure o secret VPS_USER no ambiente production."; exit 1; }
+          [[ -n "$VPS_SSH_KEY" ]] || { echo "Configure o secret VPS_SSH_KEY no ambiente production."; exit 1; }
           install -d -m 700 ~/.ssh
           printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519

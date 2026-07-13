@@ -8,7 +8,10 @@ public static class DependencyInjection
 {
 	public static IServiceCollection AddBingoInfrastructure(this IServiceCollection services, IConfiguration configuration)
 	{
-		PostgresDatabaseBootstrapper.EnsureDatabaseExists(configuration);
+		if (DatabaseBootstrapConfiguration.ShouldEnsureDatabaseExists(configuration))
+		{
+			PostgresDatabaseBootstrapper.EnsureDatabaseExists(configuration);
+		}
 		var connectionString = PostgresConfiguration.CreateConnectionString(configuration);
 		var poolSize = int.TryParse(configuration["Database:DbContextPoolSize"], out var configuredPoolSize)
 			? Math.Max(configuredPoolSize, 1)
