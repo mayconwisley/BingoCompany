@@ -16,7 +16,7 @@ concurrency:
 
 env:
   DOTNET_VERSION: 10.0.x
-  NODE_VERSION: 22.x
+  NODE_VERSION: 24.x
   SOLUTION_PATH: BingoCompany.sln
   FRONTEND_PATH: BingoCompany.Frontend
   API_PROJECT: BingoCompany.Api/BingoCompany.Api.csproj
@@ -38,7 +38,7 @@ jobs:
         run: |
           set -euo pipefail
           commit_sha="$(git rev-parse HEAD)"
-          successful_runs="$(gh run list --workflow frontend-ci.yml --commit "$commit_sha" --status success --limit 1 --json databaseId --jq 'length')"
+          successful_runs="$(gh run list --commit "$commit_sha" --status success --limit 100 --json workflowName --jq '[.[] | select(.workflowName == "Project CI")] | length')"
           [[ "$successful_runs" != "0" ]] || { echo "Nenhuma execução bem-sucedida do CI foi encontrada para o commit $commit_sha."; exit 1; }
 
   build:
