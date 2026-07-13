@@ -3,7 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="../BingoCompany.Domain/BingoCompany.Domain.csproj" />
     <ProjectReference Include="../BingoCompany.Application/BingoCompany.Application.csproj" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
