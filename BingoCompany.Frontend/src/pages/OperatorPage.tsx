@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { bingoApi } from "../features/bingo/bingoApi";
 import { getErrorMessage } from "../shared/api/getErrorMessage";
 import { useLiveBingo } from "../features/bingo/useLiveBingo";
@@ -11,6 +11,7 @@ export function OperatorPage()
 {
     const { eventId = "", roundId = "" } = useParams();
     const [query] = useSearchParams();
+    const navigate = useNavigate();
     const [error, setError] = useState("");
     const code = query.get("code") ?? "";
     const event = useAsyncResource(() => bingoApi.getPublicEvent(code), [code]);
@@ -24,6 +25,7 @@ export function OperatorPage()
     const canStart = isCurrentRound && round.status === "Ready";
     const canDraw = isCurrentRound && round.status === "Drawing" && !hasWinnerPresentation;
     const actionLabel = canStart ? "INICIAR RODADA" : "SORTEAR PRÓXIMA PEDRA";
+    const isFinished = isCurrentRound && round.status === "Finished";
 
     const performAction = async () =>
     {
@@ -49,5 +51,5 @@ export function OperatorPage()
         catch (error) { setError(getErrorMessage(error, "Não foi possível voltar o telão para o sorteio.")); }
     };
 
-    return <AppShell><main><header className="pagehead"><div><p className="eyebrow">Painel do operador</p><h1>{round.name}</h1></div></header><div className="operator"><section className="drawball"><small>ÚLTIMA PEDRA</small><strong>{round.drawnNumbers.at(-1) ?? "—"}</strong><p>{round.currentPrize || "Rodada finalizada"}</p></section><section className="panel controls"><button className="primary big" disabled={!canStart && !canDraw} onClick={performAction}>{actionLabel}</button><button className="reveal" disabled={round.status !== "WinnerDetected" && round.status !== "TieBreaker"} onClick={revealWinner}>{round.status === "TieBreaker" ? "REALIZAR DESEMPATE" : "REVELAR VENCEDOR"}</button>{hasWinnerPresentation && <><p className="success">O telão está exibindo {round.winner?.participantName}, vencedor(a) de {round.winner?.prizeName}.</p><button className="primary" onClick={continueDraw}>CONTINUAR SORTEIO NO TELÃO</button></>}<p>{round.drawnNumbers.length} pedras sorteadas</p>{!isCurrentRound && <p className="error">Esta não é a rodada atual do evento. Volte à configuração e abra a rodada correta.</p>}{error && <p className="error" role="alert">{error}</p>}</section></div></main></AppShell>;
+    return <AppShell><main><header className="pagehead"><div><p className="eyebrow">Painel do operador</p><h1>{round.name}</h1></div></header><div className="operator"><section className="drawball"><small>ÚLTIMA PEDRA</small><strong>{round.drawnNumbers.at(-1) ?? "—"}</strong><p>{round.currentPrize || "Rodada finalizada"}</p></section><section className="panel controls"><button className="primary big" disabled={!canStart && !canDraw} onClick={performAction}>{actionLabel}</button><button className="reveal" disabled={round.status !== "WinnerDetected" && round.status !== "TieBreaker"} onClick={revealWinner}>{round.status === "TieBreaker" ? "REALIZAR DESEMPATE" : "REVELAR VENCEDOR"}</button>{hasWinnerPresentation && <><p className="success">O telão está exibindo {round.winner?.participantName}, vencedor(a) de {round.winner?.prizeName}.</p><button className="primary" onClick={continueDraw}>CONTINUAR SORTEIO NO TELÃO</button></>}{isFinished && <><p className="success">Cartela cheia concluída. A rodada foi encerrada.</p><p>Prepare a próxima rodada antes de iniciar: as cartelas ativas serão reutilizadas; participantes podem gerar novas cartelas e você pode registrar novas impressas.</p><button className="primary big" onClick={() => navigate(`/admin/eventos/${eventId}?code=${code}`)}>PREPARAR PRÓXIMO SORTEIO</button></>}<p>{round.drawnNumbers.length} pedras sorteadas</p>{!isCurrentRound && <p className="error">Esta não é a rodada atual do evento. Volte à configuração e abra a rodada correta.</p>}{error && <p className="error" role="alert">{error}</p>}</section></div></main></AppShell>;
 }

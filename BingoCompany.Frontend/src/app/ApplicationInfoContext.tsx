@@ -1,0 +1,19 @@
+import { createContext, useContext } from "react";
+import type { PropsWithChildren } from "react";
+import { applicationInfoApi } from "../features/bingo/applicationInfoApi";
+import type { ApplicationInfo } from "../features/bingo/applicationInfoApi";
+import { useAsyncResource } from "../shared/hooks/useAsyncResource";
+
+const ApplicationInfoContext = createContext<ApplicationInfo | undefined>(undefined);
+
+export function ApplicationInfoProvider({ children }: PropsWithChildren)
+{
+    const application = useAsyncResource(() => applicationInfoApi.get(), []);
+
+    return <ApplicationInfoContext.Provider value={application.data}>{children}</ApplicationInfoContext.Provider>;
+}
+
+export function useApplicationInfo(): ApplicationInfo | undefined
+{
+    return useContext(ApplicationInfoContext);
+}

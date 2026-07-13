@@ -1,7 +1,7 @@
 import { http } from "../../shared/api/httpClient";
 import type { CardState, CreateEventInput, EventDetails, EventSummary, JoinEventInput, PrizeDraft, PublicAudit, PublicEvent } from "./types";
 
-type PrintedCard = { publicCode: string; fingerprint: string; status: string; numbers: number[][]; qrCodeValue: string };
+type PrintedCard = { publicCode: string; fingerprint: string; status: string; companyName: string; numbers: number[][]; qrCodeValue: string };
 
 export const bingoApi = {
     listEvents: () => http<EventSummary[]>("/api/events"),
@@ -10,6 +10,7 @@ export const bingoApi = {
     openRegistration: (eventId: string) => http<void>(`/api/events/${eventId}/registration/open`, { method: "POST" }),
     joinEvent: (eventId: string, request: JoinEventInput) => http<{ publicCode: string }>(`/api/events/${eventId}/participants`, { method: "POST", body: JSON.stringify(request) }),
     createRound: (eventId: string, name: string, stages: PrizeDraft[]) => http<{ id: string }>(`/api/events/${eventId}/rounds`, { method: "POST", body: JSON.stringify({ name, stages }) }),
+    updateRound: (eventId: string, roundId: string, name: string, stages: PrizeDraft[]) => http<void>(`/api/events/${eventId}/rounds/${roundId}`, { method: "PUT", body: JSON.stringify({ name, stages }) }),
     startRound: (eventId: string, roundId: string) => http<void>(`/api/events/${eventId}/rounds/${roundId}/start`, { method: "POST" }),
     draw: (eventId: string, roundId: string) => http<void>(`/api/events/${eventId}/rounds/${roundId}/draw`, { method: "POST" }),
     reveal: (eventId: string, roundId: string) => http<void>(`/api/events/${eventId}/rounds/${roundId}/reveal`, { method: "POST" }),

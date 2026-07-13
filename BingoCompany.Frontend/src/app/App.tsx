@@ -1,11 +1,43 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { AdminPage } from "../pages/AdminPage";
-import { AuditPage } from "../pages/AuditPage";
-import { CardPage } from "../pages/CardPage";
-import { DisplayPage } from "../pages/DisplayPage";
-import { EventSetupPage } from "../pages/EventSetupPage";
-import { HomePage } from "../pages/HomePage";
-import { JoinPage } from "../pages/JoinPage";
-import { OperatorPage } from "../pages/OperatorPage";
-import { PrintCardsPage } from "../pages/PrintCardsPage";
-export function App(){return <Routes><Route path="/" element={<HomePage/>}/><Route path="/admin" element={<AdminPage/>}/><Route path="/admin/eventos/:eventId" element={<EventSetupPage/>}/><Route path="/admin/eventos/:eventId/impressao" element={<PrintCardsPage/>}/><Route path="/participar/:publicCode" element={<JoinPage/>}/><Route path="/cartela/:eventId/:cardCode" element={<CardPage/>}/><Route path="/operacao/:eventId/:roundId" element={<OperatorPage/>}/><Route path="/display/:publicCode" element={<DisplayPage/>}/><Route path="/auditoria/:publicCode" element={<AuditPage/>}/><Route path="*" element={<Navigate to="/" replace/>}/></Routes>}
+import { ProtectedRoute } from "../shared/ui/ProtectedRoute";
+
+const AdminPage = lazy(() => import("../pages/AdminPage").then(({ AdminPage: page }) => ({ default: page })));
+const AuditPage = lazy(() => import("../pages/AuditPage").then(({ AuditPage: page }) => ({ default: page })));
+const AuthenticationPage = lazy(() => import("../pages/AuthenticationPage").then(({ AuthenticationPage: page }) => ({ default: page })));
+const CardPage = lazy(() => import("../pages/CardPage").then(({ CardPage: page }) => ({ default: page })));
+const DisplayPage = lazy(() => import("../pages/DisplayPage").then(({ DisplayPage: page }) => ({ default: page })));
+const EventSetupPage = lazy(() => import("../pages/EventSetupPage").then(({ EventSetupPage: page }) => ({ default: page })));
+const HelpPage = lazy(() => import("../pages/HelpPage").then(({ HelpPage: page }) => ({ default: page })));
+const HomePage = lazy(() => import("../pages/HomePage").then(({ HomePage: page }) => ({ default: page })));
+const JoinPage = lazy(() => import("../pages/JoinPage").then(({ JoinPage: page }) => ({ default: page })));
+const OperatorPage = lazy(() => import("../pages/OperatorPage").then(({ OperatorPage: page }) => ({ default: page })));
+const PrintCardsPage = lazy(() => import("../pages/PrintCardsPage").then(({ PrintCardsPage: page }) => ({ default: page })));
+const RegistrationSharePage = lazy(() => import("../pages/RegistrationSharePage").then(({ RegistrationSharePage: page }) => ({ default: page })));
+
+export function App() {
+    return (
+        <Suspense fallback={<RouteLoadingState />}>
+            <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/ajuda" element={<HelpPage />} />
+                <Route path="/entrar" element={<AuthenticationPage mode="login" />} />
+                <Route path="/cadastro" element={<AuthenticationPage mode="register" />} />
+                <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+                <Route path="/admin/eventos/:eventId" element={<ProtectedRoute><EventSetupPage /></ProtectedRoute>} />
+                <Route path="/admin/eventos/:eventId/impressao" element={<ProtectedRoute><PrintCardsPage /></ProtectedRoute>} />
+                <Route path="/inscricao/:publicCode" element={<RegistrationSharePage />} />
+                <Route path="/participar/:publicCode" element={<JoinPage />} />
+                <Route path="/cartela/:eventId/:cardCode" element={<CardPage />} />
+                <Route path="/operacao/:eventId/:roundId" element={<ProtectedRoute><OperatorPage /></ProtectedRoute>} />
+                <Route path="/display/:publicCode" element={<DisplayPage />} />
+                <Route path="/auditoria/:publicCode" element={<AuditPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+        </Suspense>
+    );
+}
+
+function RouteLoadingState() {
+    return <p role="status" aria-live="polite">Carregando tela...</p>;
+}

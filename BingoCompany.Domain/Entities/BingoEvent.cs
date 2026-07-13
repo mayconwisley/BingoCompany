@@ -6,9 +6,10 @@ public sealed class BingoEvent
 	private readonly List<BingoCard> _cards = [];
 	private readonly List<Participant> _participants = [];
 	private BingoEvent() { }
-	public BingoEvent(string name, int cardsPerParticipant = 1, CardMarkingMode markingMode = CardMarkingMode.Automatic)
+	public BingoEvent(Guid companyId, string name, int cardsPerParticipant = 1, CardMarkingMode markingMode = CardMarkingMode.Automatic)
 	{
 		Id = Guid.CreateVersion7();
+		CompanyId = companyId;
 		Name = name;
 		CardsPerParticipant = cardsPerParticipant;
 		MarkingMode = markingMode;
@@ -16,6 +17,7 @@ public sealed class BingoEvent
 		CreatedAt = DateTimeOffset.UtcNow;
 	}
 	public Guid Id { get; private set; }
+	public Guid CompanyId { get; private set; }
 	public string Name { get; private set; } = null!;
 	public string PublicCode { get; private set; } = null!;
 	public EventStatus Status { get; private set; } = EventStatus.Draft;

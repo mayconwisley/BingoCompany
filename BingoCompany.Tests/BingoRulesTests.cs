@@ -67,15 +67,27 @@ public sealed class BingoRulesTests
 		Assert.Equal(16, drawn.Number);
 	}
 	[Fact]
-	public void Round_rejects_a_third_stage_with_the_same_pattern()
+	public void Round_rejects_repeated_prize_rules_including_columns()
 	{
 		var round = new BingoRound(Guid.CreateVersion7(), 1, "Rodada 1");
 		round.AddStage(new PrizeStage(round.Id, 1, "Coluna B 1", WinningPattern.BColumn));
-		round.AddStage(new PrizeStage(round.Id, 2, "Coluna B 2", WinningPattern.BColumn));
 
-		var exception = Assert.Throws<InvalidOperationException>(() => round.AddStage(new PrizeStage(round.Id, 3, "Coluna B 3", WinningPattern.BColumn)));
+		var exception = Assert.Throws<InvalidOperationException>(() => round.AddStage(new PrizeStage(round.Id, 2, "Coluna B 2", WinningPattern.BColumn)));
 
-		Assert.Equal("Uma rodada permite no máximo duas etapas com a mesma regra de premiação.", exception.Message);
+		Assert.Equal("Cada regra de premiação pode ser usada apenas uma vez por rodada.", exception.Message);
+	}
+	[Fact]
+	public void Ready_round_can_be_updated_but_started_round_cannot()
+	{
+		var round = new BingoRound(Guid.CreateVersion7(), 1, "Rodada 1");
+		round.AddStage(new PrizeStage(round.Id, 1, "Linha", WinningPattern.HorizontalLine));
+
+		round.Update("Rodada especial", [new PrizeStage(round.Id, 1, "Cartela cheia", WinningPattern.FullCard)]);
+
+		Assert.Equal("Rodada especial", round.Name);
+		Assert.Equal("Cartela cheia", Assert.Single(round.Stages).PrizeName);
+		round.Start(Enumerable.Range(1, 75).ToArray(), SecureDrawSequence.Hash(Enumerable.Range(1, 75).ToArray()));
+		Assert.Throws<InvalidOperationException>(() => round.Update("Sem edição", [new PrizeStage(round.Id, 1, "Linha", WinningPattern.HorizontalLine)]));
 	}
 	[Fact]
 	public void Prize_stages_follow_the_recommended_pattern_order()

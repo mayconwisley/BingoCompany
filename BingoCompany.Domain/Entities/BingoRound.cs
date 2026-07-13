@@ -28,9 +28,22 @@ public sealed class BingoRound
 	public void AddStage(PrizeStage stage)
 	{
 		if (_stages.Any(item => item.Sequence == stage.Sequence)) throw new InvalidOperationException("A sequência das etapas de prêmio não pode se repetir.");
-		if (_stages.Count(item => item.Pattern == stage.Pattern) >= 2) throw new InvalidOperationException("Uma rodada permite no máximo duas etapas com a mesma regra de premiação.");
+		if (_stages.Any(item => item.Pattern == stage.Pattern)) throw new InvalidOperationException("Cada regra de premiação pode ser usada apenas uma vez por rodada.");
 
 		_stages.Add(stage);
+	}
+	public void Update(string name, IReadOnlyCollection<PrizeStage> stages)
+	{
+		if (Status != RoundStatus.Ready) throw new InvalidOperationException("A rodada só pode ser editada antes do início do sorteio.");
+		if (string.IsNullOrWhiteSpace(name)) throw new InvalidOperationException("Informe o nome da rodada.");
+		if (stages.Count == 0) throw new InvalidOperationException("Configure ao menos uma etapa de prêmio.");
+		if (stages.Any(stage => stage.RoundId != Id)) throw new InvalidOperationException("As etapas de prêmio devem pertencer à rodada editada.");
+		if (stages.GroupBy(stage => stage.Sequence).Any(group => group.Count() > 1)) throw new InvalidOperationException("A sequência das etapas de prêmio não pode se repetir.");
+		if (stages.GroupBy(stage => stage.Pattern).Any(group => group.Count() > 1)) throw new InvalidOperationException("Cada regra de premiação pode ser usada apenas uma vez por rodada.");
+
+		Name = name;
+		_stages.Clear();
+		_stages.AddRange(stages);
 	}
 	public void FreezeEligibility(IEnumerable<BingoCard> cards)
 	{

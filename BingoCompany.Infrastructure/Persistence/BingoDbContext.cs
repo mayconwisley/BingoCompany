@@ -6,6 +6,8 @@ namespace BingoCompany.Infrastructure.Persistence;
 public sealed class BingoDbContext(DbContextOptions<BingoDbContext> options) : DbContext(options)
 {
 	public DbSet<BingoEvent> Events => Set<BingoEvent>();
+	public DbSet<Company> Companies => Set<Company>();
+	public DbSet<CompanyUser> CompanyUsers => Set<CompanyUser>();
 	public DbSet<Participant> Participants => Set<Participant>();
 	public DbSet<BingoCard> Cards => Set<BingoCard>();
 	public DbSet<BingoRound> Rounds => Set<BingoRound>();

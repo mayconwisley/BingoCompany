@@ -29,6 +29,13 @@ public sealed class PublicController(BingoDbContext db) : ControllerBase
         var winnerDetectedCount = activeStage is null || round is null
             ? 0
             : await db.RoundWinners.CountAsync(item => item.RoundId == round.Id && item.StageId == activeStage.Id);
+        var winnerCardCodes = activeStage is null || round is null || winner is not null
+            ? []
+            : await db.RoundWinners
+                .Where(item => item.RoundId == round.Id && item.StageId == activeStage.Id)
+                .Join(db.Cards, roundWinner => roundWinner.CardId, card => card.Id, (_, card) => card.PublicCode)
+                .OrderBy(code => code)
+                .ToArrayAsync();
         var statistics = await CalculateStatistics(round, activeStage, bingoEvent.MarkingMode);
 
         return Ok(new
@@ -53,6 +60,7 @@ public sealed class PublicController(BingoDbContext db) : ControllerBase
                 stages = round.Stages.OrderBy(item => item.Sequence).Select(item => new { item.PrizeName, item.Pattern, item.PrizeImageDataUrl, item.IsActive, item.IsCompleted }),
                 drawnNumbers = round.DrawnNumbers.OrderBy(item => item.Sequence).Select(item => item.Number),
                 winnerDetectedCount,
+                winnerCardCodes,
                 tieBreakerRequired = round.Status == RoundStatus.TieBreaker,
                 statistics,
                 winner = winner is null ? null : new { participantName = winnerName, prizeName = presentationStage!.PrizeName, pattern = presentationStage.Pattern, prizeImageDataUrl = presentationStage.PrizeImageDataUrl }

@@ -15,9 +15,11 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T>
 
     try
     {
+        const session = window.localStorage.getItem("bingo-company-session");
+        const token = session ? (JSON.parse(session) as { token?: string }).token : undefined;
         response = await fetch(`${API_URL}${path}`, {
             ...init,
-            headers: { "Content-Type": "application/json", ...init?.headers }
+            headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}), ...init?.headers }
         });
     }
     catch

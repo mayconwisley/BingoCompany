@@ -6,29 +6,32 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using BingoCompany.Api.Hubs;
+using BingoCompany.Api.Security;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace BingoCompany.Api.Controllers;
 
-[ApiController, Route("api/events")]
+[ApiController, Route("api/events"), Authorize, ServiceFilter<CompanyEventOwnerFilter>]
 public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hub) : ControllerBase
 {
     private const int MaximumPrizeImageLength = 2_800_000;
     private static readonly string[] SupportedPrizeImagePrefixes = ["data:image/jpeg;base64,", "data:image/png;base64,", "data:image/webp;base64,"];
     [HttpGet]
-    public async Task<ActionResult<object>> List() => Ok((await db.Events.Select(x => new { x.Id, x.Name, x.PublicCode, x.Status, x.MarkingMode, x.CreatedAt }).ToListAsync()).OrderByDescending(x => x.CreatedAt));
+    public async Task<ActionResult<object>> List() => Ok((await db.Events.Where(x => x.CompanyId == GetCompanyId()).Select(x => new { x.Id, x.Name, x.PublicCode, x.Status, x.MarkingMode, x.CreatedAt }).ToListAsync()).OrderByDescending(x => x.CreatedAt));
     [HttpPost]
     public async Task<ActionResult<object>> Create(CreateEventRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name)) return BadRequest("Informe o nome do evento.");
-        var bingoEvent = new BingoEvent(request.Name, request.CardsPerParticipant <= 0 ? 1 : request.CardsPerParticipant, request.MarkingMode);
+        var bingoEvent = new BingoEvent(GetCompanyId(), request.Name, request.CardsPerParticipant <= 0 ? 1 : request.CardsPerParticipant, request.MarkingMode);
         db.Events.Add(bingoEvent); db.AuditEntries.Add(new AuditEntry(bingoEvent.Id, "Evento criado", $"Evento {bingoEvent.Name} criado.")); await db.SaveChangesAsync();
         return CreatedAtAction(nameof(Get), new { eventId = bingoEvent.Id }, new { bingoEvent.Id, bingoEvent.Name, bingoEvent.PublicCode, bingoEvent.Status });
     }
     [HttpGet("{eventId:guid}")]
     public async Task<ActionResult<object>> Get(Guid eventId)
     {
-        var e = await db.Events.Include(x => x.Rounds).Include(x => x.Cards).Include(x => x.Participants).SingleOrDefaultAsync(x => x.Id == eventId);
-        return e is null ? NotFound() : Ok(new { e.Id, e.Name, e.PublicCode, e.Status, participants = e.Participants.Count, cards = e.Cards.Count, participantList = e.Participants.OrderBy(item => item.Name).Select(item => new { item.Id, item.Name, item.Type }), cardList = e.Cards.OrderByDescending(item => item.CreatedAt).Select(item => new { item.PublicCode, item.Type, item.Status, item.Fingerprint, item.ParticipantId }), rounds = e.Rounds.OrderBy(x => x.Sequence).Select(x => new { x.Id, x.Name, x.Status }) });
+        var e = await db.Events.Include(x => x.Rounds).ThenInclude(x => x.Stages).Include(x => x.Cards).Include(x => x.Participants).SingleOrDefaultAsync(x => x.Id == eventId);
+        return e is null ? NotFound() : Ok(new { e.Id, e.Name, e.PublicCode, e.Status, participants = e.Participants.Count, cards = e.Cards.Count, participantList = e.Participants.OrderBy(item => item.Name).Select(item => new { item.Id, item.Name, item.Type }), cardList = e.Cards.OrderByDescending(item => item.CreatedAt).Select(item => new { item.PublicCode, item.Type, item.Status, item.Fingerprint, item.ParticipantId }), rounds = e.Rounds.OrderBy(x => x.Sequence).Select(x => new { x.Id, x.Name, x.Status, stages = x.Stages.OrderBy(stage => stage.Sequence).Select(stage => new { stage.Sequence, stage.PrizeName, stage.Pattern, stage.PrizeImageDataUrl, stage.IsActive, stage.IsCompleted }) }) });
     }
     [HttpPost("{eventId:guid}/registration/open")]
     public async Task<IActionResult> OpenRegistration(Guid eventId) { var e = await db.Events.FindAsync(eventId); if (e is null) return NotFound(); e.OpenRegistration(); db.AuditEntries.Add(new AuditEntry(eventId, "Inscrições abertas", "As inscrições do evento foram abertas.")); await db.SaveChangesAsync(); return NoContent(); }
@@ -85,9 +88,14 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
     [HttpGet("{eventId:guid}/cards/printed")]
     public async Task<ActionResult<object>> GetPrintedCards(Guid eventId)
     {
-        if (!await db.Events.AnyAsync(item => item.Id == eventId)) return NotFound();
+        var companyName = await db.Events
+            .Where(item => item.Id == eventId)
+            .Join(db.Companies, bingoEvent => bingoEvent.CompanyId, company => company.Id, (_, company) => company.Name)
+            .SingleOrDefaultAsync();
+        if (companyName is null) return NotFound();
+
         var cards = await db.Cards.Where(item => item.EventId == eventId && item.Type == CardType.Printed).OrderBy(item => item.CreatedAt).ToListAsync();
-        return Ok(cards.Select(card => new { card.PublicCode, card.Fingerprint, card.Status, numbers = ToRows(card.Numbers), qrCodeValue = $"BINGO:{eventId:N}:{card.PublicCode}:{card.Fingerprint}" }));
+        return Ok(cards.Select(card => new { card.PublicCode, card.Fingerprint, card.Status, companyName, numbers = ToRows(card.Numbers), qrCodeValue = $"BINGO:{eventId:N}:{card.PublicCode}:{card.Fingerprint}" }));
     }
     [HttpPost("{eventId:guid}/cards/{cardCode}/assign")]
     public async Task<IActionResult> AssignPrintedCard(Guid eventId, string cardCode, AssignPrintedCardRequest request)
@@ -122,15 +130,38 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
         if (request.Stages.Count == 0) return BadRequest("Configure ao menos uma etapa de prêmio.");
         if (request.Stages.Any(stage => string.IsNullOrWhiteSpace(stage.PrizeName))) return BadRequest("Informe o nome de cada prêmio.");
         if (request.Stages.Any(stage => !IsValidPrizeImage(stage.PrizeImageDataUrl))) return BadRequest("A foto do prêmio deve ser uma imagem JPEG, PNG ou WebP de até 2 MB.");
-        if (request.Stages.GroupBy(stage => stage.Pattern).Any(group => group.Count() > 2)) return BadRequest("Uma rodada permite no máximo duas etapas com a mesma regra de premiação.");
+        if (HasDuplicatePatterns(request.Stages)) return BadRequest("Cada regra de premiação pode ser usada apenas uma vez por rodada.");
         var count = await db.Rounds.CountAsync(x => x.EventId == eventId); var round = new BingoRound(eventId, count + 1, request.Name);
-        var orderedStages = PrizeStageOrdering.Order(request.Stages, stage => stage.Pattern);
-        for (var index = 0; index < orderedStages.Count; index++)
+        var orderedStages = request.Stages.OrderBy(stage => stage.Sequence).ToArray();
+        for (var index = 0; index < orderedStages.Length; index++)
         {
             var stage = orderedStages[index];
             round.AddStage(new PrizeStage(round.Id, index + 1, stage.PrizeName, stage.Pattern, stage.PrizeImageDataUrl));
         }
         db.Rounds.Add(round); db.AuditEntries.Add(new AuditEntry(eventId, "Rodada criada", $"Rodada {round.Name} criada com {request.Stages.Count} etapas.")); await db.SaveChangesAsync(); return Ok(new { round.Id, round.Name });
+    }
+    [HttpPut("{eventId:guid}/rounds/{roundId:guid}")]
+    public async Task<IActionResult> UpdateRound(Guid eventId, Guid roundId, CreateRoundRequest request)
+    {
+        var bingoEvent = await db.Events.FindAsync(eventId);
+        var round = await db.Rounds.Include(item => item.Stages).SingleOrDefaultAsync(item => item.Id == roundId && item.EventId == eventId);
+        if (bingoEvent is null || round is null) return NotFound();
+        if (bingoEvent.Status == EventStatus.Finished) return Conflict("O evento encerrado não pode ser alterado.");
+        if (round.Status != RoundStatus.Ready) return Conflict("A rodada só pode ser editada antes do início do sorteio.");
+        if (string.IsNullOrWhiteSpace(request.Name)) return BadRequest("Informe o nome da rodada.");
+        if (request.Stages.Count == 0) return BadRequest("Configure ao menos uma etapa de prêmio.");
+        if (request.Stages.Any(stage => string.IsNullOrWhiteSpace(stage.PrizeName))) return BadRequest("Informe o nome de cada prêmio.");
+        if (request.Stages.Any(stage => !IsValidPrizeImage(stage.PrizeImageDataUrl))) return BadRequest("A foto do prêmio deve ser uma imagem JPEG, PNG ou WebP de até 2 MB.");
+        if (HasDuplicatePatterns(request.Stages)) return BadRequest("Cada regra de premiação pode ser usada apenas uma vez por rodada.");
+
+        var stages = request.Stages.OrderBy(stage => stage.Sequence)
+            .Select((stage, index) => new PrizeStage(round.Id, index + 1, stage.PrizeName, stage.Pattern, stage.PrizeImageDataUrl))
+            .ToArray();
+        db.PrizeStages.RemoveRange(round.Stages);
+        round.Update(request.Name, stages);
+        db.AuditEntries.Add(new AuditEntry(eventId, "Rodada editada", $"Rodada {round.Name} atualizada com {stages.Length} etapas."));
+        await db.SaveChangesAsync();
+        return NoContent();
     }
     [HttpPost("{eventId:guid}/rounds/{roundId:guid}/start")]
     public async Task<IActionResult> StartRound(Guid eventId, Guid roundId)
@@ -281,6 +312,8 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
     }
     private static int[][] ToRows(int[,] card) => Enumerable.Range(0, 5).Select(r => Enumerable.Range(0, 5).Select(c => card[r, c]).ToArray()).ToArray();
     private static bool IsValidPrizeImage(string? imageDataUrl) => string.IsNullOrWhiteSpace(imageDataUrl) || imageDataUrl.Length <= MaximumPrizeImageLength && SupportedPrizeImagePrefixes.Any(prefix => imageDataUrl.StartsWith(prefix, StringComparison.Ordinal));
+    private static bool HasDuplicatePatterns(IEnumerable<CreatePrizeStageRequest> stages) => stages.GroupBy(stage => stage.Pattern).Any(group => group.Count() > 1);
+    private Guid GetCompanyId() => Guid.Parse(User.FindFirstValue("company_id")!);
 }
 public sealed record CreateEventRequest(string Name, int CardsPerParticipant = 1, CardMarkingMode MarkingMode = CardMarkingMode.Automatic);
 public sealed record JoinEventRequest(string Name, ParticipantType Type = ParticipantType.Employee, string? EmployeeRegistration = null, string? ResponsibleEmployeeName = null);

@@ -18,12 +18,13 @@ describe("DisplayPage", () =>
 
 	it("cria suspense sem revelar o nome enquanto há vencedor pendente", async () =>
 	{
-		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({ id: "event-1", name: "Festa", publicCode: "ABC", status: "Running", markingMode: "Automatic", participants: 2, cards: 2, round: { id: "round-1", name: "Rodada 1", sequence: 1, status: "WinnerDetected", currentPrize: "Vale-presente", stages: [], drawnNumbers: [10], winnerDetectedCount: 1, tieBreakerRequired: false } });
+		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({ id: "event-1", name: "Festa", publicCode: "ABC", status: "Running", markingMode: "Automatic", participants: 2, cards: 2, round: { id: "round-1", name: "Rodada 1", sequence: 1, status: "WinnerDetected", currentPrize: "Vale-presente", stages: [], drawnNumbers: [10], winnerDetectedCount: 1, winnerCardCodes: ["ABC123"], tieBreakerRequired: false } });
 
 		render(<MemoryRouter initialEntries={["/display/ABC"]}><Routes><Route path="/display/:publicCode" element={<DisplayPage />} /></Routes></MemoryRouter>);
 
 		expect(await screen.findByText(/TEMOS UM VENCEDOR/)).toBeInTheDocument();
 		expect(screen.getByText("Confira a cartela!")).toBeInTheDocument();
+		expect(screen.getByText("Cartela ABC123")).toBeInTheDocument();
 	});
 
     it("mostra o prêmio e a regra que deram a vitória", async () =>
