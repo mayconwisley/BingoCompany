@@ -1,4 +1,4 @@
-﻿namespace BingoCompany.Domain;
+namespace BingoCompany.Domain;
 
 internal class DependencyInjection
 {

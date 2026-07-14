@@ -5,27 +5,27 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BingoCompany.Infrastructure.Persistence.Migrations
 {
-    /// <inheritdoc />
-    public partial class AddCardReplacement : Migration
-    {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.AddColumn<Guid>(
-                name: "ReplacementCardId",
-                schema: "bingo",
-                table: "Cards",
-                type: "uuid",
-                nullable: true);
-        }
+	/// <inheritdoc />
+	public partial class AddCardReplacement : Migration
+	{
+		/// <inheritdoc />
+		protected override void Up(MigrationBuilder migrationBuilder)
+		{
+			migrationBuilder.AddColumn<Guid>(
+				name: "ReplacementCardId",
+				schema: "bingo",
+				table: "Cards",
+				type: "uuid",
+				nullable: true);
+		}
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "ReplacementCardId",
-                schema: "bingo",
-                table: "Cards");
-        }
-    }
+		/// <inheritdoc />
+		protected override void Down(MigrationBuilder migrationBuilder)
+		{
+			migrationBuilder.DropColumn(
+				name: "ReplacementCardId",
+				schema: "bingo",
+				table: "Cards");
+		}
+	}
 }

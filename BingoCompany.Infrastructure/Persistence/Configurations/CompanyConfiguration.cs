@@ -6,9 +6,9 @@ namespace BingoCompany.Infrastructure.Persistence.Configurations;
 
 public sealed class CompanyConfiguration : IEntityTypeConfiguration<Company>
 {
-    public void Configure(EntityTypeBuilder<Company> builder)
-    {
-        builder.HasKey(item => item.Id);
-        builder.Property(item => item.Name).HasMaxLength(160);
-    }
+	public void Configure(EntityTypeBuilder<Company> builder)
+	{
+		builder.HasKey(item => item.Id);
+		builder.Property(item => item.Name).HasMaxLength(160);
+	}
 }

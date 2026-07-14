@@ -7,19 +7,16 @@ vi.mock("../auth/session", () => ({ clearSession }));
 import { API_URL, http } from "./httpClient";
 
 describe("http", () => {
-    beforeEach(() => {
-        clearSession.mockReset();
-        vi.stubGlobal("fetch", vi.fn());
-    });
+	beforeEach(() => {
+		clearSession.mockReset();
+		vi.stubGlobal("fetch", vi.fn());
+	});
 
-    it("inclui o cookie de autenticação nas chamadas para a API", async () => {
-        vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ id: "event-1" }), { status: 200 }));
+	it("inclui o cookie de autenticação nas chamadas para a API", async () => {
+		vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ id: "event-1" }), { status: 200 }));
 
-        await http<{ id: string }>("/api/events");
+		await http<{ id: string }>("/api/events");
 
-        expect(fetch).toHaveBeenCalledWith(
-            `${API_URL}/api/events`,
-            expect.objectContaining({ credentials: "include" })
-        );
-    });
+		expect(fetch).toHaveBeenCalledWith(`${API_URL}/api/events`, expect.objectContaining({ credentials: "include" }));
+	});
 });

@@ -1,36 +1,35 @@
 <!doctype html>
 <html lang="pt-BR">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="icon" href="/favicon.ico" sizes="any" />
+		<link rel="icon" type="image/png" href="/assets/bingo-company-icon.png" />
+		<title>Bingo Company</title>
+		<script>
+			(() => {
+				let savedTheme;
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="icon" type="image/png" href="/assets/bingo-company-icon.png" />
-    <title>Bingo Company</title>
-    <script>
-        (() => {
-            let savedTheme;
+				try {
+					savedTheme = window.localStorage.getItem("bingo-company-theme");
+				} catch {
+					savedTheme = undefined;
+				}
 
-            try {
-                savedTheme = window.localStorage.getItem("bingo-company-theme");
-            } catch {
-                savedTheme = undefined;
-            }
+				const theme =
+					savedTheme === "light" || savedTheme === "dark"
+						? savedTheme
+						: window.matchMedia("(prefers-color-scheme: dark)").matches
+							? "dark"
+							: "light";
 
-            const theme = savedTheme === "light" || savedTheme === "dark"
-                ? savedTheme
-                : window.matchMedia("(prefers-color-scheme: dark)").matches
-                    ? "dark"
-                    : "light";
+				document.documentElement.dataset.theme = theme;
+			})();
+		</script>
+	</head>
 
-            document.documentElement.dataset.theme = theme;
-        })();
-    </script>
-</head>
-
-<body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-</body>
-
+	<body>
+		<div id="root"></div>
+		<script type="module" src="/src/main.tsx"></script>
+	</body>
 </html>

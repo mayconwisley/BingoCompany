@@ -8,82 +8,82 @@ import { ConnectionBadge } from "../../shared/ui/ConnectionBadge";
 import { PageState } from "../../shared/ui/PageState";
 
 export function CardPage() {
-    const { eventId = "", cardCode = "" } = useParams();
-    const navigate = useNavigate();
-    const loader = useCallback(() => bingoApi.getCard(eventId, cardCode), [eventId, cardCode]);
-    const card = useAsyncResource(loader);
-    const connection = useLiveBingo(eventId, card.data?.roundId, card.reload);
-    const [isGeneratingNextCard, setIsGeneratingNextCard] = useState(false);
-    const [nextCardError, setNextCardError] = useState("");
+	const { eventId = "", cardCode = "" } = useParams();
+	const navigate = useNavigate();
+	const loader = useCallback(() => bingoApi.getCard(eventId, cardCode), [eventId, cardCode]);
+	const card = useAsyncResource(loader);
+	const connection = useLiveBingo(eventId, card.data?.roundId, card.reload);
+	const [isGeneratingNextCard, setIsGeneratingNextCard] = useState(false);
+	const [nextCardError, setNextCardError] = useState("");
 
-    if (!card.data)
-        return (
-            <AppShell showAdministration={false}>
-                <PageState loading={card.loading} error={card.error} />
-            </AppShell>
-        );
+	if (!card.data)
+		return (
+			<AppShell showAdministration={false}>
+				<PageState loading={card.loading} error={card.error} />
+			</AppShell>
+		);
 
-    const manual = card.data.markingMode !== "Automatic";
-    const generateNextCard = async () => {
-        try {
-            setNextCardError("");
-            setIsGeneratingNextCard(true);
-            const nextCard = await bingoApi.generateNextCard(eventId, cardCode);
-            navigate(`/cartela/${eventId}/${nextCard.publicCode}`);
-        } catch (error) {
-            setNextCardError(getErrorMessage(error, "Não foi possível gerar a nova cartela. Atualize a página e tente novamente."));
-        } finally {
-            setIsGeneratingNextCard(false);
-        }
-    };
+	const manual = card.data.markingMode !== "Automatic";
+	const generateNextCard = async () => {
+		try {
+			setNextCardError("");
+			setIsGeneratingNextCard(true);
+			const nextCard = await bingoApi.generateNextCard(eventId, cardCode);
+			navigate(`/cartela/${eventId}/${nextCard.publicCode}`);
+		} catch (error) {
+			setNextCardError(getErrorMessage(error, "Não foi possível gerar a nova cartela. Atualize a página e tente novamente."));
+		} finally {
+			setIsGeneratingNextCard(false);
+		}
+	};
 
-    return (
-        <AppShell showAdministration={false}>
-            <main className="cardpage">
-                <header className="pagehead">
-                    <div>
-                        <p className="eyebrow">{card.data.currentPrize || "Aguardando rodada"}</p>
-                        <h1>Minha cartela</h1>
-                        {card.data.currentPattern && <p>Regra atual: {winningPatternLabel(card.data.currentPattern)}</p>}
-                    </div>
-                    <ConnectionBadge status={connection} />
-                </header>
-                <BingoCardGrid
-                    numbers={card.data.numbers}
-                    drawnNumbers={card.data.drawnNumbers}
-                    markedNumbers={card.data.markedNumbers}
-                    manual={manual}
-                    onMark={async (number) => {
-                        await bingoApi.mark(eventId, cardCode, number);
-                        await card.reload();
-                    }}
-                />
-                <p className="hint">
-                    {manual ? "Toque nos números destacados para marcá-los." : "Os números sorteados são marcados automaticamente."}
-                </p>
-                {card.data.canGenerateNextCard && (
-                    <section className="panel">
-                        <h2>Cartela completa</h2>
-                        <p>Esta cartela já participou da rodada concluída. Gere uma nova para a próxima rodada.</p>
-                        <button className="primary" onClick={generateNextCard} disabled={isGeneratingNextCard}>
-                            {isGeneratingNextCard ? "Gerando nova cartela..." : "Gerar nova cartela"}
-                        </button>
-                        {nextCardError && (
-                            <p className="error" role="alert">
-                                {nextCardError}
-                            </p>
-                        )}
-                    </section>
-                )}
-                <section className="history">
-                    <h2>Pedras sorteadas</h2>
-                    <div>
-                        {card.data.drawnNumbers.map((number) => (
-                            <span key={number}>{number}</span>
-                        ))}
-                    </div>
-                </section>
-            </main>
-        </AppShell>
-    );
+	return (
+		<AppShell showAdministration={false}>
+			<main className="cardpage">
+				<header className="pagehead">
+					<div>
+						<p className="eyebrow">{card.data.currentPrize || "Aguardando rodada"}</p>
+						<h1>Minha cartela</h1>
+						{card.data.currentPattern && <p>Regra atual: {winningPatternLabel(card.data.currentPattern)}</p>}
+					</div>
+					<ConnectionBadge status={connection} />
+				</header>
+				<BingoCardGrid
+					numbers={card.data.numbers}
+					drawnNumbers={card.data.drawnNumbers}
+					markedNumbers={card.data.markedNumbers}
+					manual={manual}
+					onMark={async (number) => {
+						await bingoApi.mark(eventId, cardCode, number);
+						await card.reload();
+					}}
+				/>
+				<p className="hint">
+					{manual ? "Toque nos números destacados para marcá-los." : "Os números sorteados são marcados automaticamente."}
+				</p>
+				{card.data.canGenerateNextCard && (
+					<section className="panel">
+						<h2>Cartela completa</h2>
+						<p>Esta cartela já participou da rodada concluída. Gere uma nova para a próxima rodada.</p>
+						<button className="primary" onClick={generateNextCard} disabled={isGeneratingNextCard}>
+							{isGeneratingNextCard ? "Gerando nova cartela..." : "Gerar nova cartela"}
+						</button>
+						{nextCardError && (
+							<p className="error" role="alert">
+								{nextCardError}
+							</p>
+						)}
+					</section>
+				)}
+				<section className="history">
+					<h2>Pedras sorteadas</h2>
+					<div>
+						{card.data.drawnNumbers.map((number) => (
+							<span key={number}>{number}</span>
+						))}
+					</div>
+				</section>
+			</main>
+		</AppShell>
+	);
 }

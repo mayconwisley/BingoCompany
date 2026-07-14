@@ -1,6 +1,7 @@
 {
-    "endOfLine": "crlf",
-    "printWidth": 140,
-    "tabWidth": 4,
-    "trailingComma": "none"
+	"endOfLine": "crlf",
+	"printWidth": 140,
+	"useTabs": true,
+	"tabWidth": 4,
+	"trailingComma": "none"
 }

@@ -8,35 +8,35 @@ vi.mock("qrcode", () => ({ default: { toDataURL: vi.fn().mockResolvedValue("data
 vi.mock("../../features/bingo/api/bingoApi", () => ({ bingoApi: { getPrintedCards: vi.fn() } }));
 
 describe("PrintCardsPage", () => {
-    it("exibe o QR Code ao lado da empresa na cartela", async () => {
-        vi.mocked(bingoApi.getPrintedCards).mockResolvedValue([
-            {
-                publicCode: "ABC123",
-                fingerprint: "fingerprint",
-                status: "Printed",
-                companyName: "Empresa Exemplo",
-                numbers: [
-                    [1, 16, 31, 46, 61],
-                    [2, 17, 32, 47, 62],
-                    [3, 18, 0, 48, 63],
-                    [4, 19, 34, 49, 64],
-                    [5, 20, 35, 50, 65]
-                ],
-                qrCodeValue: "BINGO:ABC123"
-            }
-        ]);
+	it("exibe o QR Code ao lado da empresa na cartela", async () => {
+		vi.mocked(bingoApi.getPrintedCards).mockResolvedValue([
+			{
+				publicCode: "ABC123",
+				fingerprint: "fingerprint",
+				status: "Printed",
+				companyName: "Empresa Exemplo",
+				numbers: [
+					[1, 16, 31, 46, 61],
+					[2, 17, 32, 47, 62],
+					[3, 18, 0, 48, 63],
+					[4, 19, 34, 49, 64],
+					[5, 20, 35, 50, 65]
+				],
+				qrCodeValue: "BINGO:ABC123"
+			}
+		]);
 
-        render(
-            <MemoryRouter initialEntries={["/admin/eventos/event-1/impressao"]}>
-                <Routes>
-                    <Route path="/admin/eventos/:eventId/impressao" element={<PrintCardsPage />} />
-                </Routes>
-            </MemoryRouter>
-        );
+		render(
+			<MemoryRouter initialEntries={["/admin/eventos/event-1/impressao"]}>
+				<Routes>
+					<Route path="/admin/eventos/:eventId/impressao" element={<PrintCardsPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
 
-        const qrCode = await screen.findByRole("img", { name: "QR Code da cartela ABC123" });
-        const companyName = screen.getByText("Empresa Exemplo");
+		const qrCode = await screen.findByRole("img", { name: "QR Code da cartela ABC123" });
+		const companyName = screen.getByText("Empresa Exemplo");
 
-        expect(qrCode.parentElement).toContainElement(companyName);
-    });
+		expect(qrCode.parentElement).toContainElement(companyName);
+	});
 });

@@ -1,4 +1,4 @@
-﻿namespace BingoCompany.Domain.Entities;
+namespace BingoCompany.Domain.Entities;
 
 public sealed class DrawnNumber
 {

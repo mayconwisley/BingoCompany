@@ -7,12 +7,12 @@ import { useAsyncResource } from "../shared/hooks/useAsyncResource";
 const ApplicationInfoContext = createContext<ApplicationInfo | undefined>(undefined);
 
 export function ApplicationInfoProvider({ children }: PropsWithChildren) {
-    const loader = useCallback(() => applicationInfoApi.get(), []);
-    const application = useAsyncResource(loader);
+	const loader = useCallback(() => applicationInfoApi.get(), []);
+	const application = useAsyncResource(loader);
 
-    return <ApplicationInfoContext.Provider value={application.data}>{children}</ApplicationInfoContext.Provider>;
+	return <ApplicationInfoContext.Provider value={application.data}>{children}</ApplicationInfoContext.Provider>;
 }
 
 export function useApplicationInfo(): ApplicationInfo | undefined {
-    return useContext(ApplicationInfoContext);
+	return useContext(ApplicationInfoContext);
 }

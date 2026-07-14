@@ -6,11 +6,11 @@ import { ApplicationInfoProvider } from "./app/ApplicationInfoContext";
 import "./styles.css";
 import "./shared/ui/components.css";
 createRoot(document.getElementById("root")!).render(
-    <StrictMode>
-        <BrowserRouter basename={import.meta.env.BASE_URL}>
-            <ApplicationInfoProvider>
-                <App />
-            </ApplicationInfoProvider>
-        </BrowserRouter>
-    </StrictMode>
+	<StrictMode>
+		<BrowserRouter basename={import.meta.env.BASE_URL}>
+			<ApplicationInfoProvider>
+				<App />
+			</ApplicationInfoProvider>
+		</BrowserRouter>
+	</StrictMode>
 );

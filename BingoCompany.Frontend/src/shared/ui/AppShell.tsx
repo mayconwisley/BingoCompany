@@ -8,52 +8,52 @@ import { ThemeToggle } from "./ThemeToggle";
 type Props = PropsWithChildren<{ showAdministration?: boolean }>;
 
 export function AppShell({ children, showAdministration = true }: Props) {
-    const navigate = useNavigate();
-    const session = getSession();
-    const application = useApplicationInfo();
+	const navigate = useNavigate();
+	const session = getSession();
+	const application = useApplicationInfo();
 
-    const logout = async () => {
-        try {
-            await authApi.logout();
-        } finally {
-            clearSession();
-            navigate("/");
-        }
-    };
+	const logout = async () => {
+		try {
+			await authApi.logout();
+		} finally {
+			clearSession();
+			navigate("/");
+		}
+	};
 
-    return (
-        <>
-            <nav className="topbar">
-                <Link className="brand" to="/" aria-label="Bingo Company, página inicial">
-                    <img className="brand-logo" src={`${import.meta.env.BASE_URL}assets/bingo-company-logo.png`} alt="" />
-                    <span>
-                        BINGO <b>COMPANY</b>
-                    </span>
-                </Link>
-                <div className="topbar-actions">
-                    <Link className="navlink" to="/ajuda">
-                        Ajuda
-                    </Link>
-                    {showAdministration &&
-                        (session ? (
-                            <>
-                                <Link className="navlink" to="/admin">
-                                    {session.companyName}
-                                </Link>
-                                <button className="navlink" onClick={logout}>
-                                    Sair
-                                </button>
-                            </>
-                        ) : (
-                            <Link className="navlink" to="/entrar">
-                                Entrar
-                            </Link>
-                        ))}
-                    <ThemeToggle />
-                </div>
-            </nav>
-            {children}
-            <ApplicationFooter application={application} />
-        </>
-    );
+	return (
+		<div className="app-shell">
+			<nav className="topbar">
+				<Link className="brand" to="/" aria-label="Bingo Company, página inicial">
+					<img className="brand-logo" src={`${import.meta.env.BASE_URL}assets/bingo-company-logo.png`} alt="" />
+					<span>
+						BINGO <b>COMPANY</b>
+					</span>
+				</Link>
+				<div className="topbar-actions">
+					<Link className="navlink" to="/ajuda">
+						Ajuda
+					</Link>
+					{showAdministration &&
+						(session ? (
+							<>
+								<Link className="navlink" to="/admin">
+									{session.companyName}
+								</Link>
+								<button className="navlink" onClick={logout}>
+									Sair
+								</button>
+							</>
+						) : (
+							<Link className="navlink" to="/entrar">
+								Entrar
+							</Link>
+						))}
+					<ThemeToggle />
+				</div>
+			</nav>
+			{children}
+			<ApplicationFooter application={application} />
+		</div>
+	);
 }

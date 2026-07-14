@@ -6,5 +6,5 @@ namespace BingoCompany.Infrastructure.Persistence.Configurations;
 
 public sealed class PrizeStageConfiguration : IEntityTypeConfiguration<PrizeStage>
 {
-    public void Configure(EntityTypeBuilder<PrizeStage> builder) => builder.Property(item => item.PrizeImageDataUrl).HasMaxLength(2_800_000);
+	public void Configure(EntityTypeBuilder<PrizeStage> builder) => builder.Property(item => item.PrizeImageDataUrl).HasMaxLength(2_800_000);
 }

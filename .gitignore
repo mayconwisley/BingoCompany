@@ -14,6 +14,20 @@
 *.userprefs
 .env
 
+# Artefatos locais de build, testes e ferramentas de frontend
+.build-*/
+**/.npm-cache/
+**/.vite/
+**/dist/
+*.tsbuildinfo
+coverage/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+Thumbs.db
+.DS_Store
+
 # Mono auto generated files
 mono_crash.*
 
