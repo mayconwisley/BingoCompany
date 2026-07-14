@@ -91,6 +91,7 @@ describe("DisplayPage", () => {
 					participantName: "Ana",
 					prizeName: "Vale-presente",
 					pattern: "HorizontalLine",
+					isPrizeDeliveryPending: false,
 					tieBreakers: [
 						{ participantName: "Ana", number: 71, isWinner: true },
 						{ participantName: "Bruno", number: 24, isWinner: false }
@@ -134,7 +135,7 @@ describe("DisplayPage", () => {
 				drawnNumbers: [10],
 				winnerDetectedCount: 0,
 				tieBreakerRequired: false,
-				winner: { participantName: "Ana", prizeName: "Vale-presente", pattern: "HorizontalLine" }
+				winner: { participantName: "Ana", prizeName: "Vale-presente", pattern: "HorizontalLine", isPrizeDeliveryPending: false }
 			}
 		});
 

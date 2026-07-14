@@ -127,7 +127,7 @@ docker compose down
 3. Abra as inscrições e compartilhe o link público ou QR Code.
 4. Gere, associe e ative cartelas impressas quando necessário.
 5. Configure a rodada e as etapas de prêmio.
-6. Inicie o sorteio, revele os vencedores e acompanhe o telão em tempo real.
+6. Inicie o sorteio, revele os vencedores, confirme a entrega dos prêmios e acompanhe o telão em tempo real.
 7. Finalize o evento e disponibilize a auditoria pública.
 
 ## Qualidade
@@ -161,6 +161,7 @@ npm run build
 - O frontend não decide vencedores, elegibilidade, marcações ou pedras sorteadas.
 - Dados sensíveis de colaboradores não são expostos pelas rotas públicas.
 - Todas as ações relevantes são registradas para auditoria.
+- Uma etapa só é concluída quando o operador confirma a entrega do prêmio; se não houver retirada, a rodada segue com a mesma regra e sem a cartela já recusada.
 
 ## Licença
 

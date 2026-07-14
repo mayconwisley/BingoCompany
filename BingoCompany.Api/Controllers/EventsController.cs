@@ -53,7 +53,7 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 	public async Task<ActionResult<object>> Get(Guid eventId)
 	{
 		var e = await db.Events.Include(x => x.Rounds).ThenInclude(x => x.Stages).Include(x => x.Cards).Include(x => x.Participants).SingleOrDefaultAsync(x => x.Id == eventId);
-		return e is null ? NotFound() : Ok(new { e.Id, e.Name, e.PublicCode, e.Status, participants = e.Participants.Count, cards = e.Cards.Count, participantList = e.Participants.OrderBy(item => item.Name).Select(item => new { item.Id, item.Name, item.Type }), cardList = e.Cards.OrderByDescending(item => item.CreatedAt).Select(item => new { item.PublicCode, item.Type, item.Status, item.Fingerprint, item.ParticipantId }), rounds = e.Rounds.OrderBy(x => x.Sequence).Select(x => new { x.Id, x.Name, x.Status, stages = x.Stages.OrderBy(stage => stage.Sequence).Select(stage => new { stage.Sequence, stage.PrizeName, stage.Pattern, stage.PrizeImageDataUrl, stage.IsActive, stage.IsCompleted }) }) });
+		return e is null ? NotFound() : Ok(new { e.Id, e.Name, e.PublicCode, e.Status, participants = e.Participants.Count, cards = e.Cards.Count, participantList = e.Participants.OrderBy(item => item.Name).Select(item => new { item.Id, item.Name, item.Type }), cardList = e.Cards.OrderByDescending(item => item.CreatedAt).Select(item => new { item.PublicCode, item.Type, item.Status, item.Fingerprint, item.ParticipantId }), rounds = e.Rounds.OrderBy(x => x.CreatedAt).ThenBy(x => x.Sequence).Select(x => new { x.Id, x.Name, x.Status, x.CreatedAt, stages = x.Stages.OrderBy(stage => stage.Sequence).Select(stage => new { stage.Sequence, stage.PrizeName, stage.Pattern, stage.PrizeImageDataUrl, stage.IsActive, stage.IsCompleted }) }) });
 	}
 	[HttpPost("{eventId:guid}/registration/open")]
 	public async Task<IActionResult> OpenRegistration(Guid eventId) { var e = await db.Events.FindAsync(eventId); if (e is null) return NotFound(); e.OpenRegistration(); db.AuditEntries.Add(new AuditEntry(eventId, "Inscrições abertas", "As inscrições do evento foram abertas.")); await db.SaveChangesAsync(); return NoContent(); }
@@ -83,7 +83,7 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 		if (card.ReplacementCardId.HasValue) return Conflict("Uma nova cartela já foi gerada a partir desta cartela.");
 
 		var previousRound = await db.Rounds
-			.Where(item => item.EventId == eventId && item.Status == RoundStatus.Finished)
+			.Where(item => item.EventId == eventId && (item.Status == RoundStatus.Finished || item.Status == RoundStatus.Cancelled))
 			.OrderByDescending(item => item.Sequence)
 			.FirstOrDefaultAsync();
 		if (previousRound is null) return Conflict("A cartela poderá ser renovada após o encerramento de uma rodada.");
@@ -199,6 +199,7 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 	{
 		var e = await db.Events.FindAsync(eventId); var round = await db.Rounds.Include(x => x.Stages).SingleOrDefaultAsync(x => x.Id == roundId && x.EventId == eventId); if (e is null || round is null) return NotFound();
 		if (e.Status == EventStatus.Finished) return Conflict("O evento encerrado não pode ser alterado.");
+		if (!await db.Cards.AnyAsync(item => item.EventId == eventId && item.Status == CardStatus.Active && item.ParticipantId.HasValue)) return Conflict("Gere e ative ao menos uma cartela associada a participante antes de abrir a operação.");
 		if (e.Status == EventStatus.RegistrationOpen) e.Start();
 		round.FreezeEligibility(await db.Cards.Where(x => x.EventId == eventId).ToListAsync());
 		db.RoundEligibleCards.AddRange(round.EligibleCards);
@@ -207,6 +208,29 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 		db.AuditEntries.Add(new AuditEntry(eventId, "Rodada iniciada", $"Rodada {round.Name} iniciada. Hash {round.SequenceHash}."));
 		await db.SaveChangesAsync();
 		await hub.Clients.Group($"round:{roundId}").SendAsync("RoundStarted", new { roundId, round.SequenceHash }); return NoContent();
+	}
+	[HttpPost("{eventId:guid}/rounds/{roundId:guid}/cancel")]
+	public async Task<IActionResult> CancelRound(Guid eventId, Guid roundId)
+	{
+		var bingoEvent = await db.Events.FindAsync(eventId);
+		var round = await db.Rounds.Include(item => item.DrawnNumbers).SingleOrDefaultAsync(item => item.Id == roundId && item.EventId == eventId);
+		if (bingoEvent is null || round is null) return NotFound();
+		if (bingoEvent.Status == EventStatus.Finished) return Conflict("O evento encerrado não pode ser alterado.");
+		try
+		{
+			round.Cancel();
+		}
+		catch (InvalidOperationException exception)
+		{
+			return Conflict(exception.Message);
+		}
+
+		db.AuditEntries.Add(new AuditEntry(eventId, "Rodada cancelada", $"Rodada {round.Name} cancelada após {round.DrawnNumbers.Count} pedras sorteadas."));
+		await db.SaveChangesAsync();
+		var notice = new { roundId, cancelled = true };
+		await hub.Clients.Group($"round:{roundId}").SendAsync("RoundFinished", notice);
+		await hub.Clients.Group($"event:{eventId}").SendAsync("RoundFinished", notice);
+		return NoContent();
 	}
 	[HttpPost("{eventId:guid}/finish")]
 	public async Task<IActionResult> FinishEvent(Guid eventId)
@@ -226,7 +250,16 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 		var eligibleCardIds = await db.RoundEligibleCards.Where(item => item.RoundId == roundId).Select(item => item.CardId).ToListAsync();
 		var eligibleCards = await db.Cards.Where(item => eligibleCardIds.Contains(item.Id)).ToListAsync();
 		var marks = e.MarkingMode == CardMarkingMode.Automatic ? [] : await db.CardMarks.Where(item => item.RoundId == roundId).ToListAsync();
-		var drawResult = gameplayService.Draw(round, eligibleCards, marks, e.MarkingMode);
+		var excludedCardIds = await db.RoundWinners.Where(item => item.RoundId == roundId && item.StageId == round.ActiveStage.Id).Select(item => item.CardId).ToHashSetAsync();
+		RoundDrawResult drawResult;
+		try
+		{
+			drawResult = gameplayService.Draw(round, eligibleCards, marks, e.MarkingMode, excludedCardIds);
+		}
+		catch (InvalidOperationException exception)
+		{
+			return Conflict($"{exception.Message} Cancele a rodada para encerrar o sorteio sem vencedor.");
+		}
 		db.DrawnNumbers.Add(drawResult.DrawnNumber);
 		db.RoundWinners.AddRange(drawResult.Winners);
 		var drawn = drawResult.DrawnNumber;
@@ -259,9 +292,28 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 		var revealResult = gameplayService.RevealWinner(round, candidates, DateTimeOffset.UtcNow);
 		var winner = revealResult.Winner;
 		db.AuditEntries.Add(new AuditEntry(eventId, candidates.Count > 1 ? "Desempate concluído" : "Prêmio revelado", $"Prêmio {round.Stages.Single(stage => stage.Id == winner.StageId).PrizeName} revelado."));
-		if (round.Status == RoundStatus.Finished) db.AuditEntries.Add(new AuditEntry(eventId, "Rodada encerrada", $"Rodada {round.Name} encerrada."));
 		await db.SaveChangesAsync();
 		var participant = await db.Participants.FindAsync(winner.ParticipantId); var card = await db.Cards.FindAsync(winner.CardId); var result = new { participantName = participant!.Name, cardCode = card!.PublicCode, prize = candidates.Count > 0 ? (await db.PrizeStages.FindAsync(winner.StageId))!.PrizeName : "", tieBreakers = candidates.Select(x => new { participantName = db.Participants.Find(x.ParticipantId)!.Name, x.TieBreakerNumber, x.IsWinner }) };
+		var stageChanged = new { roundId, currentPrize = round.Stages.SingleOrDefault(stage => stage.IsActive)?.PrizeName, status = round.Status };
+		await hub.Clients.Group($"round:{roundId}").SendAsync("PrizeStageChanged", stageChanged);
+		await hub.Clients.Group($"event:{eventId}").SendAsync("PrizeStageChanged", stageChanged);
+		await hub.Clients.Group($"round:{roundId}").SendAsync("WinnerRevealed", result);
+		await hub.Clients.Group($"event:{eventId}").SendAsync("WinnerRevealed", result); return Ok(result);
+	}
+	[HttpPost("{eventId:guid}/rounds/{roundId:guid}/prize-delivered")]
+	public async Task<IActionResult> MarkPrizeDelivered(Guid eventId, Guid roundId)
+	{
+		var round = await db.Rounds.Include(x => x.Stages).SingleOrDefaultAsync(x => x.Id == roundId && x.EventId == eventId);
+		if (round is null) return NotFound();
+		var winner = await FindPendingWinner(roundId, round.ActiveStage.Id);
+		if (winner is null) return Conflict("Não há prêmio aguardando confirmação de entrega.");
+
+		winner.MarkPrizeDelivered(DateTimeOffset.UtcNow);
+		round.FinishStage();
+		db.AuditEntries.Add(new AuditEntry(eventId, "Prêmio entregue", $"O prêmio {round.Stages.Single(stage => stage.Id == winner.StageId).PrizeName} foi entregue ao vencedor."));
+		if (round.Status == RoundStatus.Finished) db.AuditEntries.Add(new AuditEntry(eventId, "Rodada encerrada", $"Rodada {round.Name} encerrada."));
+		await db.SaveChangesAsync();
+
 		var stageChanged = new { roundId, currentPrize = round.Stages.SingleOrDefault(stage => stage.IsActive)?.PrizeName, status = round.Status };
 		await hub.Clients.Group($"round:{roundId}").SendAsync("PrizeStageChanged", stageChanged);
 		await hub.Clients.Group($"event:{eventId}").SendAsync("PrizeStageChanged", stageChanged);
@@ -270,8 +322,23 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 			await hub.Clients.Group($"round:{roundId}").SendAsync("RoundFinished", new { roundId });
 			await hub.Clients.Group($"event:{eventId}").SendAsync("RoundFinished", new { roundId });
 		}
-		await hub.Clients.Group($"round:{roundId}").SendAsync("WinnerRevealed", result);
-		await hub.Clients.Group($"event:{eventId}").SendAsync("WinnerRevealed", result); return Ok(result);
+		return NoContent();
+	}
+	[HttpPost("{eventId:guid}/rounds/{roundId:guid}/prize-declined")]
+	public async Task<IActionResult> MarkPrizeDeclined(Guid eventId, Guid roundId)
+	{
+		var round = await db.Rounds.Include(x => x.Stages).SingleOrDefaultAsync(x => x.Id == roundId && x.EventId == eventId);
+		if (round is null) return NotFound();
+		var winner = await FindPendingWinner(roundId, round.ActiveStage.Id);
+		if (winner is null) return Conflict("Não há prêmio aguardando confirmação de retirada.");
+
+		winner.MarkPrizeDeclined(DateTimeOffset.UtcNow);
+		round.ResumeDrawingAfterPrizeDeclined();
+		db.AuditEntries.Add(new AuditEntry(eventId, "Prêmio não retirado", $"O vencedor do prêmio {round.ActiveStage.PrizeName} não retirou o prêmio; o sorteio continuará com a mesma regra."));
+		await db.SaveChangesAsync();
+		await hub.Clients.Group($"round:{roundId}").SendAsync("WinnerPresentationClosed", new { roundId });
+		await hub.Clients.Group($"event:{eventId}").SendAsync("WinnerPresentationClosed", new { roundId });
+		return NoContent();
 	}
 	[HttpPost("{eventId:guid}/rounds/{roundId:guid}/winner-presentation/close")]
 	public async Task<IActionResult> CloseWinnerPresentation(Guid eventId, Guid roundId)
@@ -298,7 +365,8 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 		if (await db.CardMarks.AnyAsync(x => x.RoundId == round.Id && x.CardId == card.Id && x.Number == request.Number)) return NoContent();
 		db.CardMarks.Add(new CardMark(round.Id, card.Id, request.Number, drawn.Sequence));
 		var markedNumbers = (await db.CardMarks.Where(x => x.RoundId == round.Id && x.CardId == card.Id).Select(x => x.Number).ToListAsync()).Append(request.Number).ToHashSet();
-		var winnerDetection = gameplayService.DetectManualWinner(round, card, markedNumbers, drawn.Sequence);
+		var isCardExcluded = await db.RoundWinners.AnyAsync(item => item.RoundId == round.Id && item.StageId == round.ActiveStage.Id && item.CardId == card.Id);
+		var winnerDetection = gameplayService.DetectManualWinner(round, card, markedNumbers, drawn.Sequence, isCardExcluded);
 		if (winnerDetection.HasWinner) db.RoundWinners.Add(winnerDetection.Winner!);
 
 		db.AuditEntries.Add(new AuditEntry(eventId, "Número marcado", $"Cartela {card.PublicCode} marcou a pedra {request.Number} na rodada {round.Name}."));
@@ -321,19 +389,27 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 			? await db.Participants.SingleOrDefaultAsync(item => item.Id == card.ParticipantId.Value && item.EventId == eventId)
 			: null;
 		var marks = round is null ? [] : (await db.CardMarks.Where(x => x.RoundId == round.Id && x.CardId == card.Id).ToListAsync()).OrderBy(x => x.MarkedAt).Select(x => x.Number).ToArray(); var e = await db.Events.FindAsync(eventId);
-		var previousRound = await db.Rounds.Where(item => item.EventId == eventId && item.Status == RoundStatus.Finished).OrderByDescending(item => item.Sequence).FirstOrDefaultAsync();
+		var previousRound = await db.Rounds.Where(item => item.EventId == eventId && (item.Status == RoundStatus.Finished || item.Status == RoundStatus.Cancelled)).OrderByDescending(item => item.Sequence).FirstOrDefaultAsync();
 		var canGenerateNextCard = previousRound is not null
 			&& e!.Status != EventStatus.Finished
 			&& !card.ReplacementCardId.HasValue
 			&& !await db.Rounds.AnyAsync(item => item.EventId == eventId && item.Sequence > previousRound.Sequence && (item.Status == RoundStatus.Drawing || item.Status == RoundStatus.WinnerDetected || item.Status == RoundStatus.TieBreaker))
 			&& await db.RoundEligibleCards.AnyAsync(item => item.RoundId == previousRound.Id && item.CardId == card.Id);
+		var currentRoundSequence = round?.Sequence;
 		var isWinner = await db.RoundWinners
 			.Join(db.PrizeStages, winner => winner.StageId, stage => stage.Id, (winner, stage) => new { winner, stage })
-			.AnyAsync(item => item.winner.CardId == card.Id && item.winner.IsWinner && item.winner.RevealedAt.HasValue && !item.stage.IsWinnerPresentationClosed);
+			.Join(db.Rounds, item => item.winner.RoundId, winnerRound => winnerRound.Id, (item, winnerRound) => new { item.winner, item.stage, winnerRound })
+			.AnyAsync(item =>
+				item.winner.CardId == card.Id
+				&& item.winner.IsWinner
+				&& item.winner.RevealedAt.HasValue
+				&& !item.stage.IsWinnerPresentationClosed
+				&& (!currentRoundSequence.HasValue || item.winnerRound.Sequence >= currentRoundSequence.Value));
 		var activeStage = round?.Stages.SingleOrDefault(item => item.IsActive);
 		return Ok(new { card.Id, card.PublicCode, participantName = participant?.Name, responsibleEmployeeName = participant?.ResponsibleEmployeeName, isWinner, numbers = ToRows(card.Numbers), markingMode = e!.MarkingMode, roundId = round?.Id, roundStatus = round?.Status, currentPrize = activeStage?.PrizeName, currentPattern = activeStage?.Pattern, drawnNumbers = round?.DrawnNumbers.OrderBy(x => x.Sequence).Select(x => x.Number) ?? [], markedNumbers = marks, lastSequence = round?.DrawnNumbers.Count ?? 0, canGenerateNextCard });
 	}
 	private static int[][] ToRows(int[,] card) => Enumerable.Range(0, 5).Select(r => Enumerable.Range(0, 5).Select(c => card[r, c]).ToArray()).ToArray();
+	private Task<RoundWinner?> FindPendingWinner(Guid roundId, Guid stageId) => db.RoundWinners.SingleOrDefaultAsync(item => item.RoundId == roundId && item.StageId == stageId && item.IsWinner && item.RevealedAt.HasValue && !item.PrizeDeliveredAt.HasValue && !item.PrizeDeclinedAt.HasValue);
 	private static bool IsValidPrizeImage(string? imageDataUrl) => string.IsNullOrWhiteSpace(imageDataUrl) || imageDataUrl.Length <= MaximumPrizeImageLength && SupportedPrizeImagePrefixes.Any(prefix => imageDataUrl.StartsWith(prefix, StringComparison.Ordinal));
 	private static bool HasDuplicatePatterns(IEnumerable<CreatePrizeStageRequest> stages) => stages.GroupBy(stage => stage.Pattern).Any(group => group.Count() > 1);
 	private Guid GetCompanyId() => Guid.Parse(User.FindFirstValue("company_id")!);

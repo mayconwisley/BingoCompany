@@ -66,8 +66,8 @@ export function HelpPage() {
 				<section className="panel">
 					<h2>Prêmios e regras de vitória</h2>
 					<p>
-						Uma rodada pode ter várias etapas de prêmio. Elas são disputadas na ordem em que você as configurou. Ao revelar um
-						vencedor, a próxima etapa começa sem reiniciar a sequência de pedras.
+						Uma rodada pode ter várias etapas de prêmio. Elas são disputadas na ordem em que você as configurou. Depois de
+						confirmar a entrega do prêmio, a próxima etapa começa sem reiniciar a sequência de pedras.
 					</p>
 					<ul>
 						<li>
@@ -91,12 +91,13 @@ export function HelpPage() {
 				<section className="panel">
 					<h2>O que acontece quando há um vencedor?</h2>
 					<p>
-						Ao completar a regra do prêmio ativo, o sorteio pausa. No telão, aparece o código da cartela vencedora para que a
-						pessoa se manifeste. O nome só aparece quando o operador usa “Revelar vencedor”.
+						Ao completar a regra do prêmio ativo, o sorteio pausa. Antes da revelação, o telão mostra apenas o suspense e a
+						quantidade de cartelas detectadas. O nome só aparece quando o operador usa “Revelar vencedor”.
 					</p>
 					<p>
-						Se mais de uma cartela completar a regra na mesma pedra, o sistema inicia o desempate e mostra os códigos das
-						cartelas envolvidas. O operador conclui a revelação para seguir a rodada.
+						Se mais de uma cartela completar a regra na mesma pedra, o sistema inicia o desempate. Depois da revelação, o
+						operador registra se o prêmio foi entregue. Se o vencedor não retirar, a cartela deixa de concorrer somente nessa
+						etapa e o sorteio continua com a mesma regra para encontrar outro vencedor.
 					</p>
 				</section>
 				<section className="panel" id="participantes">

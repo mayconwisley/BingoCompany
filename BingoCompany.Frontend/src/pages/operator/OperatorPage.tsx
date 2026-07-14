@@ -27,10 +27,14 @@ export function OperatorPage() {
 	const round = event.data.round;
 	const isCurrentRound = round.id === roundId;
 	const hasWinnerPresentation = Boolean(round.winner);
-	const canStart = isCurrentRound && round.status === "Ready";
+	const isPrizeDeliveryPending = round.winner?.isPrizeDeliveryPending ?? false;
+	const hasCards = event.data.cards > 0;
+	const canStart = isCurrentRound && round.status === "Ready" && hasCards;
 	const canDraw = isCurrentRound && round.status === "Drawing" && !hasWinnerPresentation;
+	const canCancel = isCurrentRound && round.status === "Drawing" && !hasWinnerPresentation;
 	const actionLabel = canStart ? "INICIAR RODADA" : "SORTEAR PRÓXIMA PEDRA";
-	const isFinished = isCurrentRound && round.status === "Finished";
+	const isFinished = isCurrentRound && (round.status === "Finished" || round.status === "Cancelled");
+	const isCancelled = isCurrentRound && round.status === "Cancelled";
 
 	const performAction = async () => {
 		try {
@@ -63,6 +67,36 @@ export function OperatorPage() {
 		}
 	};
 
+	const markPrizeDelivered = async () => {
+		try {
+			setError("");
+			await bingoApi.markPrizeDelivered(eventId, roundId);
+			await event.reload();
+		} catch (error) {
+			setError(getErrorMessage(error, "Não foi possível registrar a entrega do prêmio."));
+		}
+	};
+
+	const markPrizeDeclined = async () => {
+		try {
+			setError("");
+			await bingoApi.markPrizeDeclined(eventId, roundId);
+			await event.reload();
+		} catch (error) {
+			setError(getErrorMessage(error, "Não foi possível registrar a ausência do vencedor."));
+		}
+	};
+
+	const cancelRound = async () => {
+		try {
+			setError("");
+			await bingoApi.cancelRound(eventId, roundId);
+			await event.reload();
+		} catch (error) {
+			setError(getErrorMessage(error, "Não foi possível cancelar a rodada."));
+		}
+	};
+
 	return (
 		<AppShell>
 			<main>
@@ -76,7 +110,7 @@ export function OperatorPage() {
 					<section className="drawball">
 						<small>ÚLTIMA PEDRA</small>
 						<strong>{round.drawnNumbers.at(-1) ?? "—"}</strong>
-						<p>{round.currentPrize || "Rodada finalizada"}</p>
+						<p>{isCancelled ? "Rodada cancelada" : round.currentPrize || "Rodada finalizada"}</p>
 					</section>
 					<section className="panel controls">
 						<button className="primary big" disabled={!canStart && !canDraw} onClick={performAction}>
@@ -89,19 +123,33 @@ export function OperatorPage() {
 						>
 							{round.status === "TieBreaker" ? "REALIZAR DESEMPATE" : "REVELAR VENCEDOR"}
 						</button>
+						<button className="danger" disabled={!canCancel} onClick={cancelRound}>
+							CANCELAR RODADA
+						</button>
 						{hasWinnerPresentation && (
 							<>
 								<FeedbackMessage
 									success={`O telão está exibindo ${round.winner?.participantName}, vencedor(a) de ${round.winner?.prizeName}.`}
 								/>
-								<button className="primary" onClick={continueDraw}>
-									CONTINUAR SORTEIO NO TELÃO
-								</button>
+								{isPrizeDeliveryPending ? (
+									<>
+										<button className="primary" onClick={markPrizeDelivered}>
+											PRÊMIO ENTREGUE
+										</button>
+										<button className="danger" onClick={markPrizeDeclined}>
+											VENCEDOR NÃO RETIROU O PRÊMIO
+										</button>
+									</>
+								) : (
+									<button className="primary" onClick={continueDraw}>
+										CONTINUAR SORTEIO NO TELÃO
+									</button>
+								)}
 							</>
 						)}
 						{isFinished && (
 							<>
-								<FeedbackMessage success="Cartela cheia concluída. A rodada foi encerrada." />
+								<FeedbackMessage success={isCancelled ? "A rodada foi cancelada sem vencedor." : "Cartela cheia concluída. A rodada foi encerrada."} />
 								<p>
 									Prepare a próxima rodada antes de iniciar: as cartelas ativas serão reutilizadas; participantes podem
 									gerar novas cartelas e você pode registrar novas impressas.
@@ -112,6 +160,7 @@ export function OperatorPage() {
 							</>
 						)}
 						<p>{round.drawnNumbers.length} pedras sorteadas</p>
+						{round.status === "Ready" && !hasCards && <FeedbackMessage warning="Gere e ative ao menos uma cartela antes de iniciar a rodada." />}
 						{!isCurrentRound && (
 							<FeedbackMessage warning="Esta não é a rodada atual do evento. Volte à configuração e abra a rodada correta." />
 						)}

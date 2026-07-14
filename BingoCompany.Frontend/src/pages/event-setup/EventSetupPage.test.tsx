@@ -21,6 +21,7 @@ const finishedEvent: EventDetails = {
 			id: "round-1",
 			name: "Rodada 1",
 			status: "Finished",
+			createdAt: "2026-07-14T10:30:00Z",
 			stages: []
 		}
 	]
@@ -45,8 +46,54 @@ describe("EventSetupPage", () => {
 		expect(screen.getByText("Telão").closest("[aria-disabled]")).toHaveAttribute("aria-disabled", "true");
 		expect(screen.getByText("Cartelas").closest("[aria-disabled]")).toHaveAttribute("aria-disabled", "true");
 		expect(screen.getByRole("button", { name: "Abrir operação" })).toBeDisabled();
+		expect(screen.getByText(/Criada em 14\/07\/2026/)).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Encerrar evento e publicar auditoria" })).toBeDisabled();
 		expect(screen.getByLabelText("Nome da rodada")).toBeDisabled();
 		expect(screen.getByLabelText("Quantidade de cartelas impressas")).toBeDisabled();
+	});
+
+	it("ordena as rodadas pela criação e bloqueia a operação da rodada finalizada", async () => {
+		vi.mocked(bingoApi.getEvent).mockResolvedValue({
+			...finishedEvent,
+			status: "Running",
+			cardList: [{ publicCode: "CARTELA1", type: "Digital", status: "Active", fingerprint: "fingerprint", participantId: "participant-1" }],
+			rounds: [
+				{ ...finishedEvent.rounds[0], name: "Rodada finalizada", createdAt: "2026-07-14T11:00:00Z" },
+				{ id: "round-2", name: "Rodada em sorteio", status: "Drawing", createdAt: "2026-07-14T12:00:00Z", stages: [] }
+			]
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/admin/eventos/event-1?code=EVENTO1"]}>
+				<Routes>
+					<Route path="/admin/eventos/:eventId" element={<EventSetupPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		const activeRound = await screen.findByText("Rodada em sorteio");
+		const finishedRound = screen.getByText("Rodada finalizada");
+		expect(activeRound.compareDocumentPosition(finishedRound) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		const operationButtons = screen.getAllByRole("button", { name: "Abrir operação" });
+		expect(operationButtons[0]).toBeEnabled();
+		expect(operationButtons[1]).toBeDisabled();
+	});
+
+	it("bloqueia a abertura da operação sem cartela ativa", async () => {
+		vi.mocked(bingoApi.getEvent).mockResolvedValue({
+			...finishedEvent,
+			status: "RegistrationOpen",
+			rounds: [{ ...finishedEvent.rounds[0], status: "Ready" }]
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/admin/eventos/event-1?code=EVENTO1"]}>
+				<Routes>
+					<Route path="/admin/eventos/:eventId" element={<EventSetupPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByRole("button", { name: "Abrir operação" })).toBeDisabled();
 	});
 });

@@ -8,6 +8,16 @@ import { AppShell } from "../../shared/ui/AppShell";
 import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";
 import { PageState } from "../../shared/ui/PageState";
 
+const roundCreationDateFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
+const roundOperationPriority: Record<string, number> = {
+	Drawing: 0,
+	WinnerDetected: 0,
+	TieBreaker: 0,
+	Ready: 1,
+	Finished: 2,
+	Cancelled: 2
+};
+
 export function EventSetupPage() {
 	const { eventId = "" } = useParams();
 	const [query] = useSearchParams();
@@ -35,9 +45,16 @@ export function EventSetupPage() {
 	const printedCards = event.data?.cardList.filter((card) => card.type === "Printed") ?? [];
 	const selectedCardState = printedCards.find((card) => card.publicCode === selectedCard)?.status;
 	const isFinished = event.data?.status === "Finished";
+	const hasEligibleCard = event.data?.cardList.some((card) => card.status === "Active" && Boolean(card.participantId)) ?? false;
 	const canFinishEvent =
-		event.data?.status === "Running" && event.data.rounds.length > 0 && event.data.rounds.every((round) => round.status === "Finished");
-	const hasFinishedRound = event.data?.rounds.some((round) => round.status === "Finished") ?? false;
+		event.data?.status === "Running" &&
+		event.data.rounds.length > 0 &&
+		event.data.rounds.every((round) => round.status === "Finished" || round.status === "Cancelled");
+	const hasFinishedRound = event.data?.rounds.some((round) => round.status === "Finished" || round.status === "Cancelled") ?? false;
+	const orderedRounds = [...(event.data?.rounds ?? [])].sort((left, right) => {
+		const operationPriority = (roundOperationPriority[left.status] ?? 1) - (roundOperationPriority[right.status] ?? 1);
+		return operationPriority || new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime();
+	});
 
 	const resetRoundForm = () => {
 		setEditingRoundId(undefined);
@@ -341,11 +358,12 @@ export function EventSetupPage() {
 								<p className="eyebrow">Operação</p>
 								<h2>Rodadas criadas</h2>
 								<div className="round-list">
-									{event.data.rounds.map((round) => (
+									{orderedRounds.map((round) => (
 										<article key={round.id}>
 											<div>
 												<strong>{round.name}</strong>
 												<span>{roundStatusLabel(round.status)}</span>
+												<small>Criada em {roundCreationDateFormatter.format(new Date(round.createdAt))}</small>
 											</div>
 											<div className="actions">
 												{round.status === "Ready" && (
@@ -353,8 +371,12 @@ export function EventSetupPage() {
 														Editar rodada
 													</button>
 												)}
-												<button disabled={isFinished} onClick={() => openRound(round.id)}>
-													Abrir operação
+											<button
+												disabled={isFinished || !hasEligibleCard || round.status === "Finished" || round.status === "Cancelled"}
+												title={!hasEligibleCard ? "Gere e ative ao menos uma cartela antes de abrir a operação." : undefined}
+												onClick={() => openRound(round.id)}
+											>
+												Abrir operação
 												</button>
 											</div>
 										</article>

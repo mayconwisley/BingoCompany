@@ -32,8 +32,13 @@ export const bingoApi = {
 	updateRound: (eventId: string, roundId: string, name: string, stages: PrizeDraft[]) =>
 		http<void>(`/api/events/${eventId}/rounds/${roundId}`, { method: "PUT", body: JSON.stringify({ name, stages }) }),
 	startRound: (eventId: string, roundId: string) => http<void>(`/api/events/${eventId}/rounds/${roundId}/start`, { method: "POST" }),
+	cancelRound: (eventId: string, roundId: string) => http<void>(`/api/events/${eventId}/rounds/${roundId}/cancel`, { method: "POST" }),
 	draw: (eventId: string, roundId: string) => http<void>(`/api/events/${eventId}/rounds/${roundId}/draw`, { method: "POST" }),
 	reveal: (eventId: string, roundId: string) => http<void>(`/api/events/${eventId}/rounds/${roundId}/reveal`, { method: "POST" }),
+	markPrizeDelivered: (eventId: string, roundId: string) =>
+		http<void>(`/api/events/${eventId}/rounds/${roundId}/prize-delivered`, { method: "POST" }),
+	markPrizeDeclined: (eventId: string, roundId: string) =>
+		http<void>(`/api/events/${eventId}/rounds/${roundId}/prize-declined`, { method: "POST" }),
 	closeWinnerPresentation: (eventId: string, roundId: string) =>
 		http<void>(`/api/events/${eventId}/rounds/${roundId}/winner-presentation/close`, { method: "POST" }),
 	finishEvent: (eventId: string) => http<void>(`/api/events/${eventId}/finish`, { method: "POST" }),

@@ -6,10 +6,11 @@ namespace BingoCompany.Application.Services;
 
 public sealed class BingoRoundGameplayService : IBingoRoundGameplayService
 {
-	public RoundDrawResult Draw(BingoRound round, IReadOnlyCollection<BingoCard> eligibleCards, IReadOnlyCollection<CardMark> marks, CardMarkingMode markingMode)
+	public RoundDrawResult Draw(BingoRound round, IReadOnlyCollection<BingoCard> eligibleCards, IReadOnlyCollection<CardMark> marks, CardMarkingMode markingMode, IReadOnlySet<Guid> excludedCardIds)
 	{
 		var drawnNumber = round.DrawNext();
 		var winners = eligibleCards
+			.Where(card => !excludedCardIds.Contains(card.Id))
 			.Where(card => IsWinningCard(round, card, marks, markingMode))
 			.Select(card => new RoundWinner(round.Id, round.ActiveStage.Id, card.Id, card.ParticipantId!.Value, drawnNumber.Sequence))
 			.ToArray();
@@ -26,9 +27,9 @@ public sealed class BingoRoundGameplayService : IBingoRoundGameplayService
 		return new RoundDrawResult(drawnNumber, winners);
 	}
 
-	public RoundWinnerDetection DetectManualWinner(BingoRound round, BingoCard card, IReadOnlySet<int> markedNumbers, int drawSequence)
+	public RoundWinnerDetection DetectManualWinner(BingoRound round, BingoCard card, IReadOnlySet<int> markedNumbers, int drawSequence, bool isCardExcluded)
 	{
-		if (!WinningPatternEvaluator.IsCompleted(card.Numbers, markedNumbers, round.ActiveStage.Pattern))
+		if (isCardExcluded || !WinningPatternEvaluator.IsCompleted(card.Numbers, markedNumbers, round.ActiveStage.Pattern))
 		{
 			return new RoundWinnerDetection(null);
 		}
@@ -56,7 +57,6 @@ public sealed class BingoRoundGameplayService : IBingoRoundGameplayService
 
 		var winner = candidates.OrderByDescending(candidate => candidate.TieBreakerNumber ?? 0).First();
 		winner.Confirm(revealedAt);
-		round.FinishStage();
 		return new WinnerRevealResult(winner, tieBreakerApplied);
 	}
 

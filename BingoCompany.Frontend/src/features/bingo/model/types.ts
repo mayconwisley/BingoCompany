@@ -38,6 +38,7 @@ export type EventDetails = {
 		id: string;
 		name: string;
 		status: string;
+		createdAt: string;
 		stages: {
 			sequence: number;
 			prizeName: string;
@@ -83,6 +84,7 @@ export type PublicEvent = {
 			prizeName: string;
 			pattern: string;
 			prizeImageDataUrl?: string;
+			isPrizeDeliveryPending: boolean;
 			tieBreakers?: { participantName: string; number: number; isWinner: boolean }[];
 		};
 	};

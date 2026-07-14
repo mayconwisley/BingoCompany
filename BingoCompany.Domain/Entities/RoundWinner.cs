@@ -23,6 +23,22 @@ public sealed class RoundWinner
 	public bool IsWinner { get; private set; }
 	public DateTimeOffset DetectedAt { get; private set; }
 	public DateTimeOffset? RevealedAt { get; private set; }
+	public DateTimeOffset? PrizeDeliveredAt { get; private set; }
+	public DateTimeOffset? PrizeDeclinedAt { get; private set; }
 	public void AssignTieBreaker(int number) => TieBreakerNumber = number;
 	public void Confirm(DateTimeOffset now) { IsWinner = true; RevealedAt = now; }
+	public void MarkPrizeDelivered(DateTimeOffset now)
+	{
+		if (!IsWinner || !RevealedAt.HasValue) throw new InvalidOperationException("O prêmio só pode ser entregue ao vencedor revelado.");
+		if (PrizeDeliveredAt.HasValue || PrizeDeclinedAt.HasValue) throw new InvalidOperationException("A situação de entrega deste prêmio já foi registrada.");
+
+		PrizeDeliveredAt = now;
+	}
+	public void MarkPrizeDeclined(DateTimeOffset now)
+	{
+		if (!IsWinner || !RevealedAt.HasValue) throw new InvalidOperationException("A ausência do vencedor só pode ser registrada após a revelação.");
+		if (PrizeDeliveredAt.HasValue || PrizeDeclinedAt.HasValue) throw new InvalidOperationException("A situação de entrega deste prêmio já foi registrada.");
+
+		PrizeDeclinedAt = now;
+	}
 }

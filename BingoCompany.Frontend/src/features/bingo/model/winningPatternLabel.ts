@@ -27,7 +27,8 @@ const roundStatusLabels: Record<string, string> = {
 	Drawing: "Em sorteio",
 	WinnerDetected: "Vencedor aguardando revelação",
 	TieBreaker: "Desempate em andamento",
-	Finished: "Finalizada"
+	Finished: "Finalizada",
+	Cancelled: "Cancelada"
 };
 
 const eventStatusLabels: Record<string, string> = {

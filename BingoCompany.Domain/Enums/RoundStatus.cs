@@ -6,5 +6,6 @@ public enum RoundStatus
 	Drawing,
 	WinnerDetected,
 	TieBreaker,
-	Finished
+	Finished,
+	Cancelled
 }

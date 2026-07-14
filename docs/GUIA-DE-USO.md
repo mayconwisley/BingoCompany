@@ -41,10 +41,11 @@ Para prêmios de coluna, o sorteio seleciona somente pedras da faixa da coluna a
 
 1. Abra a operação da rodada e escolha **Iniciar rodada**. O sistema gera as 75 pedras sem repetição e publica o hash da sequência antes do primeiro sorteio.
 2. Sorteie uma pedra por vez. O telão e as cartelas conectadas são atualizados em tempo real.
-3. Quando o sistema detectar vencedores, o sorteio pausa. Antes da revelação, o telão mostra apenas informações agregadas e o código da cartela, nunca o nome.
+3. Quando o sistema detectar vencedores, o sorteio pausa. Antes da revelação, o telão mostra apenas informações agregadas; nunca o nome do participante ou dados da cartela vencedora.
 4. Escolha **Revelar vencedor**. Em caso de empate, o sistema aplica o desempate e então revela o resultado.
-5. Feche a apresentação do vencedor antes de seguir. Se houver outra etapa, ela começa usando a mesma sequência; se não houver, a rodada termina.
-6. Depois que todas as rodadas terminarem, finalize o evento. Um evento finalizado não pode mais ser alterado.
+5. Confirme **Prêmio entregue** para concluir a etapa. Depois, feche a apresentação do vencedor antes de seguir. Se houver outra etapa, ela começa usando a mesma sequência; se não houver, a rodada termina.
+6. Se o vencedor não retirar o prêmio, escolha **Vencedor não retirou o prêmio**. O telão volta ao sorteio, a cartela recusada deixa de concorrer apenas nessa etapa e a mesma regra permanece ativa para validar outro vencedor.
+7. Depois que todas as rodadas terminarem, finalize o evento. Um evento finalizado não pode mais ser alterado.
 
 ## Participantes
 
@@ -67,5 +68,5 @@ Uma nova cartela digital só pode ser gerada depois de uma rodada concluída se 
 | Não consigo entrar na rodada | As inscrições podem não estar abertas, ou a rodada pode já ter congelado a elegibilidade. |
 | Uma cartela física não concorre | Confirme se ela foi associada ao participante e ativada antes do início da rodada. |
 | Não consigo marcar um número | Em modo automático não há marcação manual. Nos modos manuais, o número precisa estar na cartela e já ter sido sorteado. |
-| O sorteio não avança | Revele o vencedor e feche sua apresentação. A rodada também pode ter chegado ao fim. |
+| O sorteio não avança | Revele o vencedor e registre se o prêmio foi entregue ou não. Após uma entrega, feche a apresentação; em caso de não retirada, o sorteio é retomado na mesma etapa. A rodada também pode ter chegado ao fim. |
 | A tela parece atrasada | Atualize a página. Ao reconectar ao tempo real, a aplicação recarrega o estado atual da API. |

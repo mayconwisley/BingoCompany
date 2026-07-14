@@ -26,16 +26,21 @@ public sealed class PublicController(BingoDbContext db, IEventParticipantRegistr
 
 		var round = SelectRound(bingoEvent);
 		var activeStage = round?.Stages.SingleOrDefault(item => item.IsActive);
-		var presentationStage = round?.Stages.OrderByDescending(item => item.Sequence).FirstOrDefault(item => item.IsCompleted && !item.IsWinnerPresentationClosed);
+		var pendingPrizeWinner = round is null
+			? null
+			: await db.RoundWinners.SingleOrDefaultAsync(item => item.RoundId == round.Id && item.IsWinner && item.RevealedAt.HasValue && !item.PrizeDeliveredAt.HasValue && !item.PrizeDeclinedAt.HasValue);
+		var presentationStage = pendingPrizeWinner is null
+			? round?.Stages.OrderByDescending(item => item.Sequence).FirstOrDefault(item => item.IsCompleted && !item.IsWinnerPresentationClosed)
+			: round!.Stages.Single(item => item.Id == pendingPrizeWinner.StageId);
 		var presentationWinners = presentationStage is null
 			? []
 			: await db.RoundWinners.Where(item => item.RoundId == round!.Id && item.StageId == presentationStage.Id).ToListAsync();
-		var winner = presentationWinners.SingleOrDefault(item => item.IsWinner);
+		var winner = pendingPrizeWinner ?? presentationWinners.SingleOrDefault(item => item.IsWinner);
 		var presentationParticipantNames = presentationWinners.Count == 0
 			? new Dictionary<Guid, string>()
 			: await db.Participants.Where(item => presentationWinners.Select(winner => winner.ParticipantId).Contains(item.Id)).ToDictionaryAsync(item => item.Id, item => item.Name);
 		var winnerName = winner is null ? null : presentationParticipantNames.GetValueOrDefault(winner.ParticipantId, "Participante indisponível");
-		var winnerDetectedCount = activeStage is null || round is null
+		var winnerDetectedCount = activeStage is null || round is null || round.Status == RoundStatus.Drawing
 			? 0
 			: await db.RoundWinners.CountAsync(item => item.RoundId == round.Id && item.StageId == activeStage.Id);
 		var statistics = await CalculateStatistics(round, activeStage, bingoEvent.MarkingMode);
@@ -72,6 +77,7 @@ public sealed class PublicController(BingoDbContext db, IEventParticipantRegistr
 						prizeName = presentationStage!.PrizeName,
 						pattern = presentationStage.Pattern,
 						prizeImageDataUrl = presentationStage.PrizeImageDataUrl,
+						isPrizeDeliveryPending = pendingPrizeWinner is not null,
 						tieBreakers = presentationWinners.Count > 1
 							? presentationWinners.OrderByDescending(item => item.TieBreakerNumber).Select(item => new { participantName = presentationParticipantNames.GetValueOrDefault(item.ParticipantId, "Participante indisponível"), number = item.TieBreakerNumber, item.IsWinner })
 							: []
@@ -122,7 +128,7 @@ public sealed class PublicController(BingoDbContext db, IEventParticipantRegistr
 				round.Sequence,
 				round.Status,
 				round.SequenceHash,
-				fullSequence = round.Status == RoundStatus.Finished ? round.DrawSequence : null,
+				fullSequence = round.Status is RoundStatus.Finished or RoundStatus.Cancelled ? round.DrawSequence : null,
 				drawnNumbers = round.DrawnNumbers.OrderBy(item => item.Sequence).Select(item => new { item.Number, item.Sequence, item.DrawnAt }),
 				stages = round.Stages.OrderBy(item => item.Sequence).Select(item => new { item.PrizeName, item.Pattern, item.IsCompleted }),
 				winners = winners.Where(winner => winner.RoundId == round.Id).Select(winner => new { participantName = participantNames.GetValueOrDefault(winner.ParticipantId, "Participante indisponível"), prizeName = stageNames.GetValueOrDefault(winner.StageId, "Prêmio"), winner.IsWinner, winner.TieBreakerNumber, winner.DetectedAt, winner.RevealedAt })

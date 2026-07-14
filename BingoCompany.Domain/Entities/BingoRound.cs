@@ -13,12 +13,14 @@ public sealed class BingoRound
 		Sequence = sequence;
 		Name = name;
 		Status = RoundStatus.Ready;
+		CreatedAt = DateTimeOffset.UtcNow;
 	}
 	public Guid Id { get; private set; }
 	public Guid EventId { get; private set; }
 	public int Sequence { get; private set; }
 	public string Name { get; private set; } = null!;
 	public RoundStatus Status { get; private set; }
+	public DateTimeOffset CreatedAt { get; private set; }
 	public string? SequenceHash { get; private set; }
 	public int[]? DrawSequence { get; private set; }
 	public IReadOnlyCollection<PrizeStage> Stages => _stages;
@@ -80,7 +82,17 @@ public sealed class BingoRound
 		if (Status != RoundStatus.WinnerDetected) throw new InvalidOperationException("O desempate só pode iniciar após a detecção de vencedores.");
 		Status = RoundStatus.TieBreaker;
 	}
+	public void ResumeDrawingAfterPrizeDeclined()
+	{
+		if (Status is not (RoundStatus.WinnerDetected or RoundStatus.TieBreaker)) throw new InvalidOperationException("A rodada não está aguardando a confirmação da entrega do prêmio.");
+		Status = RoundStatus.Drawing;
+	}
 	public void FinishStage() { ActiveStage.Complete(); var next = _stages.OrderBy(x => x.Sequence).FirstOrDefault(x => !x.IsCompleted); if (next is null) Status = RoundStatus.Finished; else { next.Activate(); Status = RoundStatus.Drawing; } }
+	public void Cancel()
+	{
+		if (Status != RoundStatus.Drawing) throw new InvalidOperationException("Apenas uma rodada em sorteio pode ser cancelada.");
+		Status = RoundStatus.Cancelled;
+	}
 	public void CloseWinnerPresentation()
 	{
 		var stage = _stages.OrderByDescending(item => item.Sequence).FirstOrDefault(item => item.IsCompleted && !item.IsWinnerPresentationClosed)

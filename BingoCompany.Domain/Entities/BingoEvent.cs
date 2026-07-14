@@ -43,7 +43,7 @@ public sealed class BingoEvent
 	public void Finish()
 	{
 		if (Status != EventStatus.Running) throw new InvalidOperationException("O evento não está em andamento.");
-		if (_rounds.Any(round => round.Status != RoundStatus.Finished)) throw new InvalidOperationException("Finalize todas as rodadas antes de encerrar o evento.");
+		if (_rounds.Any(round => round.Status is not (RoundStatus.Finished or RoundStatus.Cancelled))) throw new InvalidOperationException("Finalize ou cancele todas as rodadas antes de encerrar o evento.");
 		Status = EventStatus.Finished;
 	}
 	public void AddRound(BingoRound round) => _rounds.Add(round);

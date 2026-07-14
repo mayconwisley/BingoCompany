@@ -68,6 +68,10 @@ Origin: {{origin}}
 POST {{apiUrl}}/api/events/{{eventId}}/rounds/{{roundId}}/start
 Origin: {{origin}}
 
+### Cancelar uma rodada que ainda está em sorteio
+POST {{apiUrl}}/api/events/{{eventId}}/rounds/{{roundId}}/cancel
+Origin: {{origin}}
+
 ### Sortear próxima pedra
 POST {{apiUrl}}/api/events/{{eventId}}/rounds/{{roundId}}/draw
 Origin: {{origin}}
@@ -76,7 +80,15 @@ Origin: {{origin}}
 POST {{apiUrl}}/api/events/{{eventId}}/rounds/{{roundId}}/reveal
 Origin: {{origin}}
 
-### Fechar apresentação do vencedor
+### Confirmar entrega do prêmio e avançar a etapa
+POST {{apiUrl}}/api/events/{{eventId}}/rounds/{{roundId}}/prize-delivered
+Origin: {{origin}}
+
+### Registrar prêmio não retirado e manter a etapa atual
+POST {{apiUrl}}/api/events/{{eventId}}/rounds/{{roundId}}/prize-declined
+Origin: {{origin}}
+
+### Fechar apresentação após confirmar a entrega do prêmio
 POST {{apiUrl}}/api/events/{{eventId}}/rounds/{{roundId}}/winner-presentation/close
 Origin: {{origin}}
 

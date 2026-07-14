@@ -226,6 +226,15 @@ main {
 	border-color: var(--accent);
 	color: #09241f;
 }
+.danger {
+	background: #8b3346;
+	border-color: #a9465b;
+	color: white;
+}
+.danger:hover:not(:disabled) {
+	background: #a9465b;
+	border-color: #c55a70;
+}
 .pagehead {
 	display: flex;
 	justify-content: space-between;
@@ -493,6 +502,12 @@ main > h1 {
 	color: var(--muted);
 	font-size: 0.9rem;
 	margin-top: 3px;
+}
+.round-list small {
+	display: block;
+	margin-top: 4px;
+	color: var(--muted);
+	font-size: 0.82rem;
 }
 .prize {
 	display: grid;

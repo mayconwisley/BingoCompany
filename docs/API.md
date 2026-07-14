@@ -81,9 +81,12 @@ Criação de evento:
 | `POST /api/events/{eventId}/rounds` | Cria uma rodada pronta. |
 | `PUT /api/events/{eventId}/rounds/{roundId}` | Edita uma rodada ainda não iniciada. |
 | `POST /api/events/{eventId}/rounds/{roundId}/start` | Congela as cartelas elegíveis, gera a sequência segura e inicia a primeira etapa. |
+| `POST /api/events/{eventId}/rounds/{roundId}/cancel` | Cancela uma rodada que ainda está em sorteio, sem concluir a etapa atual. |
 | `POST /api/events/{eventId}/rounds/{roundId}/draw` | Sorteia a próxima pedra. |
-| `POST /api/events/{eventId}/rounds/{roundId}/reveal` | Revela o vencedor ou conclui o desempate. |
-| `POST /api/events/{eventId}/rounds/{roundId}/winner-presentation/close` | Fecha a apresentação do vencedor para liberar o próximo sorteio. |
+| `POST /api/events/{eventId}/rounds/{roundId}/reveal` | Revela o vencedor ou conclui o desempate e aguarda a confirmação da entrega. |
+| `POST /api/events/{eventId}/rounds/{roundId}/prize-delivered` | Registra a entrega, conclui a etapa e avança a rodada. |
+| `POST /api/events/{eventId}/rounds/{roundId}/prize-declined` | Registra que o vencedor não retirou o prêmio e retoma o sorteio na mesma etapa. |
+| `POST /api/events/{eventId}/rounds/{roundId}/winner-presentation/close` | Fecha a apresentação após a confirmação da entrega para liberar a próxima pedra ou etapa. |
 
 Corpo para criar ou editar uma rodada:
 
@@ -111,6 +114,8 @@ Padrões aceitos: `HorizontalLine`, `TwoHorizontalLines`, `FourCorners`, `FullCa
 Ao iniciar uma rodada, somente as cartelas ativas e associadas existentes naquele instante entram no snapshot de elegibilidade. Cada rodada usa uma sequência de 75 pedras gerada com criptografia segura, sem repetição. O hash é divulgado no início e a sequência inteira é disponibilizada na auditoria ao final.
 
 Em marcação automática, toda pedra sorteada é considerada marcada. Nos modos manuais, apenas `CardMark` persistida pela API vale para a detecção do vencedor. O nome do vencedor só aparece na API pública e no telão após a revelação.
+
+Após a revelação, o operador confirma se o prêmio foi entregue. A confirmação conclui a etapa, mas o telão permanece na apresentação até `winner-presentation/close`. Se o vencedor não retirar o prêmio, a cartela é excluída apenas daquela etapa, o telão retorna ao sorteio e a mesma regra permanece ativa para encontrar outro vencedor.
 
 ## SignalR
 
