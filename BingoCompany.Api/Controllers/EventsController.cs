@@ -181,10 +181,17 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 		var stages = PrizeStageOrdering.Order(request.Stages, stage => stage.Pattern)
 			.Select((stage, index) => new PrizeStage(round.Id, index + 1, stage.PrizeName, stage.Pattern, stage.PrizeImageDataUrl))
 			.ToArray();
-		db.PrizeStages.RemoveRange(round.Stages);
 		round.Update(request.Name, stages);
+		db.PrizeStages.AddRange(stages);
 		db.AuditEntries.Add(new AuditEntry(eventId, "Rodada editada", $"Rodada {round.Name} atualizada com {stages.Length} etapas."));
-		await db.SaveChangesAsync();
+		try
+		{
+			await db.SaveChangesAsync();
+		}
+		catch (DbUpdateConcurrencyException)
+		{
+			return Conflict("A rodada foi alterada por outra operação. Recarregue a página antes de tentar novamente.");
+		}
 		return NoContent();
 	}
 	[HttpPost("{eventId:guid}/rounds/{roundId:guid}/start")]

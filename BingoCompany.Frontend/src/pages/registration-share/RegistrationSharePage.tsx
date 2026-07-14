@@ -4,7 +4,7 @@ import { AppShell } from "../../shared/ui/AppShell";
 
 export function RegistrationSharePage() {
 	const { publicCode = "" } = useParams();
-	const registrationPath = `/participar/${publicCode}`;
+	const registrationPath = `/bingo/participar/${publicCode}`;
 
 	return (
 		<AppShell showAdministration={false}>

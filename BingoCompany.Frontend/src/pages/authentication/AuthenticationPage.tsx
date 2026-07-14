@@ -4,6 +4,7 @@ import { authApi } from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
 import { saveSession } from "../../shared/auth/session";
 import { AppShell } from "../../shared/ui/AppShell";
+import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";
 
 type Props = { mode: "login" | "register" };
 
@@ -100,11 +101,7 @@ export function AuthenticationPage({ mode }: Props) {
 					>
 						{isSubmitting ? "Aguarde..." : isRegistering ? "Cadastrar empresa" : "Entrar"}
 					</button>
-					{error && (
-						<p className="error" role="alert">
-							{error}
-						</p>
-					)}
+					<FeedbackMessage error={error} onClose={() => setError("")} />
 					<p>
 						{isRegistering ? "Já possui uma conta?" : "Ainda não possui uma empresa cadastrada?"}{" "}
 						<Link to={isRegistering ? "/entrar" : "/cadastro"}>{isRegistering ? "Entrar" : "Cadastre-se"}</Link>

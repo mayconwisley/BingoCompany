@@ -5,6 +5,7 @@ import { getErrorMessage } from "../../shared/api/getErrorMessage";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
 import { ConnectionBadge } from "../../shared/ui/ConnectionBadge";
+import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";
 import { PageState } from "../../shared/ui/PageState";
 
 export function CardPage() {
@@ -93,11 +94,7 @@ export function CardPage() {
 						<button className="primary" onClick={generateNextCard} disabled={isGeneratingNextCard}>
 							{isGeneratingNextCard ? "Gerando nova cartela..." : "Gerar nova cartela"}
 						</button>
-						{nextCardError && (
-							<p className="error" role="alert">
-								{nextCardError}
-							</p>
-						)}
+						<FeedbackMessage error={nextCardError} onClose={() => setNextCardError("")} />
 					</section>
 				)}
 				<section className="history">

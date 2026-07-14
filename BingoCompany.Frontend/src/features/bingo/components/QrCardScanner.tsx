@@ -1,5 +1,6 @@
 import { BrowserQRCodeReader, type IScannerControls } from "@zxing/browser";
 import { useEffect, useRef, useState } from "react";
+import { FeedbackMessage } from "../../../shared/ui/FeedbackMessage";
 
 type QrCardScannerProps = {
 	onCardCodeRead: (cardCode: string) => void;
@@ -46,11 +47,7 @@ export function QrCardScanner({ onCardCodeRead, disabled = false }: QrCardScanne
 				{isOpen ? "Fechar câmera" : "Ler QR Code da cartela"}
 			</button>
 			{isOpen && <video ref={video} muted playsInline aria-label="Câmera para leitura de QR Code" />}
-			{error && (
-				<p className="error" role="alert">
-					{error}
-				</p>
-			)}
+			<FeedbackMessage error={error} onClose={() => setError("")} />
 		</section>
 	);
 }

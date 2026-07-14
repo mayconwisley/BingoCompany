@@ -4,6 +4,7 @@ import { bingoApi, useLiveBingo } from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
+import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";
 import { PageState } from "../../shared/ui/PageState";
 
 export function OperatorPage() {
@@ -90,9 +91,9 @@ export function OperatorPage() {
 						</button>
 						{hasWinnerPresentation && (
 							<>
-								<p className="success">
-									O telão está exibindo {round.winner?.participantName}, vencedor(a) de {round.winner?.prizeName}.
-								</p>
+								<FeedbackMessage
+									success={`O telão está exibindo ${round.winner?.participantName}, vencedor(a) de ${round.winner?.prizeName}.`}
+								/>
 								<button className="primary" onClick={continueDraw}>
 									CONTINUAR SORTEIO NO TELÃO
 								</button>
@@ -100,7 +101,7 @@ export function OperatorPage() {
 						)}
 						{isFinished && (
 							<>
-								<p className="success">Cartela cheia concluída. A rodada foi encerrada.</p>
+								<FeedbackMessage success="Cartela cheia concluída. A rodada foi encerrada." />
 								<p>
 									Prepare a próxima rodada antes de iniciar: as cartelas ativas serão reutilizadas; participantes podem
 									gerar novas cartelas e você pode registrar novas impressas.
@@ -112,13 +113,9 @@ export function OperatorPage() {
 						)}
 						<p>{round.drawnNumbers.length} pedras sorteadas</p>
 						{!isCurrentRound && (
-							<p className="error">Esta não é a rodada atual do evento. Volte à configuração e abra a rodada correta.</p>
+							<FeedbackMessage warning="Esta não é a rodada atual do evento. Volte à configuração e abra a rodada correta." />
 						)}
-						{error && (
-							<p className="error" role="alert">
-								{error}
-							</p>
-						)}
+						<FeedbackMessage error={error} onClose={() => setError("")} />
 					</section>
 				</div>
 			</main>

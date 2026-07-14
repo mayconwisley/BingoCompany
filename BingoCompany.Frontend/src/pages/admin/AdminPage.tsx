@@ -63,7 +63,7 @@ export function AdminPage() {
 					<button className="primary" disabled={!name.trim() || createEvent.isPending} onClick={submit}>
 						{createEvent.isPending ? "Criando..." : "Criar evento"}
 					</button>
-					<FeedbackMessage error={createEvent.error} success={createEvent.success} />
+					<FeedbackMessage error={createEvent.error} success={createEvent.success} onClose={createEvent.clear} />
 				</section>
 				<PageState loading={events.loading} error={events.error} onRetry={events.reload} />
 				<section className="grid">

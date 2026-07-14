@@ -375,7 +375,7 @@ export function EventSetupPage() {
 								</button>
 							</section>
 						)}
-						<FeedbackMessage error={action.error} success={action.success} />
+						<FeedbackMessage error={action.error} success={action.success} onClose={action.clear} />
 					</>
 				)}
 			</main>

@@ -26,5 +26,7 @@ export function useAsyncAction() {
 		}
 	}, []);
 
-	return { ...state, isPending, execute };
+	const clear = useCallback(() => setState({}), []);
+
+	return { ...state, isPending, execute, clear };
 }

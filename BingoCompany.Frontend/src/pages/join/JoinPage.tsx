@@ -5,6 +5,7 @@ import type { ParticipantType } from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
+import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";
 import { PageState } from "../../shared/ui/PageState";
 
 export function JoinPage() {
@@ -99,11 +100,7 @@ export function JoinPage() {
 							>
 								{isSubmitting ? "Gerando cartela..." : "Gerar minha cartela"}
 							</button>
-							{error && (
-								<p className="error" role="alert">
-									{error}
-								</p>
-							)}
+							<FeedbackMessage error={error} onClose={() => setError("")} />
 						</section>
 					</>
 				)}
