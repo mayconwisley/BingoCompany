@@ -24,6 +24,8 @@ export function CardPage() {
 		);
 
 	const manual = card.data.markingMode !== "Automatic";
+	const isMandatoryManual = card.data.markingMode === "ManualRequired";
+	const currentNumber = card.data.drawnNumbers.at(-1);
 	const generateNextCard = async () => {
 		try {
 			setNextCardError("");
@@ -44,6 +46,13 @@ export function CardPage() {
 					<div>
 						<p className="eyebrow">{card.data.currentPrize || "Aguardando rodada"}</p>
 						<h1>Minha cartela</h1>
+						{card.data.participantName && (
+							<div className="card-owner">
+								<span>Participante</span>
+								<strong>{card.data.participantName}</strong>
+								{card.data.responsibleEmployeeName && <small>Colaborador responsável: {card.data.responsibleEmployeeName}</small>}
+							</div>
+						)}
 						{card.data.currentPattern && <p>Regra atual: {winningPatternLabel(card.data.currentPattern)}</p>}
 					</div>
 					<ConnectionBadge status={connection} />
@@ -53,18 +62,23 @@ export function CardPage() {
 					drawnNumbers={card.data.drawnNumbers}
 					markedNumbers={card.data.markedNumbers}
 					manual={manual}
+					markableNumbers={isMandatoryManual && currentNumber ? [currentNumber] : undefined}
 					onMark={async (number) => {
 						await bingoApi.mark(eventId, cardCode, number);
 						await card.reload();
 					}}
 				/>
 				<p className="hint">
-					{manual ? "Toque nos números destacados para marcá-los." : "Os números sorteados são marcados automaticamente."}
+					{isMandatoryManual
+						? "Marque a pedra atual antes que a próxima seja sorteada."
+						: manual
+							? "Toque nos números destacados para marcá-los."
+							: "Os números sorteados são marcados automaticamente."}
 				</p>
 				{card.data.canGenerateNextCard && (
 					<section className="panel">
-						<h2>Cartela completa</h2>
-						<p>Esta cartela já participou da rodada concluída. Gere uma nova para a próxima rodada.</p>
+						<h2>Nova rodada</h2>
+						<p>Esta cartela participou da rodada concluída. Gere novos números para a próxima rodada.</p>
 						<button className="primary" onClick={generateNextCard} disabled={isGeneratingNextCard}>
 							{isGeneratingNextCard ? "Gerando nova cartela..." : "Gerar nova cartela"}
 						</button>

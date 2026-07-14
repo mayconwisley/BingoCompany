@@ -75,6 +75,9 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 	[HttpPost("{eventId:guid}/cards/{cardCode}/next")]
 	public async Task<ActionResult<object>> GenerateNextCard(Guid eventId, string cardCode)
 	{
+		var bingoEvent = await db.Events.FindAsync(eventId);
+		if (bingoEvent is null) return NotFound();
+		if (bingoEvent.Status == EventStatus.Finished) return Conflict("O evento encerrado não pode ser alterado.");
 		var card = await db.Cards.SingleOrDefaultAsync(item => item.EventId == eventId && item.PublicCode == cardCode);
 		if (card is null) return NotFound();
 		if (card.ReplacementCardId.HasValue) return Conflict("Uma nova cartela já foi gerada a partir desta cartela.");
@@ -86,9 +89,6 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 		if (previousRound is null) return Conflict("A cartela poderá ser renovada após o encerramento de uma rodada.");
 		if (await db.Rounds.AnyAsync(item => item.EventId == eventId && item.Sequence > previousRound.Sequence && (item.Status == RoundStatus.Drawing || item.Status == RoundStatus.WinnerDetected || item.Status == RoundStatus.TieBreaker))) return Conflict("A próxima rodada já foi iniciada.");
 		if (!await db.RoundEligibleCards.AnyAsync(item => item.RoundId == previousRound.Id && item.CardId == card.Id)) return Conflict("Esta cartela não participou da última rodada concluída.");
-
-		var markedNumbers = await GetMarkedNumbers(eventId, card.Id, previousRound.Id);
-		if (!card.IsComplete(markedNumbers)) return Conflict("A cartela anterior ainda não está completa.");
 
 		var nextCard = new BingoCard(eventId, card.ParticipantId, CardType.Digital, new Bingo75CardGenerator().Generate());
 		card.ReplaceWith(nextCard);
@@ -287,6 +287,7 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 		if (e.MarkingMode == CardMarkingMode.Automatic) return Conflict("Este evento usa marcação automática.");
 		if (!card.IsEligible || !Enumerable.Range(0, 5).SelectMany(r => Enumerable.Range(0, 5).Select(c => card.Numbers[r, c])).Contains(request.Number)) return BadRequest("Número inválido para a cartela.");
 		var drawn = round.DrawnNumbers.SingleOrDefault(x => x.Number == request.Number); if (drawn is null) return BadRequest("O número ainda não foi sorteado.");
+		if (e.MarkingMode == CardMarkingMode.ManualRequired && drawn.Sequence != round.DrawnNumbers.Max(item => item.Sequence)) return Conflict("Na marcação manual obrigatória, somente a pedra atual pode ser marcada.");
 		if (await db.CardMarks.AnyAsync(x => x.RoundId == round.Id && x.CardId == card.Id && x.Number == request.Number)) return NoContent();
 		db.CardMarks.Add(new CardMark(round.Id, card.Id, request.Number, drawn.Sequence));
 		var markedNumbers = (await db.CardMarks.Where(x => x.RoundId == round.Id && x.CardId == card.Id).Select(x => x.Number).ToListAsync()).Append(request.Number).ToHashSet();
@@ -309,22 +310,18 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 	public async Task<ActionResult<object>> CardState(Guid eventId, string cardCode)
 	{
 		var card = await db.Cards.SingleOrDefaultAsync(x => x.EventId == eventId && x.PublicCode == cardCode); if (card is null) return NotFound(); var round = await db.Rounds.Include(x => x.Stages).Include(x => x.DrawnNumbers).Where(x => x.EventId == eventId && (x.Status == RoundStatus.Drawing || x.Status == RoundStatus.WinnerDetected || x.Status == RoundStatus.TieBreaker)).OrderByDescending(x => x.Sequence).FirstOrDefaultAsync();
+		var participant = card.Type == CardType.Digital && card.ParticipantId.HasValue
+			? await db.Participants.SingleOrDefaultAsync(item => item.Id == card.ParticipantId.Value && item.EventId == eventId)
+			: null;
 		var marks = round is null ? [] : (await db.CardMarks.Where(x => x.RoundId == round.Id && x.CardId == card.Id).ToListAsync()).OrderBy(x => x.MarkedAt).Select(x => x.Number).ToArray(); var e = await db.Events.FindAsync(eventId);
 		var previousRound = await db.Rounds.Where(item => item.EventId == eventId && item.Status == RoundStatus.Finished).OrderByDescending(item => item.Sequence).FirstOrDefaultAsync();
 		var canGenerateNextCard = previousRound is not null
+			&& e!.Status != EventStatus.Finished
 			&& !card.ReplacementCardId.HasValue
 			&& !await db.Rounds.AnyAsync(item => item.EventId == eventId && item.Sequence > previousRound.Sequence && (item.Status == RoundStatus.Drawing || item.Status == RoundStatus.WinnerDetected || item.Status == RoundStatus.TieBreaker))
-			&& await db.RoundEligibleCards.AnyAsync(item => item.RoundId == previousRound.Id && item.CardId == card.Id)
-			&& card.IsComplete(await GetMarkedNumbers(eventId, card.Id, previousRound.Id));
+			&& await db.RoundEligibleCards.AnyAsync(item => item.RoundId == previousRound.Id && item.CardId == card.Id);
 		var activeStage = round?.Stages.SingleOrDefault(item => item.IsActive);
-		return Ok(new { card.Id, card.PublicCode, numbers = ToRows(card.Numbers), markingMode = e!.MarkingMode, roundId = round?.Id, roundStatus = round?.Status, currentPrize = activeStage?.PrizeName, currentPattern = activeStage?.Pattern, drawnNumbers = round?.DrawnNumbers.OrderBy(x => x.Sequence).Select(x => x.Number) ?? [], markedNumbers = marks, lastSequence = round?.DrawnNumbers.Count ?? 0, canGenerateNextCard });
-	}
-	private async Task<int[]> GetMarkedNumbers(Guid eventId, Guid cardId, Guid roundId)
-	{
-		var bingoEvent = await db.Events.FindAsync(eventId) ?? throw new InvalidOperationException("Evento não encontrado.");
-		return bingoEvent.MarkingMode == CardMarkingMode.Automatic
-			? await db.DrawnNumbers.Where(item => item.RoundId == roundId).Select(item => item.Number).ToArrayAsync()
-			: await db.CardMarks.Where(item => item.RoundId == roundId && item.CardId == cardId).Select(item => item.Number).ToArrayAsync();
+		return Ok(new { card.Id, card.PublicCode, participantName = participant?.Name, responsibleEmployeeName = participant?.ResponsibleEmployeeName, numbers = ToRows(card.Numbers), markingMode = e!.MarkingMode, roundId = round?.Id, roundStatus = round?.Status, currentPrize = activeStage?.PrizeName, currentPattern = activeStage?.Pattern, drawnNumbers = round?.DrawnNumbers.OrderBy(x => x.Sequence).Select(x => x.Number) ?? [], markedNumbers = marks, lastSequence = round?.DrawnNumbers.Count ?? 0, canGenerateNextCard });
 	}
 	private static int[][] ToRows(int[,] card) => Enumerable.Range(0, 5).Select(r => Enumerable.Range(0, 5).Select(c => card[r, c]).ToArray()).ToArray();
 	private static bool IsValidPrizeImage(string? imageDataUrl) => string.IsNullOrWhiteSpace(imageDataUrl) || imageDataUrl.Length <= MaximumPrizeImageLength && SupportedPrizeImagePrefixes.Any(prefix => imageDataUrl.StartsWith(prefix, StringComparison.Ordinal));

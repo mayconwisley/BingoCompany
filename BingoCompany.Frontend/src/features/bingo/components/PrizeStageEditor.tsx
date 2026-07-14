@@ -21,7 +21,13 @@ const patterns = [
 
 const maximumPrizeImageSize = 2 * 1024 * 1024;
 
-export function PrizeStageEditor({ stages, onChange }: { stages: PrizeDraft[]; onChange: (value: PrizeDraft[]) => void }) {
+type PrizeStageEditorProps = {
+	stages: PrizeDraft[];
+	onChange: (value: PrizeDraft[]) => void;
+	disabled?: boolean;
+};
+
+export function PrizeStageEditor({ stages, onChange, disabled = false }: PrizeStageEditorProps) {
 	const patternCount = (pattern: string) => stages.filter((stage) => stage.pattern === pattern).length;
 	const hasReachedPatternLimit = (pattern: WinningPattern) => patternCount(pattern) > 0;
 	const update = (index: number, patch: Partial<PrizeDraft>) =>
@@ -44,11 +50,13 @@ export function PrizeStageEditor({ stages, onChange }: { stages: PrizeDraft[]; o
 				<div className="prize" key={`${stage.sequence}-${stage.pattern}`}>
 					<input
 						aria-label={`Prêmio ${index + 1}`}
+						disabled={disabled}
 						value={stage.prizeName}
 						onChange={(event) => update(index, { prizeName: event.target.value })}
 					/>
 					<select
 						aria-label={`Regra do prêmio ${index + 1}`}
+						disabled={disabled}
 						value={stage.pattern}
 						onChange={(event) => updatePattern(index, event.target.value)}
 					>
@@ -61,7 +69,8 @@ export function PrizeStageEditor({ stages, onChange }: { stages: PrizeDraft[]; o
 					<label className="prize-image-input">
 						Foto do prêmio
 						<input
-							aria-label={`Foto do prêmio ${index + 1}`}
+						aria-label={`Foto do prêmio ${index + 1}`}
+						disabled={disabled}
 							type="file"
 							accept="image/jpeg,image/png,image/webp"
 							onChange={(event) => updateImage(index, event.target.files?.[0])}
@@ -69,7 +78,7 @@ export function PrizeStageEditor({ stages, onChange }: { stages: PrizeDraft[]; o
 						{stage.prizeImageDataUrl && (
 							<>
 								<img src={stage.prizeImageDataUrl} alt={`Prévia de ${stage.prizeName}`} />
-								<button type="button" onClick={() => update(index, { prizeImageDataUrl: undefined })}>
+								<button type="button" disabled={disabled} onClick={() => update(index, { prizeImageDataUrl: undefined })}>
 									Remover foto
 								</button>
 							</>
@@ -78,6 +87,7 @@ export function PrizeStageEditor({ stages, onChange }: { stages: PrizeDraft[]; o
 					{stages.length > 1 && (
 						<button
 							type="button"
+							disabled={disabled}
 							onClick={() => onChange(orderPrizeStages(stages.filter((_, stageIndex) => stageIndex !== index)))}
 						>
 							Remover prêmio
@@ -87,7 +97,7 @@ export function PrizeStageEditor({ stages, onChange }: { stages: PrizeDraft[]; o
 			))}
 			<button
 				type="button"
-				disabled={!nextPattern}
+				disabled={disabled || !nextPattern}
 				onClick={() =>
 					nextPattern &&
 					onChange(orderPrizeStages([...stages, { sequence: stages.length + 1, prizeName: "Novo prêmio", pattern: nextPattern }]))

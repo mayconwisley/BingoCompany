@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from "react";
 
 type QrCardScannerProps = {
 	onCardCodeRead: (cardCode: string) => void;
+	disabled?: boolean;
 };
 
-export function QrCardScanner({ onCardCodeRead }: QrCardScannerProps) {
+export function QrCardScanner({ onCardCodeRead, disabled = false }: QrCardScannerProps) {
 	const video = useRef<HTMLVideoElement>(null);
 	const [isOpen, setIsOpen] = useState(false);
 	const [error, setError] = useState("");
@@ -36,6 +37,7 @@ export function QrCardScanner({ onCardCodeRead }: QrCardScannerProps) {
 		<section className="qrscanner">
 			<button
 				type="button"
+				disabled={disabled}
 				onClick={() => {
 					setError("");
 					setIsOpen((value) => !value);

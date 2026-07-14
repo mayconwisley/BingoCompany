@@ -187,4 +187,75 @@ describe("DisplayPage", () => {
 			"data:image/png;base64,abc"
 		);
 	});
+
+	it("destaca o nome do prêmio ativo quando não há foto", async () => {
+		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
+			id: "event-1",
+			name: "Festa",
+			publicCode: "ABC",
+			status: "Running",
+			markingMode: "Automatic",
+			participants: 2,
+			cards: 2,
+			round: {
+				id: "round-1",
+				name: "Rodada 1",
+				sequence: 1,
+				status: "Drawing",
+				currentPrize: "Vale-presente",
+				stages: [],
+				drawnNumbers: [10],
+				winnerDetectedCount: 0,
+				tieBreakerRequired: false
+			}
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/display/ABC"]}>
+				<Routes>
+					<Route path="/display/:publicCode" element={<DisplayPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByRole("heading", { name: "Vale-presente" })).toBeInTheDocument();
+		expect(screen.getByText("Prêmio em disputa")).toBeInTheDocument();
+	});
+
+	it("explica quantas cartelas estão próximas do prêmio", async () => {
+		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
+			id: "event-1",
+			name: "Festa",
+			publicCode: "ABC",
+			status: "Running",
+			markingMode: "Automatic",
+			participants: 2,
+			cards: 6,
+			round: {
+				id: "round-1",
+				name: "Rodada 1",
+				sequence: 1,
+				status: "Drawing",
+				currentPrize: "Vale-presente",
+				stages: [],
+				drawnNumbers: [10],
+				winnerDetectedCount: 0,
+				tieBreakerRequired: false,
+				statistics: { totalCards: 6, oneNumberAway: 0, twoNumbersAway: 2, threeNumbersAway: 4, awardedCards: 0 }
+			}
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/display/ABC"]}>
+				<Routes>
+					<Route path="/display/:publicCode" element={<DisplayPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByText("6 cartelas na rodada")).toBeInTheDocument();
+		expect(screen.getByText("0 cartelas precisam de 1 pedra para ganhar")).toBeInTheDocument();
+		expect(screen.getByText("2 cartelas precisam de 2 pedras para ganhar")).toBeInTheDocument();
+		expect(screen.getByText("4 cartelas precisam de 3 pedras para ganhar")).toBeInTheDocument();
+	});
 });

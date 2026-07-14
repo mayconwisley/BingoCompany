@@ -34,6 +34,7 @@ export function EventSetupPage() {
 	const onCardCodeRead = useCallback((cardCode: string) => setSelectedCard(cardCode), []);
 	const printedCards = event.data?.cardList.filter((card) => card.type === "Printed") ?? [];
 	const selectedCardState = printedCards.find((card) => card.publicCode === selectedCard)?.status;
+	const isFinished = event.data?.status === "Finished";
 	const canFinishEvent =
 		event.data?.status === "Running" && event.data.rounds.length > 0 && event.data.rounds.every((round) => round.status === "Finished");
 	const hasFinishedRound = event.data?.rounds.some((round) => round.status === "Finished") ?? false;
@@ -104,26 +105,50 @@ export function EventSetupPage() {
 								<p>Use estes atalhos para abrir ou compartilhar cada experiência do bingo.</p>
 							</div>
 							<nav className="access-menu" aria-label="Acessos do evento">
-								<Link className="access-item" to={registrationPath}>
+								{isFinished ? (
+									<span className="access-item is-disabled" aria-disabled="true">
+										<span aria-hidden="true">↗</span>
+										<strong>Inscrição</strong>
+										<small>Participantes entram no bingo</small>
+									</span>
+								) : (
+									<Link className="access-item" to={registrationPath}>
 									<span aria-hidden="true">↗</span>
 									<strong>Inscrição</strong>
 									<small>Participantes entram no bingo</small>
 								</Link>
-								<Link className="access-item" to={displayPath} target="_blank" rel="noopener noreferrer">
+								)}
+								{isFinished ? (
+									<span className="access-item is-disabled" aria-disabled="true">
+										<span aria-hidden="true">▣</span>
+										<strong>Telão</strong>
+										<small>Exibição pública do sorteio</small>
+									</span>
+								) : (
+									<Link className="access-item" to={displayPath} target="_blank" rel="noopener noreferrer">
 									<span aria-hidden="true">▣</span>
 									<strong>Telão</strong>
 									<small>Exibição pública do sorteio</small>
 								</Link>
+								)}
 								<Link className="access-item" to={auditPath}>
 									<span aria-hidden="true">✓</span>
 									<strong>Auditoria</strong>
 									<small>Dados e histórico verificáveis</small>
 								</Link>
-								<Link className="access-item" to={printCardsPath}>
+								{isFinished ? (
+									<span className="access-item is-disabled" aria-disabled="true">
+										<span aria-hidden="true">▤</span>
+										<strong>Cartelas</strong>
+										<small>Gerar e imprimir cartelas físicas</small>
+									</span>
+								) : (
+									<Link className="access-item" to={printCardsPath}>
 									<span aria-hidden="true">▤</span>
 									<strong>Cartelas</strong>
 									<small>Gerar e imprimir cartelas físicas</small>
 								</Link>
+								)}
 							</nav>
 						</section>
 						<div className="two">
@@ -132,15 +157,23 @@ export function EventSetupPage() {
 								<h2>Inscrições</h2>
 								<p>Abra a página pública de compartilhamento para exibir o QR Code aos participantes.</p>
 								<div className="actions">
-									<Link className="button" to={registrationSharePath} target="_blank" rel="noopener noreferrer">
+									{isFinished ? (
+										<span className="button is-disabled" aria-disabled="true">Abrir QR Code de inscrição</span>
+									) : (
+										<Link className="button" to={registrationSharePath} target="_blank" rel="noopener noreferrer">
 										Abrir QR Code de inscrição
 									</Link>
-									<Link className="button" to={registrationPath}>
+									)}
+									{isFinished ? (
+										<span className="button is-disabled" aria-disabled="true">Visualizar inscrição</span>
+									) : (
+										<Link className="button" to={registrationPath}>
 										Visualizar inscrição
 									</Link>
+									)}
 									<button
 										className="primary"
-										disabled={event.data.status !== "Draft" || action.isPending}
+										disabled={isFinished || event.data.status !== "Draft" || action.isPending}
 										onClick={async () => {
 											await action.execute(() => bingoApi.openRegistration(eventId), "Inscrições abertas.");
 											await event.reload();
@@ -166,15 +199,16 @@ export function EventSetupPage() {
 									Nome da rodada
 									<input
 										aria-label="Nome da rodada"
+										disabled={isFinished}
 										value={roundName}
 										onChange={(input) => setRoundName(input.target.value)}
 									/>
 								</label>
-								<PrizeStageEditor stages={stages} onChange={setStages} />
+								<PrizeStageEditor stages={stages} onChange={setStages} disabled={isFinished} />
 								<div className="actions">
 									<button
 										className="primary"
-										disabled={event.data.status === "Finished" || action.isPending}
+										disabled={isFinished || action.isPending}
 										onClick={saveRound}
 									>
 										{action.isPending
@@ -184,7 +218,7 @@ export function EventSetupPage() {
 												: "Salvar e ir para operação"}
 									</button>
 									{editingRoundId && (
-										<button type="button" disabled={action.isPending} onClick={resetRoundForm}>
+										<button type="button" disabled={isFinished || action.isPending} onClick={resetRoundForm}>
 											Cancelar edição
 										</button>
 									)}
@@ -195,14 +229,19 @@ export function EventSetupPage() {
 							<p className="eyebrow">Cartelas físicas</p>
 							<h2>Cartelas impressas</h2>
 							<div className="actions">
-								<Link className="button" to={printCardsPath}>
+								{isFinished ? (
+									<span className="button is-disabled" aria-disabled="true">Abrir para impressão</span>
+								) : (
+									<Link className="button" to={printCardsPath}>
 									Abrir para impressão
 								</Link>
+								)}
 							</div>
 							<label>
 								Quantidade
 								<input
 									aria-label="Quantidade de cartelas impressas"
+									disabled={isFinished}
 									type="number"
 									min="1"
 									max="1000"
@@ -212,7 +251,7 @@ export function EventSetupPage() {
 							</label>
 							<button
 								className="primary"
-								disabled={event.data.status === "Finished" || action.isPending}
+								disabled={isFinished || action.isPending}
 								onClick={async () => {
 									const cards = await action.execute(
 										() => bingoApi.generatePrintedCards(eventId, printedQuantity),
@@ -226,11 +265,12 @@ export function EventSetupPage() {
 							{printedCards.length > 0 && (
 								<>
 									<h3>Associar e ativar cartela</h3>
-									<QrCardScanner onCardCodeRead={onCardCodeRead} />
+									<QrCardScanner onCardCodeRead={onCardCodeRead} disabled={isFinished} />
 									<label>
 										Cartela
 										<select
 											aria-label="Cartela impressa"
+											disabled={isFinished}
 											value={selectedCard}
 											onChange={(input) => setSelectedCard(input.target.value)}
 										>
@@ -246,6 +286,7 @@ export function EventSetupPage() {
 										Participante
 										<select
 											aria-label="Participante"
+											disabled={isFinished}
 											value={selectedParticipant}
 											onChange={(input) => setSelectedParticipant(input.target.value)}
 										>
@@ -260,7 +301,7 @@ export function EventSetupPage() {
 									<div className="actions">
 										<button
 											disabled={
-												!selectedCard || !selectedParticipant || selectedCardState !== "Printed" || action.isPending
+												isFinished || !selectedCard || !selectedParticipant || selectedCardState !== "Printed" || action.isPending
 											}
 											onClick={async () => {
 												await action.execute(
@@ -274,7 +315,7 @@ export function EventSetupPage() {
 										</button>
 										<button
 											className="reveal"
-											disabled={!selectedCard || selectedCardState !== "Assigned" || action.isPending}
+											disabled={isFinished || !selectedCard || selectedCardState !== "Assigned" || action.isPending}
 											onClick={async () => {
 												await action.execute(
 													() => bingoApi.activatePrintedCard(eventId, selectedCard),
@@ -302,9 +343,9 @@ export function EventSetupPage() {
 											</div>
 											<div className="actions">
 												{round.status === "Ready" && (
-													<button onClick={() => editRound(round)}>Editar rodada</button>
+													<button disabled={isFinished} onClick={() => editRound(round)}>Editar rodada</button>
 												)}
-												<button onClick={() => openRound(round.id)}>Abrir operação</button>
+											<button disabled={isFinished} onClick={() => openRound(round.id)}>Abrir operação</button>
 											</div>
 										</article>
 									))}

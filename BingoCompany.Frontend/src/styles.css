@@ -240,6 +240,24 @@ main > h1 {
 	letter-spacing: -0.035em;
 	margin: 0.1em 0 0.35em;
 }
+.card-owner {
+	display: grid;
+	gap: 2px;
+	color: var(--muted);
+}
+.card-owner span {
+	font-size: 0.72rem;
+	font-weight: 800;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+.card-owner strong {
+	color: var(--text);
+	font-size: 1.1rem;
+}
+.card-owner small {
+	font-size: 0.9rem;
+}
 .panel,
 .event {
 	background: var(--surface);
@@ -376,6 +394,12 @@ main > h1 {
 	transform: translateY(-1px);
 	box-shadow: var(--shadow-sm);
 }
+.button.is-disabled,
+.access-item.is-disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	pointer-events: none;
+}
 .registration-link,
 .hash {
 	display: block;
@@ -424,6 +448,12 @@ main > h1 {
 	border-color: var(--primary);
 	transform: translateY(-3px);
 	box-shadow: var(--shadow-sm);
+}
+.access-item.is-disabled:hover {
+	background: var(--surface-alt);
+	border-color: var(--line);
+	transform: none;
+	box-shadow: none;
 }
 .access-item span {
 	font-size: 1.35rem;

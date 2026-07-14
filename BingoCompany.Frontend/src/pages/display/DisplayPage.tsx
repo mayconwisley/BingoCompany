@@ -35,6 +35,7 @@ export function DisplayPage() {
 	const isWinnerSuspense = hasPendingWinner && isWinnerSuspenseVisible;
 	const prizeImage =
 		winner?.prizeImageDataUrl ?? (isWinnerSuspense ? round?.presentationPrizeImageDataUrl : round?.currentPrizeImageDataUrl);
+	const shouldHighlightPrizeName = !prizeImage && Boolean(round?.currentPrize);
 
 	return (
 		<main className="display">
@@ -80,10 +81,18 @@ export function DisplayPage() {
 			) : (
 				<>
 					<section className="display-draw-layout">
-						<div className="display-prize">
-							<p>
-								{round?.name || "Aguardando início"} · {round?.currentPrize || "Aguardando próxima etapa"}
-							</p>
+						<div className={shouldHighlightPrizeName ? "display-prize display-prize--without-image" : "display-prize"}>
+							{shouldHighlightPrizeName ? (
+								<>
+									<p className="display-prize-round">{round?.name}</p>
+									<p className="display-prize-label">Prêmio em disputa</p>
+									<h1>{round?.currentPrize}</h1>
+								</>
+							) : (
+								<p>
+									{round?.name || "Aguardando início"} · {round?.currentPrize || "Aguardando próxima etapa"}
+								</p>
+							)}
 							{prizeImage && (
 								<img
 									className="display-prize-image display-prize-image--active"
@@ -104,10 +113,10 @@ export function DisplayPage() {
 					</div>
 					{round?.statistics && (
 						<section className="displaystats" aria-label="Estatísticas do sorteio">
-							<span>{round.statistics.totalCards} cartelas</span>
-							<span>{round.statistics.oneNumberAway} a 1 pedra</span>
-							<span>{round.statistics.twoNumbersAway} a 2 pedras</span>
-							<span>{round.statistics.threeNumbersAway} a 3 pedras</span>
+							<span>{round.statistics.totalCards} cartelas na rodada</span>
+							<span>{round.statistics.oneNumberAway} cartelas precisam de 1 pedra para ganhar</span>
+							<span>{round.statistics.twoNumbersAway} cartelas precisam de 2 pedras para ganhar</span>
+							<span>{round.statistics.threeNumbersAway} cartelas precisam de 3 pedras para ganhar</span>
 						</section>
 					)}
 				</>

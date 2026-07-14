@@ -90,6 +90,8 @@ export type PublicEvent = {
 export type CardState = {
 	id: string;
 	publicCode: string;
+	participantName?: string;
+	responsibleEmployeeName?: string;
 	numbers: number[][];
 	markingMode: string;
 	roundId?: string;
