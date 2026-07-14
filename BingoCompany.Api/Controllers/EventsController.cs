@@ -305,7 +305,7 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 
 		return NoContent();
 	}
-	[HttpGet("{eventId:guid}/cards/{cardCode}/state")]
+	[HttpGet("{eventId:guid}/cards/{cardCode}/state"), AllowAnonymous]
 	public async Task<ActionResult<object>> CardState(Guid eventId, string cardCode)
 	{
 		var card = await db.Cards.SingleOrDefaultAsync(x => x.EventId == eventId && x.PublicCode == cardCode); if (card is null) return NotFound(); var round = await db.Rounds.Include(x => x.Stages).Include(x => x.DrawnNumbers).Where(x => x.EventId == eventId && (x.Status == RoundStatus.Drawing || x.Status == RoundStatus.WinnerDetected || x.Status == RoundStatus.TieBreaker)).OrderByDescending(x => x.Sequence).FirstOrDefaultAsync();

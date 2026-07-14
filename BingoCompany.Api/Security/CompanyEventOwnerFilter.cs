@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using BingoCompany.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,12 @@ public sealed class CompanyEventOwnerFilter(BingoDbContext db) : IAsyncActionFil
 {
 	public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
 	{
+		if (context.ActionDescriptor.EndpointMetadata.OfType<IAllowAnonymous>().Any())
+		{
+			await next();
+			return;
+		}
+
 		if (!context.RouteData.Values.TryGetValue("eventId", out var rawEventId) || !Guid.TryParse(rawEventId?.ToString(), out var eventId))
 		{
 			await next();

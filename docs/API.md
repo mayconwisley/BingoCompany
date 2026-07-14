@@ -19,7 +19,7 @@ As respostas usam JSON com enums serializados como texto. A API retorna `204 No 
 
 No login, envie apenas `email` e `password`. A resposta é `{ "name": "...", "companyName": "..." }` e a sessão é mantida em cookie `HttpOnly`; o token JWT não é retornado ao JavaScript. Para encerrar a sessão, use `POST /api/auth/logout`.
 
-Rotas em `/api/events` exigem a sessão e são limitadas à empresa do usuário. Para métodos que alteram estado autenticado, o navegador precisa enviar uma origem presente em `Cors:AllowedOrigins`; isso protege o cookie contra requisições entre sites.
+As rotas em `/api/events` exigem a sessão e são limitadas à empresa do usuário, exceto `GET /api/events/{eventId}/cards/{cardCode}/state`, que é a consulta pública da cartela digital pelo seu link. Para métodos que alteram estado autenticado, o navegador precisa enviar uma origem presente em `Cors:AllowedOrigins`; isso protege o cookie contra requisições entre sites.
 
 ## Rotas públicas
 
