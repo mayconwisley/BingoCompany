@@ -24,6 +24,8 @@ describe("winningPatternLabel", () => {
 
 	it("traduz estados e modos internos para linguagem natural", () => {
 		expect(markingModeLabel("Automatic")).toBe("Automática");
+		expect(markingModeLabel("ManualRequired")).toBe("Manual obrigatória");
+		expect(markingModeLabel("AssistedManual")).toBe("Manual assistida");
 		expect(roundStatusLabel("WinnerDetected")).toBe("Vencedor aguardando revelação");
 		expect(eventStatusLabel("RegistrationOpen")).toBe("Inscrições abertas");
 	});

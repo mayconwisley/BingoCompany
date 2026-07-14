@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { BingoCardGrid, bingoApi, useLiveBingo, winningPatternLabel } from "../../features/bingo";
+import { BingoCardGrid, bingoApi, markingModeLabel, useLiveBingo, winningPatternLabel } from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
@@ -46,6 +46,9 @@ export function CardPage() {
 					<div>
 						<p className="eyebrow">{card.data.currentPrize || "Aguardando rodada"}</p>
 						<h1>Minha cartela</h1>
+						<p className="card-marking-mode">
+							Tipo de marcação: <strong>{markingModeLabel(card.data.markingMode)}</strong>
+						</p>
 						{card.data.participantName && (
 							<div className="card-owner">
 								<span>Participante</span>

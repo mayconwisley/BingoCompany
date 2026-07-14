@@ -258,6 +258,13 @@ main > h1 {
 .card-owner small {
 	font-size: 0.9rem;
 }
+.card-marking-mode {
+	margin: 0 0 0.8rem;
+	color: var(--muted);
+}
+.card-marking-mode strong {
+	color: var(--text);
+}
 .panel,
 .event {
 	background: var(--surface);

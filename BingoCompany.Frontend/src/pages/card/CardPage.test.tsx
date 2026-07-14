@@ -30,6 +30,7 @@ describe("CardPage", () => {
 
 		const previousNumber = await screen.findByRole("button", { name: "Número 1, sorteado" });
 		const currentNumber = screen.getByRole("button", { name: "Número 16, sorteado" });
+		expect(screen.getByText("Manual obrigatória")).toBeInTheDocument();
 		expect(previousNumber).toBeDisabled();
 		expect(currentNumber).toBeEnabled();
 		fireEvent.click(currentNumber);
@@ -91,6 +92,7 @@ describe("CardPage", () => {
 
 		fireEvent.click(await screen.findByRole("button", { name: "Gerar nova cartela" }));
 
+		expect(screen.getByText("Automática")).toBeInTheDocument();
 		expect(bingoApi.generateNextCard).toHaveBeenCalledWith("event-1", "ANTERIOR");
 	});
 });
