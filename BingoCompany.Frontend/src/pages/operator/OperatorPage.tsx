@@ -149,7 +149,13 @@ export function OperatorPage() {
 						)}
 						{isFinished && (
 							<>
-								<FeedbackMessage success={isCancelled ? "A rodada foi cancelada sem vencedor." : "Cartela cheia concluída. A rodada foi encerrada."} />
+								<FeedbackMessage
+									success={
+										isCancelled
+											? "A rodada foi cancelada sem vencedor."
+											: "Cartela cheia concluída. A rodada foi encerrada."
+									}
+								/>
 								<p>
 									Prepare a próxima rodada antes de iniciar: as cartelas ativas serão reutilizadas; participantes podem
 									gerar novas cartelas e você pode registrar novas impressas.
@@ -160,7 +166,9 @@ export function OperatorPage() {
 							</>
 						)}
 						<p>{round.drawnNumbers.length} pedras sorteadas</p>
-						{round.status === "Ready" && !hasCards && <FeedbackMessage warning="Gere e ative ao menos uma cartela antes de iniciar a rodada." />}
+						{round.status === "Ready" && !hasCards && (
+							<FeedbackMessage warning="Gere e ative ao menos uma cartela antes de iniciar a rodada." />
+						)}
 						{!isCurrentRound && (
 							<FeedbackMessage warning="Esta não é a rodada atual do evento. Volte à configuração e abra a rodada correta." />
 						)}

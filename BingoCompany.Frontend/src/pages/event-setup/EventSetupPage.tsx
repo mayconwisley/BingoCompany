@@ -371,12 +371,21 @@ export function EventSetupPage() {
 														Editar rodada
 													</button>
 												)}
-											<button
-												disabled={isFinished || !hasEligibleCard || round.status === "Finished" || round.status === "Cancelled"}
-												title={!hasEligibleCard ? "Gere e ative ao menos uma cartela antes de abrir a operação." : undefined}
-												onClick={() => openRound(round.id)}
-											>
-												Abrir operação
+												<button
+													disabled={
+														isFinished ||
+														!hasEligibleCard ||
+														round.status === "Finished" ||
+														round.status === "Cancelled"
+													}
+													title={
+														!hasEligibleCard
+															? "Gere e ative ao menos uma cartela antes de abrir a operação."
+															: undefined
+													}
+													onClick={() => openRound(round.id)}
+												>
+													Abrir operação
 												</button>
 											</div>
 										</article>

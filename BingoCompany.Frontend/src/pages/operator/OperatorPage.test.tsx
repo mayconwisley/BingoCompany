@@ -5,7 +5,16 @@ import { bingoApi } from "../../features/bingo/api/bingoApi";
 import { OperatorPage } from "./OperatorPage";
 
 vi.mock("../../features/bingo/api/bingoApi", () => ({
-	bingoApi: { cancelRound: vi.fn(), closeWinnerPresentation: vi.fn(), draw: vi.fn(), getPublicEvent: vi.fn(), markPrizeDeclined: vi.fn(), markPrizeDelivered: vi.fn(), reveal: vi.fn(), startRound: vi.fn() }
+	bingoApi: {
+		cancelRound: vi.fn(),
+		closeWinnerPresentation: vi.fn(),
+		draw: vi.fn(),
+		getPublicEvent: vi.fn(),
+		markPrizeDeclined: vi.fn(),
+		markPrizeDelivered: vi.fn(),
+		reveal: vi.fn(),
+		startRound: vi.fn()
+	}
 }));
 vi.mock("../../features/bingo/hooks/useLiveBingo", () => ({ useLiveBingo: vi.fn() }));
 
