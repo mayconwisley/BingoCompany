@@ -20,9 +20,13 @@ export function ApplicationFooter({ application }: Props) {
             </div>
             <div>
                 <span>{application ? `Versão ${application.version}` : ""}</span>
-                <span>Desenvolvido por Maycon Wisley e Vesão</span>
+                <span>Desenvolvido por Maycon Wisley</span>
+                <a href="https://github.com/mayconwisley/BingoCompany" target="_blank" rel="noreferrer">
+                    Projeto open source
+                </a>
                 <Link to="/ajuda">Ajuda</Link>
             </div>
+            <p className="application-footer-notice">Projeto demonstrativo online: não informe dados pessoais, reais ou sensíveis.</p>
         </footer>
     );
 }

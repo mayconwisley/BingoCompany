@@ -11,6 +11,31 @@ namespace BingoCompany.Tests;
 public sealed class AuthenticationControllerSecurityTests
 {
     [Fact]
+    public async Task Register_WhenEmailIsAlreadyRegistered_ReturnsClearConflictMessage()
+    {
+        var options = new DbContextOptionsBuilder<BingoDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+        await using var db = new BingoDbContext(options);
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["BingoJwtKey"] = "a-secure-test-key-with-at-least-thirty-two-bytes" })
+            .Build();
+        var authenticationConfiguration = new AuthenticationConfiguration { CookieName = "__Secure-bingo-company-auth", CookiePath = "/bingo" };
+        var controller = new AuthenticationController(
+            db,
+            new JwtKeyProvider(configuration, new TestHostEnvironment()),
+            authenticationConfiguration,
+            new TestHostEnvironment())
+        {
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
+        };
+
+        await controller.Register(new RegisterCompanyRequest("Empresa", "Ana", "ana@empresa.test", "uma-senha-segura"), CancellationToken.None);
+        var result = await controller.Register(new RegisterCompanyRequest("Outra empresa", "Outra Ana", "ANA@EMPRESA.TEST", "outra-senha-segura"), CancellationToken.None);
+
+        var response = Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.Equal("Já existe uma conta cadastrada com este e-mail. Entre para acessar sua conta ou use outro e-mail.", response.Value);
+    }
+
+    [Fact]
     public async Task Register_StoresAccessTokenOnlyInSecureHttpOnlyCookie()
     {
         var options = new DbContextOptionsBuilder<BingoDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;

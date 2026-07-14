@@ -1,0 +1,77 @@
+services:
+  postgres:
+    image: postgres:18.0-alpine3.22
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - bingo-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bingo -d bingo"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    mem_limit: 512m
+    cpus: 0.75
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Bingo: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username={{username}};Password={{password}};Timeout=60;Maximum Pool Size=200
+      DBBingoUser: ${POSTGRES_USER}
+      DBBingoPass: ${POSTGRES_PASSWORD}
+      BingoJwtKey: ${BINGO_JWT_KEY}
+      Cors__AllowedOrigins__0: http://localhost:8080
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    mem_limit: 512m
+    cpus: 0.75
+
+  frontend:
+    build:
+      context: ./BingoCompany.Frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:uid=101,gid=101,mode=0755
+      - /var/run:uid=101,gid=101,mode=0755
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 10s
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    mem_limit: 128m
+    cpus: 0.25
+
+volumes:
+  bingo-postgres-data:

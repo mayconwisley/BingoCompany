@@ -16,7 +16,7 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
     try {
         response = await fetch(`${API_URL}${path}`, {
             ...init,
-            credentials: "same-origin",
+            credentials: "include",
             headers: { "Content-Type": "application/json", ...init?.headers }
         });
     } catch {

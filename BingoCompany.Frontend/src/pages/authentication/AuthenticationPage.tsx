@@ -13,6 +13,7 @@ export function AuthenticationPage({ mode }: Props) {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [error, setError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const isRegistering = mode === "register";
@@ -66,13 +67,25 @@ export function AuthenticationPage({ mode }: Props) {
                     </label>
                     <label>
                         Senha
-                        <input
-                            aria-label="Senha"
-                            type="password"
-                            minLength={12}
-                            value={password}
-                            onChange={(event) => setPassword(event.target.value)}
-                        />
+                        <span className="password-field">
+                            <input
+                                aria-label="Senha"
+                                type={isPasswordVisible ? "text" : "password"}
+                                minLength={12}
+                                maxLength={128}
+                                value={password}
+                                onChange={(event) => setPassword(event.target.value)}
+                            />
+                            <button
+                                aria-label={isPasswordVisible ? "Ocultar senha" : "Mostrar senha"}
+                                className="password-visibility-toggle"
+                                onClick={() => setIsPasswordVisible((isVisible) => !isVisible)}
+                                type="button"
+                            >
+                                👁
+                            </button>
+                        </span>
+                        {isRegistering && <small>A senha deve ter entre 12 e 128 caracteres.</small>}
                     </label>
                     <button
                         className="primary"
@@ -80,6 +93,7 @@ export function AuthenticationPage({ mode }: Props) {
                             isSubmitting ||
                             !email.trim() ||
                             password.length < 12 ||
+                            password.length > 128 ||
                             (isRegistering && (!companyName.trim() || !name.trim()))
                         }
                         onClick={submit}

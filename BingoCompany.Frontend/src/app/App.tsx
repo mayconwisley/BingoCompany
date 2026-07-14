@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "../shared/ui/ProtectedRoute";
+import { RouteLoadingState } from "../shared/ui/RouteLoadingState";
 
 const AdminPage = lazy(() => import("../pages/admin/AdminPage").then(({ AdminPage: page }) => ({ default: page })));
 const AuditPage = lazy(() => import("../pages/audit/AuditPage").then(({ AuditPage: page }) => ({ default: page })));
@@ -67,13 +68,5 @@ export function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </Suspense>
-    );
-}
-
-function RouteLoadingState() {
-    return (
-        <p role="status" aria-live="polite">
-            Carregando tela...
-        </p>
     );
 }

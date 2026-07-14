@@ -1,4 +1,7 @@
 using BingoCompany.Api.Security;
+using BingoCompany.Api.Interfaces;
+using BingoCompany.Api.Services;
+using BingoCompany.Application;
 using BingoCompany.Infrastructure;
 using BingoCompany.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -73,7 +76,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
 });
 builder.Services.AddAuthorization();
+builder.Services.AddBingoApplication();
 builder.Services.AddBingoInfrastructure(builder.Configuration);
+builder.Services.AddScoped<IEventParticipantRegistrationService, EventParticipantRegistrationService>();
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 builder.Services.AddRateLimiter(options =>
 {
@@ -127,6 +132,7 @@ app.Use(async (context, next) =>
 });
 app.UseAuthorization();
 app.UseRateLimiter();
+app.MapGet("/healthz", () => Results.Ok()).AllowAnonymous();
 app.MapControllers();
 app.MapHub<BingoCompany.Api.Hubs.BingoHub>("/hubs/bingo");
 app.Run();

@@ -1,4 +1,4 @@
-﻿namespace BingoCompany.Domain.Models;
+﻿namespace BingoCompany.Domain.Entities;
 
 public sealed class CardMark
 {

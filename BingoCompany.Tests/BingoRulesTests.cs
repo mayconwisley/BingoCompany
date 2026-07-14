@@ -9,6 +9,12 @@ public sealed class BingoRulesTests
     [Fact] public void Full_card_requires_all_non_free_cells() => Assert.False(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int>(Enumerable.Range(1, 75).Where(x => x != 65)), WinningPattern.FullCard));
     [Fact] public void Horizontal_line_is_completed_when_all_values_are_drawn() => Assert.True(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int> { 1, 16, 31, 46, 61 }, WinningPattern.HorizontalLine));
     [Fact] public void Four_corners_requires_every_corner() => Assert.True(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int> { 1, 61, 5, 65 }, WinningPattern.FourCorners));
+	[Fact] public void B_diagonal_requires_the_top_left_to_bottom_right_diagonal() => Assert.True(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int> { 1, 17, 49, 65 }, WinningPattern.BDiagonal));
+	[Fact] public void O_diagonal_requires_the_top_right_to_bottom_left_diagonal() => Assert.True(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int> { 61, 47, 19, 5 }, WinningPattern.ODiagonal));
+	[Fact] public void X_requires_both_diagonals() => Assert.True(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int> { 1, 17, 49, 65, 61, 47, 19, 5 }, WinningPattern.XPattern));
+	[Fact] public void T_requires_the_top_row_and_the_n_column() => Assert.True(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int> { 1, 16, 31, 46, 61, 32, 34, 35 }, WinningPattern.TPattern));
+	[Fact] public void Frame_requires_every_border_cell() => Assert.True(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int> { 1, 16, 31, 46, 61, 2, 62, 3, 63, 4, 64, 5, 20, 35, 50, 65 }, WinningPattern.Frame));
+	[Fact] public void Cross_requires_the_middle_row_and_n_column() => Assert.True(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int> { 3, 18, 48, 63, 31, 32, 34, 35 }, WinningPattern.Cross));
 	[Fact] public void B_column_requires_all_numbers_in_the_b_column() => Assert.True(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int> { 1, 2, 3, 4, 5 }, WinningPattern.BColumn));
     [Fact] public void O_column_requires_all_numbers_in_the_o_column() => Assert.True(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int> { 61, 62, 63, 64, 65 }, WinningPattern.OColumn));
 	[Fact] public void I_column_requires_all_numbers_in_the_i_column() => Assert.True(WinningPatternEvaluator.IsCompleted(Card, new HashSet<int> { 16, 17, 18, 19, 20 }, WinningPattern.IColumn));
@@ -37,8 +43,8 @@ public sealed class BingoRulesTests
     [Fact] public void Secure_sequence_contains_each_bingo_number_once() { var sequence = SecureDrawSequence.Generate(); Assert.Equal(75, sequence.Distinct().Count()); Assert.Equal(Enumerable.Range(1, 75), sequence.Order()); }
     [Fact] public void Generated_card_obeys_bingo_column_ranges() { var card = new Bingo75CardGenerator().Generate(); for (var c = 0; c < 5; c++) for (var r = 0; r < 5; r++) if (r != 2 || c != 2) Assert.InRange(card[r, c], c * 15 + 1, c * 15 + 15); }
     [Fact]
-    public void Next_draw_requires_operator_to_close_winner_presentation()
-    {
+	public void Next_draw_requires_operator_to_close_winner_presentation()
+	{
         var round = new BingoRound(Guid.CreateVersion7(), 1, "Rodada 1");
         round.AddStage(new PrizeStage(round.Id, 1, "Linha", WinningPattern.HorizontalLine));
         round.AddStage(new PrizeStage(round.Id, 2, "Bingo", WinningPattern.FullCard));
@@ -52,8 +58,36 @@ public sealed class BingoRulesTests
         round.CloseWinnerPresentation();
 
         Assert.False(round.HasWinnerPresentationPending);
-        Assert.Equal(1, round.DrawNext().Number);
-    }
+		Assert.Equal(1, round.DrawNext().Number);
+	}
+	[Fact]
+	public void Progressive_patterns_continue_consuming_the_same_draw_sequence()
+	{
+		var round = new BingoRound(Guid.CreateVersion7(), 1, "Rodada progressiva");
+		var patterns = new[]
+		{
+			WinningPattern.FourCorners,
+			WinningPattern.BDiagonal,
+			WinningPattern.ODiagonal,
+			WinningPattern.HorizontalLine,
+			WinningPattern.XPattern,
+			WinningPattern.TPattern,
+			WinningPattern.Cross,
+			WinningPattern.TwoHorizontalLines,
+			WinningPattern.Frame,
+			WinningPattern.FullCard
+		};
+		for (var index = 0; index < patterns.Length; index++) round.AddStage(new PrizeStage(round.Id, index + 1, $"Prêmio {index + 1}", patterns[index]));
+		var sequence = Enumerable.Range(1, 75).ToArray();
+		round.Start(sequence, SecureDrawSequence.Hash(sequence));
+
+		for (var index = 0; index < patterns.Length; index++)
+		{
+			Assert.Equal(index + 1, round.DrawNext().Number);
+			round.FinishStage();
+			if (index < patterns.Length - 1) round.CloseWinnerPresentation();
+		}
+	}
 	[Fact]
 	public void Column_stage_draws_only_numbers_from_its_column_range()
 	{
@@ -93,10 +127,10 @@ public sealed class BingoRulesTests
 	public void Prize_stages_follow_the_recommended_pattern_order()
 	{
 		var orderedPatterns = PrizeStageOrdering.Order(
-			new[] { WinningPattern.FullCard, WinningPattern.OColumn, WinningPattern.HorizontalLine, WinningPattern.BColumn },
+			new[] { WinningPattern.FullCard, WinningPattern.Frame, WinningPattern.Cross, WinningPattern.TPattern, WinningPattern.XPattern, WinningPattern.ODiagonal, WinningPattern.OColumn, WinningPattern.HorizontalLine, WinningPattern.BDiagonal, WinningPattern.BColumn },
 			pattern => pattern);
 
-		Assert.Equal(new[] { WinningPattern.BColumn, WinningPattern.OColumn, WinningPattern.HorizontalLine, WinningPattern.FullCard }, orderedPatterns);
+		Assert.Equal(new[] { WinningPattern.BColumn, WinningPattern.OColumn, WinningPattern.BDiagonal, WinningPattern.ODiagonal, WinningPattern.HorizontalLine, WinningPattern.XPattern, WinningPattern.TPattern, WinningPattern.Cross, WinningPattern.Frame, WinningPattern.FullCard }, orderedPatterns);
 	}
 	[Fact]
 	public void Tie_breaker_blocks_drawing_until_the_winner_is_revealed()

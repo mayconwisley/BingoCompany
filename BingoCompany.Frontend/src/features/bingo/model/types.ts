@@ -1,7 +1,7 @@
 export type CardMarkingMode = "Automatic" | "ManualRequired" | "AssistedManual";
 export type ParticipantType = "Employee" | "FamilyMember" | "Guest";
 export type WinningPattern =
-    "HorizontalLine" | "TwoHorizontalLines" | "FourCorners" | "FullCard" | "BColumn" | "IColumn" | "NColumn" | "GColumn" | "OColumn";
+    "HorizontalLine" | "TwoHorizontalLines" | "FourCorners" | "FullCard" | "BDiagonal" | "ODiagonal" | "BColumn" | "IColumn" | "NColumn" | "GColumn" | "OColumn" | "XPattern" | "TPattern" | "Frame" | "Cross";
 export type EventSummary = { id: string; name: string; publicCode: string; status: string; markingMode: CardMarkingMode };
 export type EventDetails = {
     id: string;

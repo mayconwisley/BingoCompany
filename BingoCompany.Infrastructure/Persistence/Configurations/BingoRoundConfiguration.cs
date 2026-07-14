@@ -1,5 +1,5 @@
 using System.Text.Json;
-using BingoCompany.Domain.Models;
+using BingoCompany.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

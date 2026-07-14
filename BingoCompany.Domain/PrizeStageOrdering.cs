@@ -1,4 +1,4 @@
-namespace BingoCompany.Domain.Models;
+namespace BingoCompany.Domain;
 
 public static class PrizeStageOrdering
 {
@@ -17,9 +17,15 @@ public static class PrizeStageOrdering
 		WinningPattern.GColumn => 4,
 		WinningPattern.OColumn => 5,
 		WinningPattern.FourCorners => 6,
-		WinningPattern.HorizontalLine => 7,
-		WinningPattern.TwoHorizontalLines => 8,
-		WinningPattern.FullCard => 9,
+		WinningPattern.BDiagonal => 7,
+		WinningPattern.ODiagonal => 8,
+		WinningPattern.HorizontalLine => 9,
+		WinningPattern.XPattern => 10,
+		WinningPattern.TPattern => 11,
+		WinningPattern.Cross => 12,
+		WinningPattern.TwoHorizontalLines => 13,
+		WinningPattern.Frame => 14,
+		WinningPattern.FullCard => 15,
 		_ => throw new InvalidOperationException("Regra de premiação inválida.")
 	};
 }

@@ -1,4 +1,4 @@
-using BingoCompany.Domain.Models;
+using BingoCompany.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BingoCompany.Infrastructure.Persistence;

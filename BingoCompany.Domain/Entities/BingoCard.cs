@@ -1,7 +1,7 @@
-	using System.Security.Cryptography;
-	using System.Text;
+using System.Security.Cryptography;
+using System.Text;
 
-namespace BingoCompany.Domain.Models;
+namespace BingoCompany.Domain.Entities;
 
 public sealed class BingoCard
 {

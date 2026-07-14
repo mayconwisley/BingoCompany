@@ -1,0 +1,13 @@
+.git
+.vs
+.agents
+.build-auth
+.build-tests
+**/bin
+**/obj
+**/node_modules
+BingoCompany.Frontend/dist
+*.user
+*.suo
+*.log
+

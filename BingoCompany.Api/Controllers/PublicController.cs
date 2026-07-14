@@ -1,15 +1,19 @@
 using BingoCompany.Application;
+using BingoCompany.Api.Contracts;
+using BingoCompany.Api.Interfaces;
+using BingoCompany.Api.Services;
 using BingoCompany.Domain;
 using BingoCompany.Infrastructure;
 using BingoCompany.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using BingoCompany.Domain.Entities;
 
 namespace BingoCompany.Api.Controllers;
 
 [ApiController, Route("api/public/events")]
-public sealed class PublicController(BingoDbContext db) : ControllerBase
+public sealed class PublicController(BingoDbContext db, IEventParticipantRegistrationService participantRegistrationService) : ControllerBase
 {
     [HttpGet("{code}")]
     public async Task<ActionResult<object>> Get(string code)
@@ -67,7 +71,17 @@ public sealed class PublicController(BingoDbContext db) : ControllerBase
     {
         var bingoEvent = await db.Events.SingleOrDefaultAsync(item => item.PublicCode == code);
         if (bingoEvent is null) return NotFound();
-        return await new EventsController(db, HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.SignalR.IHubContext<BingoCompany.Api.Hubs.BingoHub>>()).Join(bingoEvent.Id, request);
+        try
+        {
+            var registration = await participantRegistrationService.Register(bingoEvent.Id, request, HttpContext.RequestAborted);
+            return registration is null
+                ? NotFound()
+                : Ok(new { participantId = registration.ParticipantId, cardId = registration.CardId, registration.PublicCode, registration.Numbers });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(exception.Message);
+        }
     }
 
     [HttpGet("{code}/audit")]

@@ -8,8 +8,14 @@ const patterns = [
     ["GColumn", "Coluna G"],
     ["OColumn", "Coluna O"],
     ["FourCorners", "Quatro cantos"],
+	["BDiagonal", "Diagonal B"],
+	["ODiagonal", "Diagonal O"],
     ["HorizontalLine", "Uma linha"],
+	["XPattern", "X"],
+	["TPattern", "T"],
+	["Cross", "Cruz"],
     ["TwoHorizontalLines", "Duas linhas"],
+	["Frame", "Moldura"],
     ["FullCard", "Cartela cheia"]
 ] as const;
 
