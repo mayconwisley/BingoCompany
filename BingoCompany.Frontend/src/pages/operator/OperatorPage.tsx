@@ -143,7 +143,7 @@ export function OperatorPage() {
 								/>
 								{isPrizeDeliveryPending ? (
 									<>
-									<button className="primary" disabled={isSubmitting} onClick={markPrizeDelivered}>
+										<button className="primary" disabled={isSubmitting} onClick={markPrizeDelivered}>
 											PRÊMIO ENTREGUE
 										</button>
 										<button className="danger" onClick={markPrizeDeclined}>
