@@ -13,7 +13,7 @@ using BingoCompany.Domain.Entities;
 namespace BingoCompany.Api.Controllers;
 
 [ApiController, Route("api/public/events")]
-public sealed class PublicController(BingoDbContext db, IEventParticipantRegistrationService participantRegistrationService) : ControllerBase
+public sealed partial class PublicController(BingoDbContext db, IEventParticipantRegistrationService participantRegistrationService) : ControllerBase
 {
 	[HttpGet("{code}")]
 	public async Task<ActionResult<object>> Get(string code)
@@ -85,57 +85,6 @@ public sealed class PublicController(BingoDbContext db, IEventParticipantRegistr
 							: []
 					}
 			}
-		});
-	}
-
-	[HttpPost("{code}/join")]
-	[EnableRateLimiting("public-join")]
-	public async Task<ActionResult<object>> Join(string code, JoinEventRequest request)
-	{
-		var bingoEvent = await db.Events.SingleOrDefaultAsync(item => item.PublicCode == code);
-		if (bingoEvent is null) return NotFound();
-		try
-		{
-			var registration = await participantRegistrationService.Register(bingoEvent.Id, request, HttpContext.RequestAborted);
-			return registration is null
-				? NotFound()
-				: Ok(new { participantId = registration.ParticipantId, cardId = registration.CardId, registration.PublicCode, registration.Numbers });
-		}
-		catch (InvalidOperationException exception)
-		{
-			return Conflict(exception.Message);
-		}
-	}
-
-	[HttpGet("{code}/audit")]
-	public async Task<ActionResult<object>> Audit(string code)
-	{
-		var bingoEvent = await db.Events.SingleOrDefaultAsync(item => item.PublicCode == code);
-		if (bingoEvent is null) return NotFound();
-
-		var rounds = await db.Rounds.Where(item => item.EventId == bingoEvent.Id).OrderBy(item => item.Sequence).Include(item => item.Stages).Include(item => item.DrawnNumbers).ToListAsync();
-		var participants = await db.Participants.Where(item => item.EventId == bingoEvent.Id).OrderBy(item => item.JoinedAt).Select(item => new { item.Id, item.Name, item.JoinedAt }).ToListAsync();
-		var cards = await db.Cards.Where(item => item.EventId == bingoEvent.Id).OrderBy(item => item.CreatedAt).Select(item => new { item.Id, item.PublicCode, item.Type, item.Status, item.ParticipantId, item.CreatedAt }).ToListAsync();
-		var winners = await db.RoundWinners.Where(item => rounds.Select(round => round.Id).Contains(item.RoundId)).ToListAsync();
-		var participantNames = participants.ToDictionary(item => item.Id, item => item.Name);
-		var stageNames = rounds.SelectMany(round => round.Stages).ToDictionary(stage => stage.Id, stage => stage.PrizeName);
-		return Ok(new
-		{
-			eventInfo = new { bingoEvent.Name, bingoEvent.PublicCode, bingoEvent.Status, bingoEvent.CreatedAt },
-			participants,
-			cards,
-			rounds = rounds.Select(round => new
-			{
-				round.Name,
-				round.Sequence,
-				round.Status,
-				round.SequenceHash,
-				fullSequence = round.Status is RoundStatus.Finished or RoundStatus.Cancelled ? round.DrawSequence : null,
-				drawnNumbers = round.DrawnNumbers.OrderBy(item => item.Sequence).Select(item => new { item.Number, item.Sequence, item.DrawnAt }),
-				stages = round.Stages.OrderBy(item => item.Sequence).Select(item => new { item.PrizeName, item.Pattern, item.IsCompleted }),
-				winners = winners.Where(winner => winner.RoundId == round.Id).Select(winner => new { participantName = participantNames.GetValueOrDefault(winner.ParticipantId, "Participante indisponível"), prizeName = stageNames.GetValueOrDefault(winner.StageId, "Prêmio"), winner.IsWinner, winner.TieBreakerNumber, winner.DetectedAt, winner.RevealedAt })
-			}),
-			entries = await db.AuditEntries.Where(item => item.EventId == bingoEvent.Id).OrderBy(item => item.OccurredAt).Select(item => new { item.Action, item.Details, item.OccurredAt }).ToListAsync()
 		});
 	}
 

@@ -1,4 +1,5 @@
 using BingoCompany.Api.Controllers;
+using BingoCompany.Api.Contracts;
 using BingoCompany.Api.Security;
 using BingoCompany.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;

@@ -104,8 +104,8 @@ export function EventSetupPage() {
 
 	return (
 		<AppShell>
-			<main>
-				<header className="pagehead">
+			<main className="event-setup">
+				<header className="pagehead event-setup-header">
 					<div>
 						<p className="eyebrow">Evento {code}</p>
 						<h1>{event.data?.name || "Preparação do bingo"}</h1>
@@ -169,15 +169,26 @@ export function EventSetupPage() {
 							</nav>
 						</section>
 						<div className="two">
-							<section className="panel">
-								<p className="eyebrow">Participantes</p>
-								<h2>Inscrições</h2>
-								<p>Abra a página pública de compartilhamento para exibir o QR Code aos participantes.</p>
-								<div className="card-count" aria-label={`${event.data.cards} cartelas geradas para o evento`}>
-									<strong>{event.data.cards}</strong>
-									<span>cartelas geradas para este evento</span>
+							<section className="panel participants-panel">
+								<div className="participants-panel-header">
+									<div>
+										<p className="eyebrow">Participantes</p>
+										<h2>Inscrições</h2>
+									</div>
+									<span className="participants-panel-icon" aria-hidden="true">✦</span>
 								</div>
-								<div className="actions">
+								<p>Abra a página pública de compartilhamento para exibir o QR Code aos participantes.</p>
+								<div className="participant-metrics">
+									<div>
+										<span>Participantes</span>
+										<strong>{event.data.participants}</strong>
+									</div>
+									<div className="card-count" aria-label={`${event.data.cards} cartelas geradas para o evento`}>
+										<span>Cartelas geradas</span>
+										<strong>{event.data.cards}</strong>
+									</div>
+								</div>
+								<div className="actions participant-actions">
 									{isFinished ? (
 										<span className="button is-disabled" aria-disabled="true">
 											Abrir QR Code de inscrição
@@ -214,9 +225,12 @@ export function EventSetupPage() {
 											<ul>
 												{event.data.awardedCards.map((card) => (
 													<li key={`${card.publicCode}-${card.roundName}-${card.prizeName}`}>
-														<strong>{card.publicCode}</strong>
-														<span>{card.participantName}</span>
-														<small>{card.roundName} · {card.prizeName}</small>
+														<span className="awarded-card-icon" aria-hidden="true">★</span>
+														<div>
+															<strong>{card.publicCode}</strong>
+															<span>{card.participantName}</span>
+															<small>{card.roundName} · {card.prizeName}</small>
+														</div>
 													</li>
 												))}
 											</ul>
@@ -226,7 +240,7 @@ export function EventSetupPage() {
 									</div>
 								)}
 							</section>
-							<section className="panel">
+							<section className="panel round-setup-panel">
 								<p className="eyebrow">Configuração da rodada</p>
 								<h2>
 									{editingRoundId ? "Editar rodada" : hasFinishedRound ? "Preparar próximo sorteio" : "Prêmios e regras"}
@@ -264,7 +278,7 @@ export function EventSetupPage() {
 								</div>
 							</section>
 						</div>
-						<section className="panel">
+						<section className="panel printed-cards-panel">
 							<p className="eyebrow">Cartelas físicas</p>
 							<h2>Cartelas impressas</h2>
 							<div className="actions">
@@ -376,7 +390,7 @@ export function EventSetupPage() {
 							)}
 						</section>
 						{event.data.rounds.length > 0 && (
-							<section className="panel">
+							<section className="panel event-rounds-panel">
 								<p className="eyebrow">Operação</p>
 								<h2>Rodadas criadas</h2>
 								<div className="round-list">

@@ -1,4 +1,5 @@
 using System.Reflection;
+using BingoCompany.Api.Contracts;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BingoCompany.Api.Controllers;
@@ -18,5 +19,3 @@ public sealed class ApplicationInfoController : ControllerBase
 		return Ok(new ApplicationInfoResponse(title, description, version));
 	}
 }
-
-public sealed record ApplicationInfoResponse(string Name, string Description, string Version);

@@ -294,24 +294,179 @@ main > h1 {
 .panel p {
 	line-height: 1.55;
 }
-.card-count {
+.event-setup {
+	padding-bottom: 3.5rem;
+}
+.event-setup-header {
+	position: relative;
+	overflow: hidden;
+	padding: clamp(1.5rem, 4vw, 2.5rem);
+	border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--line));
+	border-radius: 22px;
+	background:
+		radial-gradient(circle at 92% 18%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 26%),
+		linear-gradient(125deg, color-mix(in srgb, var(--surface) 92%, var(--primary)), var(--surface));
+	box-shadow: var(--shadow);
+}
+.event-setup-header::after {
+	position: absolute;
+	width: 12rem;
+	height: 12rem;
+	right: -5rem;
+	bottom: -8rem;
+	border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+	border-radius: 50%;
+	content: "";
+	pointer-events: none;
+}
+.event-setup-header h1 {
+	max-width: 18ch;
+	font-size: clamp(2rem, 4vw, 3.2rem);
+}
+.event-setup .event-access {
+	position: relative;
+	overflow: hidden;
+	margin-top: 1.5rem;
+	border-color: color-mix(in srgb, var(--primary) 25%, var(--line));
+	background: linear-gradient(135deg, var(--surface), color-mix(in srgb, var(--surface) 91%, var(--primary)));
+}
+.event-setup .access-item {
+	min-height: 7.35rem;
+	border-radius: 16px;
+	background: color-mix(in srgb, var(--surface) 75%, var(--bg));
+	transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+}
+.event-setup .access-item:hover:not(.is-disabled) {
+	transform: translateY(-3px);
+	border-color: color-mix(in srgb, var(--primary) 48%, var(--line));
+	box-shadow: var(--shadow-sm);
+}
+.event-setup .two {
+	align-items: stretch;
+}
+.event-setup .two > .panel {
+	padding: clamp(1.35rem, 3vw, 2rem);
+}
+.round-setup-panel {
+	border-color: color-mix(in srgb, var(--primary) 25%, var(--line));
+	background: linear-gradient(155deg, var(--surface), color-mix(in srgb, var(--surface) 93%, var(--primary)));
+}
+.printed-cards-panel,
+.event-rounds-panel {
+	position: relative;
+	overflow: hidden;
+	border-radius: 20px;
+}
+.printed-cards-panel {
+	border-color: color-mix(in srgb, var(--accent) 26%, var(--line));
+	background: linear-gradient(140deg, var(--surface), color-mix(in srgb, var(--surface) 93%, var(--accent)));
+}
+.printed-cards-panel > .actions {
+	margin-bottom: 0.75rem;
+}
+.event-rounds-panel {
+	border-color: color-mix(in srgb, var(--warm) 38%, var(--line));
+	background: linear-gradient(140deg, var(--surface), color-mix(in srgb, var(--surface) 94%, var(--warm)));
+}
+.event-setup .round-list article {
+	margin-bottom: 0.75rem;
+	padding: 1rem;
+	border: 1px solid var(--line);
+	border-radius: 14px;
+	background: color-mix(in srgb, var(--surface) 78%, var(--bg));
+	transition: transform 0.18s, border-color 0.18s;
+}
+.event-setup .round-list article:hover {
+	transform: translateX(3px);
+	border-color: color-mix(in srgb, var(--primary) 42%, var(--line));
+}
+.event-setup .round-list article:last-child {
+	margin-bottom: 1.25rem;
+}
+.participants-panel {
+	position: relative;
+	overflow: hidden;
+}
+.participants-panel::before {
+	position: absolute;
+	width: 180px;
+	height: 180px;
+	right: -90px;
+	top: -115px;
+	border-radius: 50%;
+	background: radial-gradient(circle, color-mix(in srgb, var(--accent) 24%, transparent), transparent 68%);
+	content: "";
+	pointer-events: none;
+}
+.participants-panel-header {
 	display: flex;
-	align-items: baseline;
-	gap: 0.5rem;
-	margin: 1.25rem 0;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1rem;
+}
+.participants-panel-header h2 {
+	margin-bottom: 0.5rem;
+}
+.participants-panel-icon {
+	display: grid;
+	width: 2.7rem;
+	height: 2.7rem;
+	place-items: center;
+	border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--line));
+	border-radius: 14px;
+	background: var(--accent-soft);
+	color: var(--accent);
+	font-size: 1.2rem;
+}
+.participant-metrics {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.75rem;
+	margin: 1.35rem 0;
+}
+.participant-metrics > div {
+	display: flex;
+	min-height: 5.25rem;
+	flex-direction: column;
+	justify-content: space-between;
 	padding: 0.85rem 1rem;
 	border: 1px solid var(--line);
-	border-radius: 12px;
-	background: var(--bg);
+	border-radius: 14px;
+	background: color-mix(in srgb, var(--bg) 72%, var(--surface));
 }
-.card-count strong {
-	color: var(--accent);
-	font-size: 1.65rem;
-}
-.card-count span {
+.participant-metrics span {
 	color: var(--muted);
-	font-size: 0.9rem;
-	font-weight: 700;
+	font-size: 0.78rem;
+	font-weight: 800;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+}
+.participant-metrics strong {
+	color: var(--text);
+	font: 700 2rem/1 Fraunces, serif;
+}
+.participant-metrics .card-count {
+	border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+	background: linear-gradient(135deg, var(--accent-soft), color-mix(in srgb, var(--surface) 86%, var(--accent-soft)));
+}
+.participant-metrics .card-count strong {
+	color: var(--accent);
+}
+.participant-actions {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.6rem;
+}
+.participant-actions > * {
+	display: inline-flex;
+	min-height: 3rem;
+	align-items: center;
+	justify-content: center;
+	margin: 0;
+	text-align: center;
+}
+.participant-actions > :last-child {
+	grid-column: 1 / -1;
 }
 .awarded-cards {
 	margin-top: 1.5rem;
@@ -330,19 +485,35 @@ main > h1 {
 }
 .awarded-cards li {
 	display: grid;
-	grid-template-columns: auto 1fr;
-	column-gap: 0.6rem;
+	grid-template-columns: auto minmax(0, 1fr);
+	gap: 0.75rem;
 	padding: 0.75rem;
 	border: 1px solid var(--line);
+	border-radius: 14px;
+	background: color-mix(in srgb, var(--bg) 72%, var(--surface));
+	transition: transform 0.18s, border-color 0.18s;
+}
+.awarded-cards li:hover {
+	transform: translateY(-1px);
+	border-color: color-mix(in srgb, var(--accent) 48%, var(--line));
+}
+.awarded-card-icon {
+	display: grid;
+	width: 2.15rem;
+	height: 2.15rem;
+	place-items: center;
 	border-radius: 10px;
-	background: var(--bg);
+	background: color-mix(in srgb, var(--warm) 20%, var(--surface));
+	color: var(--warm);
+}
+.awarded-cards li div {
+	display: grid;
+	gap: 0.15rem;
 }
 .awarded-cards li strong {
 	color: var(--accent);
 }
 .awarded-cards li small {
-	grid-column: 1 / -1;
-	margin-top: 0.25rem;
 	color: var(--muted);
 }
 .formrow {
@@ -909,6 +1080,13 @@ main > h1 {
 	}
 }
 @media (max-width: 560px) {
+	.participant-metrics,
+	.participant-actions {
+		grid-template-columns: 1fr;
+	}
+	.participant-actions > :last-child {
+		grid-column: auto;
+	}
 	.topbar {
 		height: 68px;
 		padding: 0 18px;

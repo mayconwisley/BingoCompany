@@ -1,4 +1,5 @@
 using BingoCompany.Api.Security;
+using BingoCompany.Api.Contracts;
 using BingoCompany.Domain.Entities;
 using BingoCompany.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -80,15 +81,3 @@ public sealed class AuthenticationController(BingoDbContext db, JwtKeyProvider j
 		return new AuthResponse(user.Name, companyName);
 	}
 }
-
-public sealed record RegisterCompanyRequest(
-	[Required, StringLength(120, MinimumLength = 2)] string CompanyName,
-	[Required, StringLength(120, MinimumLength = 2)] string Name,
-	[Required, EmailAddress, StringLength(254)] string Email,
-	[Required, StringLength(128, MinimumLength = 12)] string Password);
-
-public sealed record LoginRequest(
-	[Required, EmailAddress, StringLength(254)] string Email,
-	[Required, StringLength(128)] string Password);
-
-public sealed record AuthResponse(string Name, string CompanyName);
