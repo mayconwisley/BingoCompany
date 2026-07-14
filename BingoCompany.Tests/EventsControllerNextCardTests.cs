@@ -20,13 +20,17 @@ public sealed class EventsControllerNextCardTests
 		var participant = new Participant(bingoEvent.Id, "Ana", ParticipantType.FamilyMember, responsibleEmployeeName: "Bruno");
 		var card = new BingoCard(bingoEvent.Id, participant.Id, CardType.Digital, CreateCard());
 		var round = new BingoRound(bingoEvent.Id, 1, "Rodada 1");
-		round.AddStage(new PrizeStage(round.Id, 1, "Linha", WinningPattern.HorizontalLine));
+		var stage = new PrizeStage(round.Id, 1, "Linha", WinningPattern.HorizontalLine);
+		round.AddStage(stage);
 		round.Start(Enumerable.Range(1, 75).ToArray(), "hash");
 		round.FinishStage();
+		var winner = new RoundWinner(round.Id, stage.Id, card.Id, participant.Id, 1);
+		winner.Confirm(DateTimeOffset.UtcNow);
 		db.Events.Add(bingoEvent);
 		db.Participants.Add(participant);
 		db.Cards.Add(card);
 		db.Rounds.Add(round);
+		db.RoundWinners.Add(winner);
 		db.RoundEligibleCards.Add(new RoundEligibleCard(round.Id, card.Id, participant.Id));
 		await db.SaveChangesAsync();
 		var controller = new EventsController(db, null!, null!, null!);
@@ -36,6 +40,7 @@ public sealed class EventsControllerNextCardTests
 		Assert.True(stateJson.RootElement.GetProperty("canGenerateNextCard").GetBoolean());
 		Assert.Equal("Ana", stateJson.RootElement.GetProperty("participantName").GetString());
 		Assert.Equal("Bruno", stateJson.RootElement.GetProperty("responsibleEmployeeName").GetString());
+		Assert.True(stateJson.RootElement.GetProperty("isWinner").GetBoolean());
 
 		var response = Assert.IsType<OkObjectResult>((await controller.GenerateNextCard(bingoEvent.Id, card.PublicCode)).Result);
 		Assert.NotNull(response.Value);

@@ -320,8 +320,11 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 			&& !card.ReplacementCardId.HasValue
 			&& !await db.Rounds.AnyAsync(item => item.EventId == eventId && item.Sequence > previousRound.Sequence && (item.Status == RoundStatus.Drawing || item.Status == RoundStatus.WinnerDetected || item.Status == RoundStatus.TieBreaker))
 			&& await db.RoundEligibleCards.AnyAsync(item => item.RoundId == previousRound.Id && item.CardId == card.Id);
+		var isWinner = await db.RoundWinners
+			.Join(db.PrizeStages, winner => winner.StageId, stage => stage.Id, (winner, stage) => new { winner, stage })
+			.AnyAsync(item => item.winner.CardId == card.Id && item.winner.IsWinner && item.winner.RevealedAt.HasValue && !item.stage.IsWinnerPresentationClosed);
 		var activeStage = round?.Stages.SingleOrDefault(item => item.IsActive);
-		return Ok(new { card.Id, card.PublicCode, participantName = participant?.Name, responsibleEmployeeName = participant?.ResponsibleEmployeeName, numbers = ToRows(card.Numbers), markingMode = e!.MarkingMode, roundId = round?.Id, roundStatus = round?.Status, currentPrize = activeStage?.PrizeName, currentPattern = activeStage?.Pattern, drawnNumbers = round?.DrawnNumbers.OrderBy(x => x.Sequence).Select(x => x.Number) ?? [], markedNumbers = marks, lastSequence = round?.DrawnNumbers.Count ?? 0, canGenerateNextCard });
+		return Ok(new { card.Id, card.PublicCode, participantName = participant?.Name, responsibleEmployeeName = participant?.ResponsibleEmployeeName, isWinner, numbers = ToRows(card.Numbers), markingMode = e!.MarkingMode, roundId = round?.Id, roundStatus = round?.Status, currentPrize = activeStage?.PrizeName, currentPattern = activeStage?.Pattern, drawnNumbers = round?.DrawnNumbers.OrderBy(x => x.Sequence).Select(x => x.Number) ?? [], markedNumbers = marks, lastSequence = round?.DrawnNumbers.Count ?? 0, canGenerateNextCard });
 	}
 	private static int[][] ToRows(int[,] card) => Enumerable.Range(0, 5).Select(r => Enumerable.Range(0, 5).Select(c => card[r, c]).ToArray()).ToArray();
 	private static bool IsValidPrizeImage(string? imageDataUrl) => string.IsNullOrWhiteSpace(imageDataUrl) || imageDataUrl.Length <= MaximumPrizeImageLength && SupportedPrizeImagePrefixes.Any(prefix => imageDataUrl.StartsWith(prefix, StringComparison.Ordinal));

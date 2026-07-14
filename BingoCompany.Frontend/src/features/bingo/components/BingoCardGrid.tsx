@@ -4,12 +4,13 @@ type Props = {
 	markedNumbers: number[];
 	manual: boolean;
 	markableNumbers?: number[];
+	isWinner?: boolean;
 	disabled?: boolean;
 	onMark: (number: number) => void;
 };
-export function BingoCardGrid({ numbers, drawnNumbers, markedNumbers, manual, markableNumbers, disabled, onMark }: Props) {
+export function BingoCardGrid({ numbers, drawnNumbers, markedNumbers, manual, markableNumbers, isWinner, disabled, onMark }: Props) {
 	return (
-		<section className="bingocard" aria-label="Cartela de bingo">
+		<section className={isWinner ? "bingocard bingocard--winner" : "bingocard"} aria-label="Cartela de bingo">
 			<div className="letters">
 				{"BINGO".split("").map((x) => (
 					<b key={x}>{x}</b>

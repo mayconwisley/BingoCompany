@@ -92,6 +92,7 @@ export type CardState = {
 	publicCode: string;
 	participantName?: string;
 	responsibleEmployeeName?: string;
+	isWinner: boolean;
 	numbers: number[][];
 	markingMode: string;
 	roundId?: string;

@@ -8,10 +8,36 @@ vi.mock("../../features/bingo/api/bingoApi", () => ({ bingoApi: { generateNextCa
 vi.mock("../../features/bingo/hooks/useLiveBingo", () => ({ useLiveBingo: vi.fn() }));
 
 describe("CardPage", () => {
+	it("destaca a cartela somente após a revelação da vitória", async () => {
+		vi.mocked(bingoApi.getCard).mockResolvedValue({
+			id: "card-1",
+			publicCode: "VENCEDORA",
+			isWinner: true,
+			numbers: [[1, 16, 31, 46, 61]],
+			markingMode: "Automatic",
+			drawnNumbers: [1],
+			markedNumbers: [],
+			lastSequence: 1,
+			canGenerateNextCard: false
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/cartela/event-1/VENCEDORA"]}>
+				<Routes>
+					<Route path="/cartela/:eventId/:cardCode" element={<CardPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByText("🎉 Parabéns! Esta é a cartela vencedora.")).toBeInTheDocument();
+		expect(screen.getByLabelText("Cartela de bingo")).toHaveClass("bingocard--winner");
+	});
+
 	it("permite marcar somente a pedra atual na marcação manual obrigatória", async () => {
 		vi.mocked(bingoApi.getCard).mockResolvedValue({
 			id: "card-1",
 			publicCode: "MANUAL",
+			isWinner: false,
 			numbers: [[1, 16, 31, 46, 61]],
 			markingMode: "ManualRequired",
 			drawnNumbers: [1, 16],
@@ -41,6 +67,7 @@ describe("CardPage", () => {
 		vi.mocked(bingoApi.getCard).mockResolvedValue({
 			id: "card-1",
 			publicCode: "FAMILIAR",
+			isWinner: false,
 			participantName: "Marina Silva",
 			responsibleEmployeeName: "Carlos Silva",
 			numbers: [[1, 16, 31, 46, 61]],
@@ -67,6 +94,7 @@ describe("CardPage", () => {
 		vi.mocked(bingoApi.getCard).mockResolvedValue({
 			id: "card-1",
 			publicCode: "ANTERIOR",
+			isWinner: false,
 			numbers: [
 				[1, 16, 31, 46, 61],
 				[2, 17, 32, 47, 62],

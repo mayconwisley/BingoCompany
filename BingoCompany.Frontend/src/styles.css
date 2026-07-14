@@ -579,6 +579,33 @@ main > h1 {
 	border-radius: 26px;
 	box-shadow: 0 24px 80px rgba(20, 27, 49, 0.22);
 }
+.bingocard--winner {
+	animation: winner-card-celebration 1.4s ease-in-out infinite alternate;
+	border: 3px solid var(--warm);
+	transform-origin: center;
+}
+.winner-card-message {
+	margin: 1.25rem 0 0;
+	color: var(--warm);
+	font-size: 1.2rem;
+	font-weight: 800;
+	text-align: center;
+}
+@keyframes winner-card-celebration {
+	from {
+		box-shadow: 0 24px 80px rgba(20, 27, 49, 0.22), 0 0 12px color-mix(in srgb, var(--warm) 35%, transparent);
+		transform: scale(1);
+	}
+	to {
+		box-shadow: 0 24px 80px rgba(20, 27, 49, 0.22), 0 0 46px color-mix(in srgb, var(--warm) 88%, transparent);
+		transform: scale(1.025);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.bingocard--winner {
+		animation: none;
+	}
+}
 .letters,
 .numbers {
 	display: grid;

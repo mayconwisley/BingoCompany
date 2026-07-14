@@ -68,11 +68,17 @@ export function CardPage() {
 					markedNumbers={card.data.markedNumbers}
 					manual={manual}
 					markableNumbers={isMandatoryManual && currentNumber ? [currentNumber] : undefined}
+					isWinner={card.data.isWinner}
 					onMark={async (number) => {
 						await bingoApi.mark(eventId, cardCode, number);
 						await card.reload();
 					}}
 				/>
+				{card.data.isWinner && (
+					<p className="winner-card-message" role="status">
+						🎉 Parabéns! Esta é a cartela vencedora.
+					</p>
+				)}
 				<p className="hint">
 					{isMandatoryManual
 						? "Marque a pedra atual antes que a próxima seja sorteada."
