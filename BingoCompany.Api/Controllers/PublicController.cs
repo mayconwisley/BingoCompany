@@ -27,10 +27,14 @@ public sealed class PublicController(BingoDbContext db, IEventParticipantRegistr
 		var round = SelectRound(bingoEvent);
 		var activeStage = round?.Stages.SingleOrDefault(item => item.IsActive);
 		var presentationStage = round?.Stages.OrderByDescending(item => item.Sequence).FirstOrDefault(item => item.IsCompleted && !item.IsWinnerPresentationClosed);
-		var winner = presentationStage is null
-			? null
-			: await db.RoundWinners.Where(item => item.RoundId == round!.Id && item.StageId == presentationStage.Id && item.IsWinner).SingleOrDefaultAsync();
-		var winnerName = winner is null ? null : (await db.Participants.FindAsync(winner.ParticipantId))?.Name;
+		var presentationWinners = presentationStage is null
+			? []
+			: await db.RoundWinners.Where(item => item.RoundId == round!.Id && item.StageId == presentationStage.Id).ToListAsync();
+		var winner = presentationWinners.SingleOrDefault(item => item.IsWinner);
+		var presentationParticipantNames = presentationWinners.Count == 0
+			? new Dictionary<Guid, string>()
+			: await db.Participants.Where(item => presentationWinners.Select(winner => winner.ParticipantId).Contains(item.Id)).ToDictionaryAsync(item => item.Id, item => item.Name);
+		var winnerName = winner is null ? null : presentationParticipantNames.GetValueOrDefault(winner.ParticipantId, "Participante indisponível");
 		var winnerDetectedCount = activeStage is null || round is null
 			? 0
 			: await db.RoundWinners.CountAsync(item => item.RoundId == round.Id && item.StageId == activeStage.Id);
@@ -60,7 +64,18 @@ public sealed class PublicController(BingoDbContext db, IEventParticipantRegistr
 				winnerDetectedCount,
 				tieBreakerRequired = round.Status == RoundStatus.TieBreaker,
 				statistics,
-				winner = winner is null ? null : new { participantName = winnerName, prizeName = presentationStage!.PrizeName, pattern = presentationStage.Pattern, prizeImageDataUrl = presentationStage.PrizeImageDataUrl }
+				winner = winner is null
+					? null
+					: new
+					{
+						participantName = winnerName,
+						prizeName = presentationStage!.PrizeName,
+						pattern = presentationStage.Pattern,
+						prizeImageDataUrl = presentationStage.PrizeImageDataUrl,
+						tieBreakers = presentationWinners.Count > 1
+							? presentationWinners.OrderByDescending(item => item.TieBreakerNumber).Select(item => new { participantName = presentationParticipantNames.GetValueOrDefault(item.ParticipantId, "Participante indisponível"), number = item.TieBreakerNumber, item.IsWinner })
+							: []
+					}
 			}
 		});
 	}

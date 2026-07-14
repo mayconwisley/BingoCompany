@@ -113,6 +113,54 @@
 	max-height: 28vh;
 	margin: 0;
 }
+.tie-breaker-results {
+	width: min(760px, 92vw);
+	padding: 0.85rem 1rem;
+	border: 1px solid #ffffff30;
+	border-radius: 16px;
+	background: #07131fcc;
+	text-align: center;
+}
+.tie-breaker-results h2,
+.tie-breaker-results p {
+	margin: 0;
+}
+.tie-breaker-results p {
+	margin-top: 0.3rem;
+	color: #d9e5e3;
+}
+.tie-breaker-results ul {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 0.45rem;
+	margin: 0.7rem 0 0;
+	padding: 0;
+	list-style: none;
+}
+.tie-breaker-results li {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: center;
+	gap: 0.35rem 0.6rem;
+	padding: 0.5rem 0.65rem;
+	border-radius: 10px;
+	background: #ffffff12;
+	text-align: left;
+}
+.tie-breaker-results li.winner {
+	background: color-mix(in srgb, var(--accent) 28%, #07131f);
+	border: 1px solid var(--accent);
+}
+.tie-breaker-results li strong {
+	font-size: 1.4rem;
+	color: var(--warm);
+}
+.tie-breaker-results li em {
+	grid-column: 1 / -1;
+	font-style: normal;
+	font-weight: 800;
+	color: var(--accent);
+}
 .display footer {
 	position: static;
 	margin-top: 0.35rem;

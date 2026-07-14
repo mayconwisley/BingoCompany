@@ -78,7 +78,13 @@ export type PublicEvent = {
 		winnerDetectedCount: number;
 		tieBreakerRequired: boolean;
 		statistics?: RoundStatistics;
-		winner?: { participantName: string; prizeName: string; pattern: string; prizeImageDataUrl?: string };
+		winner?: {
+			participantName: string;
+			prizeName: string;
+			pattern: string;
+			prizeImageDataUrl?: string;
+			tieBreakers?: { participantName: string; number: number; isWinner: boolean }[];
+		};
 	};
 };
 export type CardState = {

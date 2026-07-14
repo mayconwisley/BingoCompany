@@ -5,7 +5,7 @@ import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { ThemeToggle } from "../../shared/ui/ThemeToggle";
 import "./displayPage.css";
 
-const winnerSuspenseDelayInMilliseconds = 10000;
+const winnerSuspenseDelayInMilliseconds = 3000;
 
 export function DisplayPage() {
 	const { publicCode = "" } = useParams();
@@ -47,6 +47,21 @@ export function DisplayPage() {
 					<p className="winnerprize">{winner.prizeName}</p>
 					{prizeImage && <img className="display-prize-image" src={prizeImage} alt={`Prêmio: ${winner.prizeName}`} />}
 					<p className="winnerpattern">Regra vencedora: {winningPatternLabel(winner.pattern)}</p>
+					{winner.tieBreakers && winner.tieBreakers.length > 0 && (
+						<section className="tie-breaker-results" aria-label="Resultado do desempate">
+							<h2>Resultado do desempate</h2>
+							<p>Pedras sorteadas para cada participante</p>
+							<ul>
+								{winner.tieBreakers.map((tieBreaker) => (
+									<li className={tieBreaker.isWinner ? "winner" : ""} key={tieBreaker.participantName}>
+										<span>{tieBreaker.participantName}</span>
+										<strong>{tieBreaker.number}</strong>
+										{tieBreaker.isWinner && <em>Vencedor(a)</em>}
+									</li>
+								))}
+							</ul>
+						</section>
+					)}
 					<p>Aguardando o operador continuar o sorteio.</p>
 				</section>
 			) : isWinnerSuspense ? (

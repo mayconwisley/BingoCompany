@@ -27,7 +27,7 @@ As rotas em `/api/events` exigem a sessão e são limitadas à empresa do usuár
 | --- | --- |
 | `GET /healthz` | Saúde da aplicação. |
 | `GET /api/application/info` | Nome, descrição e versão da aplicação. |
-| `GET /api/public/events/{code}` | Estado público do evento, rodada selecionada, pedras, etapas, estatísticas agregadas e vencedor já revelado. |
+| `GET /api/public/events/{code}` | Estado público do evento, rodada selecionada, pedras, etapas, estatísticas agregadas e vencedor já revelado. Em desempate revelado, inclui todos os participantes, suas pedras e a indicação do vencedor. |
 | `POST /api/public/events/{code}/join` | Inscreve um participante e gera cartela digital. Limite: 20 requisições/minuto por IP. |
 | `GET /api/public/events/{code}/audit` | Histórico público, cartelas, rodadas, resultados e auditoria. A sequência completa somente é exposta ao fim da rodada. |
 

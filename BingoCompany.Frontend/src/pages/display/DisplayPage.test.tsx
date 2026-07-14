@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { bingoApi } from "../../features/bingo/api/bingoApi";
@@ -22,7 +22,7 @@ describe("DisplayPage", () => {
 		expect(await screen.findByRole("button", { name: /ativar tema/i })).toBeInTheDocument();
 	});
 
-	it("mantém a pedra vencedora visível por dez segundos antes do suspense", async () => {
+	it("mantém a pedra vencedora visível por três segundos antes do suspense", async () => {
 		vi.useFakeTimers();
 		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
 			id: "event-1",
@@ -60,13 +60,60 @@ describe("DisplayPage", () => {
 		expect(screen.getByText("10", { selector: "strong" })).toBeInTheDocument();
 		expect(screen.queryByText(/TEMOS UM VENCEDOR/)).not.toBeInTheDocument();
 
-		act(() => vi.advanceTimersByTime(10000));
+		act(() => vi.advanceTimersByTime(3000));
 
 		expect(screen.getByText(/TEMOS UM VENCEDOR/)).toBeInTheDocument();
 		expect(screen.getByText("Confira a cartela!")).toBeInTheDocument();
 		expect(screen.getByText("PEDRA VENCEDORA")).toBeInTheDocument();
 		expect(screen.getByText("10", { selector: "strong" })).toBeInTheDocument();
 		expect(screen.queryByText(/Cartela ABC123/)).not.toBeInTheDocument();
+	});
+
+	it("mostra todos os participantes, as pedras e o vencedor do desempate", async () => {
+		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
+			id: "event-1",
+			name: "Festa",
+			publicCode: "ABC",
+			status: "Running",
+			markingMode: "Automatic",
+			participants: 2,
+			cards: 2,
+			round: {
+				id: "round-1",
+				name: "Rodada 1",
+				sequence: 1,
+				status: "Drawing",
+				stages: [],
+				drawnNumbers: [10],
+				winnerDetectedCount: 0,
+				tieBreakerRequired: false,
+				winner: {
+					participantName: "Ana",
+					prizeName: "Vale-presente",
+					pattern: "HorizontalLine",
+					tieBreakers: [
+						{ participantName: "Ana", number: 71, isWinner: true },
+						{ participantName: "Bruno", number: 24, isWinner: false }
+					]
+				}
+			}
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/display/ABC"]}>
+				<Routes>
+					<Route path="/display/:publicCode" element={<DisplayPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		const result = await screen.findByRole("region", { name: "Resultado do desempate" });
+		expect(within(result).getByRole("heading", { name: "Resultado do desempate" })).toBeInTheDocument();
+		expect(within(result).getByText("Ana")).toBeInTheDocument();
+		expect(within(result).getByText("Bruno")).toBeInTheDocument();
+		expect(within(result).getByText("71")).toBeInTheDocument();
+		expect(within(result).getByText("24")).toBeInTheDocument();
+		expect(within(result).getByText("Vencedor(a)")).toBeInTheDocument();
 	});
 
 	it("mostra o prêmio e a regra que deram a vitória", async () => {
