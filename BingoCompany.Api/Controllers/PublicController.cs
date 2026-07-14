@@ -26,16 +26,18 @@ public sealed class PublicController(BingoDbContext db, IEventParticipantRegistr
 
 		var round = SelectRound(bingoEvent);
 		var activeStage = round?.Stages.SingleOrDefault(item => item.IsActive);
-		var pendingPrizeWinner = round is null
+		var pendingPrizeWinner = round is null || activeStage is null
 			? null
-			: await db.RoundWinners.SingleOrDefaultAsync(item => item.RoundId == round.Id && item.IsWinner && item.RevealedAt.HasValue && !item.PrizeDeliveredAt.HasValue && !item.PrizeDeclinedAt.HasValue);
+			: SelectWinner(await db.RoundWinners
+				.Where(item => item.RoundId == round.Id && item.StageId == activeStage.Id && item.IsWinner && item.RevealedAt.HasValue && !item.PrizeDeliveredAt.HasValue && !item.PrizeDeclinedAt.HasValue)
+				.ToListAsync());
 		var presentationStage = pendingPrizeWinner is null
 			? round?.Stages.OrderByDescending(item => item.Sequence).FirstOrDefault(item => item.IsCompleted && !item.IsWinnerPresentationClosed)
 			: round!.Stages.Single(item => item.Id == pendingPrizeWinner.StageId);
 		var presentationWinners = presentationStage is null
 			? []
 			: await db.RoundWinners.Where(item => item.RoundId == round!.Id && item.StageId == presentationStage.Id).ToListAsync();
-		var winner = pendingPrizeWinner ?? presentationWinners.SingleOrDefault(item => item.IsWinner);
+		var winner = pendingPrizeWinner ?? SelectWinner(presentationWinners);
 		var presentationParticipantNames = presentationWinners.Count == 0
 			? new Dictionary<Guid, string>()
 			: await db.Participants.Where(item => presentationWinners.Select(winner => winner.ParticipantId).Contains(item.Id)).ToDictionaryAsync(item => item.Id, item => item.Name);
@@ -78,8 +80,8 @@ public sealed class PublicController(BingoDbContext db, IEventParticipantRegistr
 						pattern = presentationStage.Pattern,
 						prizeImageDataUrl = presentationStage.PrizeImageDataUrl,
 						isPrizeDeliveryPending = pendingPrizeWinner is not null,
-						tieBreakers = presentationWinners.Count > 1
-							? presentationWinners.OrderByDescending(item => item.TieBreakerNumber).Select(item => new { participantName = presentationParticipantNames.GetValueOrDefault(item.ParticipantId, "Participante indisponível"), number = item.TieBreakerNumber, item.IsWinner })
+							tieBreakers = presentationWinners.Count > 1
+							? presentationWinners.OrderByDescending(item => item.TieBreakerNumber).Select(item => new { participantName = presentationParticipantNames.GetValueOrDefault(item.ParticipantId, "Participante indisponível"), number = item.TieBreakerNumber, isWinner = item.Id == winner.Id })
 							: []
 					}
 			}
@@ -143,6 +145,13 @@ public sealed class PublicController(BingoDbContext db, IEventParticipantRegistr
 		.FirstOrDefault()
 		?? bingoEvent.Rounds.Where(item => item.Status == RoundStatus.Ready).OrderBy(item => item.Sequence).FirstOrDefault()
 		?? bingoEvent.Rounds.OrderByDescending(item => item.Sequence).FirstOrDefault();
+
+	private static RoundWinner? SelectWinner(IEnumerable<RoundWinner> candidates) => candidates
+		.Where(item => item.IsWinner)
+		.OrderByDescending(item => item.TieBreakerNumber)
+		.ThenBy(item => item.RevealedAt)
+		.ThenBy(item => item.Id)
+		.FirstOrDefault();
 
 	private async Task<object?> CalculateStatistics(BingoRound? round, PrizeStage? stage, CardMarkingMode markingMode)
 	{

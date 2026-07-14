@@ -12,6 +12,7 @@ export function OperatorPage() {
 	const [query] = useSearchParams();
 	const navigate = useNavigate();
 	const [error, setError] = useState("");
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const code = query.get("code") ?? "";
 	const loader = useCallback(() => bingoApi.getPublicEvent(code), [code]);
 	const event = useAsyncResource(loader);
@@ -48,12 +49,16 @@ export function OperatorPage() {
 	};
 
 	const revealWinner = async () => {
+		if (isSubmitting) return;
+		setIsSubmitting(true);
 		try {
 			setError("");
 			await bingoApi.reveal(eventId, roundId);
 			await event.reload();
 		} catch (error) {
 			setError(getErrorMessage(error, "Não foi possível revelar o vencedor."));
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -68,12 +73,16 @@ export function OperatorPage() {
 	};
 
 	const markPrizeDelivered = async () => {
+		if (isSubmitting) return;
+		setIsSubmitting(true);
 		try {
 			setError("");
 			await bingoApi.markPrizeDelivered(eventId, roundId);
 			await event.reload();
 		} catch (error) {
 			setError(getErrorMessage(error, "Não foi possível registrar a entrega do prêmio."));
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -105,6 +114,7 @@ export function OperatorPage() {
 						<p className="eyebrow">Painel do operador</p>
 						<h1>{round.name}</h1>
 					</div>
+					<button onClick={() => navigate(`/admin/eventos/${eventId}?code=${code}`)}>VOLTAR ÀS CONFIGURAÇÕES</button>
 				</header>
 				<div className="operator">
 					<section className="drawball">
@@ -118,7 +128,7 @@ export function OperatorPage() {
 						</button>
 						<button
 							className="reveal"
-							disabled={round.status !== "WinnerDetected" && round.status !== "TieBreaker"}
+							disabled={isSubmitting || (round.status !== "WinnerDetected" && round.status !== "TieBreaker")}
 							onClick={revealWinner}
 						>
 							{round.status === "TieBreaker" ? "REALIZAR DESEMPATE" : "REVELAR VENCEDOR"}
@@ -133,7 +143,7 @@ export function OperatorPage() {
 								/>
 								{isPrizeDeliveryPending ? (
 									<>
-										<button className="primary" onClick={markPrizeDelivered}>
+									<button className="primary" disabled={isSubmitting} onClick={markPrizeDelivered}>
 											PRÊMIO ENTREGUE
 										</button>
 										<button className="danger" onClick={markPrizeDeclined}>

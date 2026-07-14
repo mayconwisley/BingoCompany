@@ -10,5 +10,7 @@ public sealed class RoundWinnerConfiguration : IEntityTypeConfiguration<RoundWin
 	{
 		builder.HasKey(item => item.Id);
 		builder.HasIndex(item => new { item.StageId, item.CardId }).IsUnique();
+		builder.Property(item => item.RevealedAt).IsConcurrencyToken();
+		builder.Property(item => item.TieBreakerNumber).IsConcurrencyToken();
 	}
 }

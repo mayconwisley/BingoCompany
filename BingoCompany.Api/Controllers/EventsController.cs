@@ -291,10 +291,18 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 	{
 		var round = await db.Rounds.Include(x => x.Stages).SingleOrDefaultAsync(x => x.Id == roundId && x.EventId == eventId); if (round is null || (round.Status != RoundStatus.WinnerDetected && round.Status != RoundStatus.TieBreaker)) return Conflict("Não há vencedor aguardando revelação.");
 		var candidates = await db.RoundWinners.Where(x => x.RoundId == roundId && x.StageId == round.ActiveStage.Id).ToListAsync(); if (candidates.Count == 0) return NotFound();
+		if (candidates.Any(candidate => candidate.RevealedAt.HasValue)) return Conflict("O vencedor desta etapa já foi revelado.");
 		var revealResult = gameplayService.RevealWinner(round, candidates, DateTimeOffset.UtcNow);
 		var winner = revealResult.Winner;
 		db.AuditEntries.Add(new AuditEntry(eventId, candidates.Count > 1 ? "Desempate concluído" : "Prêmio revelado", $"Prêmio {round.Stages.Single(stage => stage.Id == winner.StageId).PrizeName} revelado."));
-		await db.SaveChangesAsync();
+		try
+		{
+			await db.SaveChangesAsync();
+		}
+		catch (DbUpdateConcurrencyException)
+		{
+			return Conflict("O vencedor desta etapa já foi revelado.");
+		}
 		var participantNames = await db.Participants
 			.Where(participant => candidates.Select(candidate => candidate.ParticipantId).Contains(participant.Id))
 			.ToDictionaryAsync(participant => participant.Id, participant => participant.Name);
@@ -422,7 +430,13 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 		return Ok(new { card.Id, card.PublicCode, participantName = participant?.Name, responsibleEmployeeName = participant?.ResponsibleEmployeeName, isWinner, numbers = ToRows(card.Numbers), markingMode = e!.MarkingMode, roundId = round?.Id, roundStatus = round?.Status, currentPrize = activeStage?.PrizeName, currentPattern = activeStage?.Pattern, drawnNumbers = round?.DrawnNumbers.OrderBy(x => x.Sequence).Select(x => x.Number) ?? [], markedNumbers = marks, lastSequence = round?.DrawnNumbers.Count ?? 0, canGenerateNextCard });
 	}
 	private static int[][] ToRows(int[,] card) => Enumerable.Range(0, 5).Select(r => Enumerable.Range(0, 5).Select(c => card[r, c]).ToArray()).ToArray();
-	private Task<RoundWinner?> FindPendingWinner(Guid roundId, Guid stageId) => db.RoundWinners.SingleOrDefaultAsync(item => item.RoundId == roundId && item.StageId == stageId && item.IsWinner && item.RevealedAt.HasValue && !item.PrizeDeliveredAt.HasValue && !item.PrizeDeclinedAt.HasValue);
+	private async Task<RoundWinner?> FindPendingWinner(Guid roundId, Guid stageId) => (await db.RoundWinners
+		.Where(item => item.RoundId == roundId && item.StageId == stageId && item.IsWinner && item.RevealedAt.HasValue && !item.PrizeDeliveredAt.HasValue && !item.PrizeDeclinedAt.HasValue)
+		.ToListAsync())
+		.OrderByDescending(item => item.TieBreakerNumber)
+		.ThenBy(item => item.RevealedAt)
+		.ThenBy(item => item.Id)
+		.FirstOrDefault();
 	private static bool IsValidPrizeImage(string? imageDataUrl) => string.IsNullOrWhiteSpace(imageDataUrl) || imageDataUrl.Length <= MaximumPrizeImageLength && SupportedPrizeImagePrefixes.Any(prefix => imageDataUrl.StartsWith(prefix, StringComparison.Ordinal));
 	private static bool HasDuplicatePatterns(IEnumerable<CreatePrizeStageRequest> stages) => stages.GroupBy(stage => stage.Pattern).Any(group => group.Count() > 1);
 	private Guid GetCompanyId() => Guid.Parse(User.FindFirstValue("company_id")!);

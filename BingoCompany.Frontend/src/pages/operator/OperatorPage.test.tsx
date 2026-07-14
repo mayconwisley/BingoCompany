@@ -56,6 +56,21 @@ describe("OperatorPage", () => {
 		expect(bingoApi.startRound).not.toHaveBeenCalled();
 	});
 
+	it("volta para as configurações do evento", async () => {
+		render(
+			<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}>
+				<Routes>
+					<Route path="/operacao/:eventId/:roundId" element={<OperatorPage />} />
+					<Route path="/admin/eventos/:eventId" element={<p>Configurações do evento</p>} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		fireEvent.click(await screen.findByRole("button", { name: "VOLTAR ÀS CONFIGURAÇÕES" }));
+
+		expect(await screen.findByText("Configurações do evento")).toBeInTheDocument();
+	});
+
 	it("mantém o sorteio bloqueado enquanto o telão apresenta o vencedor", async () => {
 		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
 			id: "event-1",
@@ -126,6 +141,44 @@ describe("OperatorPage", () => {
 		fireEvent.click(await screen.findByRole("button", { name: "VENCEDOR NÃO RETIROU O PRÊMIO" }));
 
 		expect(bingoApi.markPrizeDeclined).toHaveBeenCalledWith("event-1", "round-1");
+	});
+
+	it("impede uma segunda revelação enquanto a primeira está em andamento", async () => {
+		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
+			id: "event-1",
+			name: "Festa",
+			publicCode: "ABC",
+			status: "Running",
+			markingMode: "Automatic",
+			participants: 1,
+			cards: 1,
+			round: {
+				id: "round-1",
+				name: "Rodada 1",
+				sequence: 1,
+				status: "TieBreaker",
+				stages: [],
+				drawnNumbers: [10],
+				winnerDetectedCount: 2,
+				tieBreakerRequired: true
+			}
+		});
+		vi.mocked(bingoApi.reveal).mockImplementation(() => new Promise(() => {}));
+
+		render(
+			<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}>
+				<Routes>
+					<Route path="/operacao/:eventId/:roundId" element={<OperatorPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		const revealButton = await screen.findByRole("button", { name: "REALIZAR DESEMPATE" });
+		fireEvent.click(revealButton);
+		fireEvent.click(revealButton);
+
+		expect(bingoApi.reveal).toHaveBeenCalledTimes(1);
+		expect(revealButton).toBeDisabled();
 	});
 
 	it("permite cancelar uma rodada em sorteio", async () => {
