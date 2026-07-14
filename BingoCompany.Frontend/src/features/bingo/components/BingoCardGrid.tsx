@@ -31,7 +31,7 @@ export function BingoCardGrid({ numbers, drawnNumbers, markedNumbers, manual, ma
 										: `Número ${number}${drawn ? ", sorteado" : ""}${marked ? ", marcado" : ""}`
 								}
 								className={`${number === 0 ? "free" : ""} ${drawn ? "drawn" : ""} ${marked ? "marked" : ""}`}
-							disabled={disabled || number === 0 || !drawn || marked || !manual || !canMark}
+								disabled={disabled || number === 0 || !drawn || marked || !manual || !canMark}
 								onClick={() => onMark(number)}
 							>
 								{number === 0 ? "★" : number}

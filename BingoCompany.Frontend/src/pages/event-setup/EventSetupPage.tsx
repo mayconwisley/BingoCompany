@@ -113,10 +113,10 @@ export function EventSetupPage() {
 									</span>
 								) : (
 									<Link className="access-item" to={registrationPath}>
-									<span aria-hidden="true">↗</span>
-									<strong>Inscrição</strong>
-									<small>Participantes entram no bingo</small>
-								</Link>
+										<span aria-hidden="true">↗</span>
+										<strong>Inscrição</strong>
+										<small>Participantes entram no bingo</small>
+									</Link>
 								)}
 								{isFinished ? (
 									<span className="access-item is-disabled" aria-disabled="true">
@@ -126,10 +126,10 @@ export function EventSetupPage() {
 									</span>
 								) : (
 									<Link className="access-item" to={displayPath} target="_blank" rel="noopener noreferrer">
-									<span aria-hidden="true">▣</span>
-									<strong>Telão</strong>
-									<small>Exibição pública do sorteio</small>
-								</Link>
+										<span aria-hidden="true">▣</span>
+										<strong>Telão</strong>
+										<small>Exibição pública do sorteio</small>
+									</Link>
 								)}
 								<Link className="access-item" to={auditPath}>
 									<span aria-hidden="true">✓</span>
@@ -144,10 +144,10 @@ export function EventSetupPage() {
 									</span>
 								) : (
 									<Link className="access-item" to={printCardsPath}>
-									<span aria-hidden="true">▤</span>
-									<strong>Cartelas</strong>
-									<small>Gerar e imprimir cartelas físicas</small>
-								</Link>
+										<span aria-hidden="true">▤</span>
+										<strong>Cartelas</strong>
+										<small>Gerar e imprimir cartelas físicas</small>
+									</Link>
 								)}
 							</nav>
 						</section>
@@ -158,18 +158,22 @@ export function EventSetupPage() {
 								<p>Abra a página pública de compartilhamento para exibir o QR Code aos participantes.</p>
 								<div className="actions">
 									{isFinished ? (
-										<span className="button is-disabled" aria-disabled="true">Abrir QR Code de inscrição</span>
+										<span className="button is-disabled" aria-disabled="true">
+											Abrir QR Code de inscrição
+										</span>
 									) : (
 										<Link className="button" to={registrationSharePath} target="_blank" rel="noopener noreferrer">
-										Abrir QR Code de inscrição
-									</Link>
+											Abrir QR Code de inscrição
+										</Link>
 									)}
 									{isFinished ? (
-										<span className="button is-disabled" aria-disabled="true">Visualizar inscrição</span>
+										<span className="button is-disabled" aria-disabled="true">
+											Visualizar inscrição
+										</span>
 									) : (
 										<Link className="button" to={registrationPath}>
-										Visualizar inscrição
-									</Link>
+											Visualizar inscrição
+										</Link>
 									)}
 									<button
 										className="primary"
@@ -206,11 +210,7 @@ export function EventSetupPage() {
 								</label>
 								<PrizeStageEditor stages={stages} onChange={setStages} disabled={isFinished} />
 								<div className="actions">
-									<button
-										className="primary"
-										disabled={isFinished || action.isPending}
-										onClick={saveRound}
-									>
+									<button className="primary" disabled={isFinished || action.isPending} onClick={saveRound}>
 										{action.isPending
 											? "Salvando..."
 											: editingRoundId
@@ -230,11 +230,13 @@ export function EventSetupPage() {
 							<h2>Cartelas impressas</h2>
 							<div className="actions">
 								{isFinished ? (
-									<span className="button is-disabled" aria-disabled="true">Abrir para impressão</span>
+									<span className="button is-disabled" aria-disabled="true">
+										Abrir para impressão
+									</span>
 								) : (
 									<Link className="button" to={printCardsPath}>
-									Abrir para impressão
-								</Link>
+										Abrir para impressão
+									</Link>
 								)}
 							</div>
 							<label>
@@ -301,7 +303,11 @@ export function EventSetupPage() {
 									<div className="actions">
 										<button
 											disabled={
-												isFinished || !selectedCard || !selectedParticipant || selectedCardState !== "Printed" || action.isPending
+												isFinished ||
+												!selectedCard ||
+												!selectedParticipant ||
+												selectedCardState !== "Printed" ||
+												action.isPending
 											}
 											onClick={async () => {
 												await action.execute(
@@ -343,9 +349,13 @@ export function EventSetupPage() {
 											</div>
 											<div className="actions">
 												{round.status === "Ready" && (
-													<button disabled={isFinished} onClick={() => editRound(round)}>Editar rodada</button>
+													<button disabled={isFinished} onClick={() => editRound(round)}>
+														Editar rodada
+													</button>
 												)}
-											<button disabled={isFinished} onClick={() => openRound(round.id)}>Abrir operação</button>
+												<button disabled={isFinished} onClick={() => openRound(round.id)}>
+													Abrir operação
+												</button>
 											</div>
 										</article>
 									))}

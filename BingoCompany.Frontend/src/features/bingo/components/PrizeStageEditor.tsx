@@ -69,8 +69,8 @@ export function PrizeStageEditor({ stages, onChange, disabled = false }: PrizeSt
 					<label className="prize-image-input">
 						Foto do prêmio
 						<input
-						aria-label={`Foto do prêmio ${index + 1}`}
-						disabled={disabled}
+							aria-label={`Foto do prêmio ${index + 1}`}
+							disabled={disabled}
 							type="file"
 							accept="image/jpeg,image/png,image/webp"
 							onChange={(event) => updateImage(index, event.target.files?.[0])}

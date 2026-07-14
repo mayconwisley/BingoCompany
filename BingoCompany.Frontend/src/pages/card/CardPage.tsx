@@ -53,7 +53,9 @@ export function CardPage() {
 							<div className="card-owner">
 								<span>Participante</span>
 								<strong>{card.data.participantName}</strong>
-								{card.data.responsibleEmployeeName && <small>Colaborador responsável: {card.data.responsibleEmployeeName}</small>}
+								{card.data.responsibleEmployeeName && (
+									<small>Colaborador responsável: {card.data.responsibleEmployeeName}</small>
+								)}
 							</div>
 						)}
 						{card.data.currentPattern && <p>Regra atual: {winningPatternLabel(card.data.currentPattern)}</p>}
