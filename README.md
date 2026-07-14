@@ -1,43 +1,84 @@
-# Bingo Company
+<p align="center">
+  <img src="BingoCompany.Frontend/public/assets/bingo-company-logo.png" width="150" alt="Logo do Bingo Company">
+</p>
 
-Plataforma de bingo corporativo em tempo real. A organização cria eventos e rodadas com etapas progressivas de prêmio; participantes usam cartelas digitais ou impressas; o operador conduz o sorteio; o telão e as cartelas acompanham a partida ao vivo.
+<h1 align="center">Bingo Company</h1>
 
-O backend é a fonte de verdade para a sequência de pedras, cartelas elegíveis, marcações e vencedores.
+<p align="center">
+  Plataforma corporativa de bingo em tempo real, com sorteios auditáveis e experiências para organização, participantes, operação e telão.
+</p>
 
-## Para quem usa o sistema
+<p align="center">
+  <a href="https://github.com/mayconwisley/BingoCompany/actions/workflows/ci.yml"><img src="https://github.com/mayconwisley/BingoCompany/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI"></a>
+  <a href="https://github.com/mayconwisley/BingoCompany/actions/workflows/release.yml"><img src="https://github.com/mayconwisley/BingoCompany/actions/workflows/release.yml/badge.svg" alt="Deploy de produção"></a>
+  <a href="https://github.com/mayconwisley/BingoCompany/releases/latest"><img src="https://img.shields.io/github/v/release/mayconwisley/BingoCompany?display_name=tag&sort=semver" alt="Versão"></a>
+  <a href="https://mcnwly.com.br/bingo/"><img src="https://img.shields.io/website?url=https%3A%2F%2Fmcnwly.com.br%2Fbingo%2F&label=deploy" alt="Aplicação em produção"></a>
+</p>
 
-A ajuda está disponível dentro do produto em **Ajuda** (`/ajuda`). Para uma referência que pode ser compartilhada ou impressa, consulte o [guia de uso](docs/GUIA-DE-USO.md).
+<p align="center">
+  <img src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white" alt=".NET 10">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=20232A" alt="React 19">
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white" alt="Vite">
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/SignalR-tempo%20real-512BD4" alt="SignalR">
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" alt="Docker Compose">
+</p>
 
-Fluxo da organização:
+## Visão geral
 
-1. Cadastre a empresa e entre na área administrativa.
-2. Crie o evento e escolha o modo de marcação.
-3. Abra as inscrições e compartilhe o link ou QR Code.
-4. Gere/associe/ative cartelas físicas, se houver.
-5. Crie uma rodada com uma ou mais etapas de prêmio.
-6. Inicie a rodada, faça os sorteios e revele cada vencedor.
-7. Encerre a apresentação do prêmio antes de continuar e finalize o evento somente após concluir todas as rodadas.
+O Bingo Company organiza eventos de bingo corporativo com cartelas digitais e impressas. A plataforma mantém o backend como fonte de verdade para cartelas, sequência de pedras, marcações, elegibilidade, vencedores e auditoria.
+
+- Eventos com várias rodadas e etapas progressivas de prêmio.
+- Inscrição pública por link ou QR Code.
+- Cartelas digitais e físicas com rastreabilidade.
+- Marcação automática, manual obrigatória ou manual assistida.
+- Operação em tempo real via SignalR e telão público.
+- Auditoria de sequência, rodadas, cartelas e vencedores.
+
+## Status de qualidade e publicação
+
+| Item | Status | O que valida |
+| --- | --- | --- |
+| CI | [![CI](https://github.com/mayconwisley/BingoCompany/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/mayconwisley/BingoCompany/actions/workflows/ci.yml) | Testes, build, ESLint, tipos, formatação e auditoria de dependências. |
+| Deploy | [![Deploy](https://github.com/mayconwisley/BingoCompany/actions/workflows/release.yml/badge.svg)](https://github.com/mayconwisley/BingoCompany/actions/workflows/release.yml) | Publicação versionada na VPS após aprovação do CI. |
+| Produção | [![Produção](https://img.shields.io/website?url=https%3A%2F%2Fmcnwly.com.br%2Fbingo%2F&label=online)](https://mcnwly.com.br/bingo/) | Disponibilidade da aplicação pública. |
+
+Os badges são atualizados pelo GitHub Actions e pelo monitoramento do endereço público; verde indica a última execução ou verificação bem-sucedida.
 
 ## Arquitetura
 
 | Projeto | Responsabilidade |
 | --- | --- |
 | `BingoCompany.Domain` | Entidades, enums e invariantes de negócio. |
-| `BingoCompany.Application` | Geração segura de cartelas e sequência, avaliação de padrões e jogo da rodada. |
-| `BingoCompany.Infrastructure` | EF Core, PostgreSQL e migrations. |
-| `BingoCompany.Api` | REST, SignalR, autenticação e inicialização do banco. |
-| `BingoCompany.Frontend` | React, TypeScript e Vite para participantes, organização, operação, telão e auditoria. |
-| `BingoCompany.Tests` | Testes unitários e de integração. |
+| `BingoCompany.Application` | Casos de uso puros: geração segura, avaliação de padrões e regras da rodada. |
+| `BingoCompany.Infrastructure` | EF Core, PostgreSQL e mapeamento de persistência. |
+| `BingoCompany.Api` | API REST, SignalR, autenticação e inicialização. |
+| `BingoCompany.Frontend` | React + TypeScript + Vite para participantes, organização, operação, telão e auditoria. |
+| `BingoCompany.Tests` | Testes unitários e de integração do backend. |
 
-## Requisitos
+## Tecnologias
 
-- .NET SDK compatível com `BingoCompany.Api/BingoCompany.Api.csproj`.
-- Node.js e npm para o frontend.
-- PostgreSQL acessível. No desenvolvimento local, a aplicação pode criar o banco configurado, desde que o usuário informado em `DBBingoUser` tenha a permissão necessária.
+| Camada | Recursos |
+| --- | --- |
+| Backend | .NET 10, ASP.NET Core, EF Core, JWT, OpenAPI/Swagger |
+| Frontend | React 19, TypeScript, Vite, React Router, Vitest, Testing Library |
+| Tempo real | ASP.NET Core SignalR |
+| Dados | PostgreSQL |
+| Operação | Docker Compose, Nginx, systemd e GitHub Actions |
 
-## Executar localmente
+## Começar rapidamente
 
-1. Configure as credenciais do PostgreSQL. O arquivo `BingoCompany.Api/appsettings.json` contém a string de conexão com os marcadores `{{username}}` e `{{password}}`; informe os valores por variáveis de ambiente:
+### Pré-requisitos
+
+- .NET SDK 10.
+- Node.js 22 ou superior e npm.
+- PostgreSQL acessível.
+- Docker Desktop opcional para a demonstração completa.
+
+### Desenvolvimento local
+
+1. Configure as credenciais locais do PostgreSQL e a chave JWT:
 
    ```powershell
    $env:DBBingoUser = "bingo"
@@ -45,13 +86,13 @@ Fluxo da organização:
    $env:BingoJwtKey = "uma-chave-aleatoria-com-pelo-menos-32-caracteres"
    ```
 
-2. Em um terminal, execute a API:
+2. Inicie a API:
 
    ```powershell
    dotnet run --project .\BingoCompany.Api
    ```
 
-3. Em outro terminal, instale e inicie o frontend:
+3. Em outro terminal, inicie o frontend:
 
    ```powershell
    cd .\BingoCompany.Frontend
@@ -59,35 +100,37 @@ Fluxo da organização:
    npm run dev
    ```
 
-Por padrão, o frontend é aberto em `http://localhost:5173` e a API em `http://localhost:5138`. Swagger só é exposto no ambiente `Development`, em `http://localhost:5138/swagger`. O endpoint de saúde é `GET /healthz`.
+O frontend fica disponível em `http://localhost:5173`; a API em `http://localhost:5138`; o Swagger, apenas em desenvolvimento, em `http://localhost:5138/swagger`.
 
-## Demonstração com Docker Compose
-
-O Compose é destinado a uma demonstração local por HTTP, não a produção.
+### Demonstração com Docker Compose
 
 ```powershell
 Copy-Item .env.example .env
-# Edite .env e substitua os valores de exemplo por segredos aleatórios.
+# Edite .env e informe segredos locais.
 docker compose up --build
 ```
 
-Abra `http://localhost:8080`. A mesma origem atende o frontend, a API em `/api`, o SignalR em `/hubs/bingo` e o Swagger em `/swagger`. Os dados ficam no volume `bingo-postgres-data`.
+Abra `http://localhost:8080`. O Compose atende o frontend, a API em `/api`, o SignalR em `/hubs/bingo` e o Swagger em `/swagger`.
+
+Para encerrar:
 
 ```powershell
 docker compose down
 ```
 
-Para apagar os dados da demonstração, use `docker compose down -v`. Isso remove o volume do PostgreSQL e não deve ser usado para resolver alterações de esquema em ambientes persistentes.
+> Para remover também os dados locais da demonstração, use `docker compose down -v`.
 
-## API, tempo real e testes manuais
+## Fluxo de uso
 
-- A referência funcional dos endpoints está em [docs/API.md](docs/API.md).
-- Os exemplos executáveis estão divididos em [`BingoCompany.Api/http`](BingoCompany.Api/http): autenticação, consulta pública e operações de evento/cartela.
-- O hub SignalR é `/hubs/bingo`; clientes entram nos grupos do evento e, opcionalmente, da rodada. Os eventos e as regras de reconexão estão em [docs/API.md](docs/API.md#signalr).
+1. Cadastre a empresa e entre na administração.
+2. Crie o evento e escolha o modo de marcação.
+3. Abra as inscrições e compartilhe o link público ou QR Code.
+4. Gere, associe e ative cartelas impressas quando necessário.
+5. Configure a rodada e as etapas de prêmio.
+6. Inicie o sorteio, revele os vencedores e acompanhe o telão em tempo real.
+7. Finalize o evento e disponibilize a auditoria pública.
 
-As rotas administrativas exigem a sessão autenticada e só permitem acessar eventos da própria empresa. As rotas públicas não retornam CPF, matrícula, e-mail, token de acesso nem dados internos de colaboradores.
-
-## Validação
+## Qualidade
 
 Na raiz da solução:
 
@@ -101,9 +144,24 @@ No frontend:
 ```powershell
 cd .\BingoCompany.Frontend
 npm test
+npm run lint
 npm run build
 ```
 
-## Publicação na VPS
+## Documentação
 
-O procedimento de produção, incluindo Nginx, systemd, variáveis de ambiente e release por tag, está em [deploy/vps/README.md](deploy/vps/README.md).
+- [Guia de uso](docs/GUIA-DE-USO.md)
+- [Referência da API e SignalR](docs/API.md)
+- [Exemplos HTTP](BingoCompany.Api/http)
+- [Publicação na VPS](deploy/vps/README.md)
+
+## Segurança e auditoria
+
+- A sequência é gerada no backend com fonte criptograficamente segura e publicada com hash antes da revelação.
+- O frontend não decide vencedores, elegibilidade, marcações ou pedras sorteadas.
+- Dados sensíveis de colaboradores não são expostos pelas rotas públicas.
+- Todas as ações relevantes são registradas para auditoria.
+
+## Licença
+
+Consulte [LICENSE.txt](LICENSE.txt).
