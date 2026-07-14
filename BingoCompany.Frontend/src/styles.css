@@ -294,6 +294,57 @@ main > h1 {
 .panel p {
 	line-height: 1.55;
 }
+.card-count {
+	display: flex;
+	align-items: baseline;
+	gap: 0.5rem;
+	margin: 1.25rem 0;
+	padding: 0.85rem 1rem;
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	background: var(--bg);
+}
+.card-count strong {
+	color: var(--accent);
+	font-size: 1.65rem;
+}
+.card-count span {
+	color: var(--muted);
+	font-size: 0.9rem;
+	font-weight: 700;
+}
+.awarded-cards {
+	margin-top: 1.5rem;
+	padding-top: 1.25rem;
+	border-top: 1px solid var(--line);
+}
+.awarded-cards h3 {
+	margin: 0 0 0.8rem;
+}
+.awarded-cards ul {
+	display: grid;
+	gap: 0.65rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.awarded-cards li {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	column-gap: 0.6rem;
+	padding: 0.75rem;
+	border: 1px solid var(--line);
+	border-radius: 10px;
+	background: var(--bg);
+}
+.awarded-cards li strong {
+	color: var(--accent);
+}
+.awarded-cards li small {
+	grid-column: 1 / -1;
+	margin-top: 0.25rem;
+	color: var(--muted);
+}
 .formrow {
 	display: grid;
 	grid-template-columns: 2fr 1fr auto;

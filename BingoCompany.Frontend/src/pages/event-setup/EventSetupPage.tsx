@@ -173,6 +173,10 @@ export function EventSetupPage() {
 								<p className="eyebrow">Participantes</p>
 								<h2>Inscrições</h2>
 								<p>Abra a página pública de compartilhamento para exibir o QR Code aos participantes.</p>
+								<div className="card-count" aria-label={`${event.data.cards} cartelas geradas para o evento`}>
+									<strong>{event.data.cards}</strong>
+									<span>cartelas geradas para este evento</span>
+								</div>
 								<div className="actions">
 									{isFinished ? (
 										<span className="button is-disabled" aria-disabled="true">
@@ -203,6 +207,24 @@ export function EventSetupPage() {
 										Abrir inscrições
 									</button>
 								</div>
+								{isFinished && (
+									<div className="awarded-cards" aria-labelledby="awarded-cards-title">
+										<h3 id="awarded-cards-title">Cartelas premiadas</h3>
+										{event.data.awardedCards.length > 0 ? (
+											<ul>
+												{event.data.awardedCards.map((card) => (
+													<li key={`${card.publicCode}-${card.roundName}-${card.prizeName}`}>
+														<strong>{card.publicCode}</strong>
+														<span>{card.participantName}</span>
+														<small>{card.roundName} · {card.prizeName}</small>
+													</li>
+												))}
+											</ul>
+										) : (
+											<p>Nenhuma cartela foi premiada neste evento.</p>
+										)}
+									</div>
+								)}
 							</section>
 							<section className="panel">
 								<p className="eyebrow">Configuração da rodada</p>

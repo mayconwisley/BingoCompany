@@ -34,6 +34,7 @@ export type EventDetails = {
 	cards: number;
 	participantList: { id: string; name: string; type: string }[];
 	cardList: { publicCode: string; type: string; status: string; fingerprint: string; participantId?: string }[];
+	awardedCards: { publicCode: string; participantName: string; roundName: string; prizeName: string }[];
 	rounds: {
 		id: string;
 		name: string;

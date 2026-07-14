@@ -16,6 +16,7 @@ const finishedEvent: EventDetails = {
 	cards: 1,
 	participantList: [],
 	cardList: [],
+	awardedCards: [],
 	rounds: [
 		{
 			id: "round-1",
@@ -50,6 +51,29 @@ describe("EventSetupPage", () => {
 		expect(screen.getByRole("button", { name: "Encerrar evento e publicar auditoria" })).toBeDisabled();
 		expect(screen.getByLabelText("Nome da rodada")).toBeDisabled();
 		expect(screen.getByLabelText("Quantidade de cartelas impressas")).toBeDisabled();
+	});
+
+	it("mostra o total de cartelas e as cartelas premiadas ao encerrar o evento", async () => {
+		vi.mocked(bingoApi.getEvent).mockResolvedValue({
+			...finishedEvent,
+			cards: 12,
+			awardedCards: [
+				{ publicCode: "BINGO-12", participantName: "Ana", roundName: "Rodada 1", prizeName: "Vale-presente" }
+			]
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/admin/eventos/event-1?code=EVENTO1"]}>
+				<Routes>
+					<Route path="/admin/eventos/:eventId" element={<EventSetupPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByLabelText("12 cartelas geradas para o evento")).toBeInTheDocument();
+		expect(screen.getByRole("heading", { name: "Cartelas premiadas" })).toBeInTheDocument();
+		expect(screen.getByText("BINGO-12")).toBeInTheDocument();
+		expect(screen.getByText("Rodada 1 · Vale-presente")).toBeInTheDocument();
 	});
 
 	it("ordena as rodadas pela criação e bloqueia a operação da rodada finalizada", async () => {

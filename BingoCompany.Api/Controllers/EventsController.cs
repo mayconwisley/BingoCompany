@@ -53,7 +53,22 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 	public async Task<ActionResult<object>> Get(Guid eventId)
 	{
 		var e = await db.Events.Include(x => x.Rounds).ThenInclude(x => x.Stages).Include(x => x.Cards).Include(x => x.Participants).SingleOrDefaultAsync(x => x.Id == eventId);
-		return e is null ? NotFound() : Ok(new { e.Id, e.Name, e.PublicCode, e.Status, participants = e.Participants.Count, cards = e.Cards.Count, participantList = e.Participants.OrderBy(item => item.Name).Select(item => new { item.Id, item.Name, item.Type }), cardList = e.Cards.OrderByDescending(item => item.CreatedAt).Select(item => new { item.PublicCode, item.Type, item.Status, item.Fingerprint, item.ParticipantId }), rounds = e.Rounds.OrderBy(x => x.CreatedAt).ThenBy(x => x.Sequence).Select(x => new { x.Id, x.Name, x.Status, x.CreatedAt, stages = x.Stages.OrderBy(stage => stage.Sequence).Select(stage => new { stage.Sequence, stage.PrizeName, stage.Pattern, stage.PrizeImageDataUrl, stage.IsActive, stage.IsCompleted }) }) });
+		if (e is null) return NotFound();
+
+		AwardedCardSummary[] awardedCards = e.Status != EventStatus.Finished
+			? []
+			: await (
+				from winner in db.RoundWinners.AsNoTracking()
+				join card in db.Cards.AsNoTracking() on winner.CardId equals card.Id
+				join participant in db.Participants.AsNoTracking() on winner.ParticipantId equals participant.Id
+				join round in db.Rounds.AsNoTracking() on winner.RoundId equals round.Id
+				join stage in db.PrizeStages.AsNoTracking() on winner.StageId equals stage.Id
+				where winner.IsWinner && winner.RevealedAt.HasValue && round.EventId == eventId
+				orderby round.Sequence, stage.Sequence
+				select new AwardedCardSummary(card.PublicCode, participant.Name, round.Name, stage.PrizeName)
+			).ToArrayAsync();
+
+		return Ok(new { e.Id, e.Name, e.PublicCode, e.Status, participants = e.Participants.Count, cards = e.Cards.Count, participantList = e.Participants.OrderBy(item => item.Name).Select(item => new { item.Id, item.Name, item.Type }), cardList = e.Cards.OrderByDescending(item => item.CreatedAt).Select(item => new { item.PublicCode, item.Type, item.Status, item.Fingerprint, item.ParticipantId }), awardedCards, rounds = e.Rounds.OrderBy(x => x.CreatedAt).ThenBy(x => x.Sequence).Select(x => new { x.Id, x.Name, x.Status, x.CreatedAt, stages = x.Stages.OrderBy(stage => stage.Sequence).Select(stage => new { stage.Sequence, stage.PrizeName, stage.Pattern, stage.PrizeImageDataUrl, stage.IsActive, stage.IsCompleted }) }) });
 	}
 	[HttpPost("{eventId:guid}/registration/open")]
 	public async Task<IActionResult> OpenRegistration(Guid eventId) { var e = await db.Events.FindAsync(eventId); if (e is null) return NotFound(); e.OpenRegistration(); db.AuditEntries.Add(new AuditEntry(eventId, "Inscrições abertas", "As inscrições do evento foram abertas.")); await db.SaveChangesAsync(); return NoContent(); }
@@ -430,6 +445,7 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 		return Ok(new { card.Id, card.PublicCode, participantName = participant?.Name, responsibleEmployeeName = participant?.ResponsibleEmployeeName, isWinner, numbers = ToRows(card.Numbers), markingMode = e!.MarkingMode, roundId = round?.Id, roundStatus = round?.Status, currentPrize = activeStage?.PrizeName, currentPattern = activeStage?.Pattern, drawnNumbers = round?.DrawnNumbers.OrderBy(x => x.Sequence).Select(x => x.Number) ?? [], markedNumbers = marks, lastSequence = round?.DrawnNumbers.Count ?? 0, canGenerateNextCard });
 	}
 	private static int[][] ToRows(int[,] card) => Enumerable.Range(0, 5).Select(r => Enumerable.Range(0, 5).Select(c => card[r, c]).ToArray()).ToArray();
+	private sealed record AwardedCardSummary(string PublicCode, string ParticipantName, string RoundName, string PrizeName);
 	private async Task<RoundWinner?> FindPendingWinner(Guid roundId, Guid stageId) => (await db.RoundWinners
 		.Where(item => item.RoundId == roundId && item.StageId == stageId && item.IsWinner && item.RevealedAt.HasValue && !item.PrizeDeliveredAt.HasValue && !item.PrizeDeclinedAt.HasValue)
 		.ToListAsync())
