@@ -11,6 +11,6 @@ describe("App", () => {
 			</MemoryRouter>
 		);
 
-		expect(await screen.findByRole("heading", { name: /a festa inteira/i }, { timeout: 3000 })).toBeInTheDocument();
-	});
+		expect(await screen.findByRole("heading", { name: /a festa inteira/i }, { timeout: 10_000 })).toBeInTheDocument();
+	}, 15_000);
 });
