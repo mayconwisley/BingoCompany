@@ -16,5 +16,6 @@ describe("HelpPage", () => {
 		expect(screen.getByRole("heading", { name: "Entre no bingo e use sua cartela" })).toBeInTheDocument();
 		expect(screen.getByRole("heading", { name: "Veja a auditoria sem fazer login" })).toBeInTheDocument();
 		expect(screen.getByText(/Se o vencedor não retirar/i)).toBeInTheDocument();
+		expect(screen.getByText(/1\.000 cartelas elegíveis/i)).toBeInTheDocument();
 	});
 });

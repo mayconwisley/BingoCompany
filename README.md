@@ -35,6 +35,7 @@ O Bingo Company organiza eventos de bingo corporativo com cartelas digitais e im
 - Marcação automática, manual obrigatória ou manual assistida.
 - Operação em tempo real via SignalR e telão público.
 - Auditoria de sequência, rodadas, cartelas e vencedores.
+- Fluxo de sorteio validado no núcleo da aplicação com 1.000 cartelas elegíveis e 1.000 empates simultâneos.
 
 ## Status de qualidade e publicação
 
@@ -147,6 +148,12 @@ npm test
 npm run lint
 npm run build
 ```
+
+### Capacidade de rodada
+
+O núcleo do sorteio possui teste de regressão para 1.000 cartelas elegíveis na mesma rodada, incluindo a detecção de 1.000 vencedores simultâneos e o respectivo desempate. O desempate atribui posições únicas por embaralhamento criptograficamente seguro e não é limitado às 75 pedras.
+
+O lote de cartelas impressas aceita até 1.000 unidades por requisição; novos lotes podem ser gerados para o mesmo evento. A capacidade efetiva em produção também depende do PostgreSQL, da infraestrutura de rede e da quantidade de conexões SignalR, que devem ser testadas no ambiente de implantação antes de um evento de grande porte.
 
 ## Documentação
 

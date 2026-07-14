@@ -19,6 +19,8 @@ Há três modos exibidos na criação do evento:
 
 A cartela digital é entregue ao participante ao concluir a inscrição. A cartela física precisa estar associada e ativada. Quando uma rodada começa, o conjunto de cartelas elegíveis é congelado: novas inscrições ou ativações não entram naquela rodada, mas podem participar de uma rodada futura.
 
+O núcleo da rodada é validado para 1.000 cartelas elegíveis, inclusive quando todas completam a regra na mesma pedra. Para cartelas físicas, gere lotes de até 1.000 por vez; você pode repetir a operação para preparar mais cartelas no evento.
+
 ## Padrões de prêmio
 
 As etapas são disputadas na ordem configurada, sem reiniciar as pedras entre uma etapa e outra. A casa livre central conta quando o padrão a utiliza.
@@ -42,7 +44,7 @@ Para prêmios de coluna, o sorteio seleciona somente pedras da faixa da coluna a
 1. Abra a operação da rodada e escolha **Iniciar rodada**. O sistema gera as 75 pedras sem repetição e publica o hash da sequência antes do primeiro sorteio.
 2. Sorteie uma pedra por vez. O telão e as cartelas conectadas são atualizados em tempo real.
 3. Quando o sistema detectar vencedores, o sorteio pausa. Antes da revelação, o telão mostra apenas informações agregadas; nunca o nome do participante ou dados da cartela vencedora.
-4. Escolha **Revelar vencedor**. Em caso de empate, o sistema aplica o desempate e então revela o resultado.
+4. Escolha **Revelar vencedor**. Em caso de empate, o sistema atribui posições únicas de desempate, em ordem criptograficamente embaralhada, e então revela o resultado. Essa ordem não é limitada às 75 pedras.
 5. Confirme **Prêmio entregue** para concluir a etapa. Depois, feche a apresentação do vencedor antes de seguir. Se houver outra etapa, ela começa usando a mesma sequência; se não houver, a rodada termina.
 6. Se o vencedor não retirar o prêmio, escolha **Vencedor não retirou o prêmio**. O telão volta ao sorteio, a cartela recusada deixa de concorrer apenas nessa etapa e a mesma regra permanece ativa para validar outro vencedor.
 7. Depois que todas as rodadas terminarem, finalize o evento. Um evento finalizado não pode mais ser alterado.

@@ -72,7 +72,7 @@ Criação de evento:
 }
 ```
 
-`markingMode` aceita `Automatic`, `ManualRequired` ou `AssistedManual`. A criação de cartelas impressas recebe `{ "quantity": 10 }`; a associação recebe `{ "participantId": "GUID" }`; a marcação recebe `{ "number": 42 }`.
+`markingMode` aceita `Automatic`, `ManualRequired` ou `AssistedManual`. A criação de cartelas impressas recebe `{ "quantity": 10 }` e permite de 1 a 1.000 cartelas por requisição; novos lotes podem ser criados para o mesmo evento. A associação recebe `{ "participantId": "GUID" }`; a marcação recebe `{ "number": 42 }`.
 
 ## Rodadas e prêmios
 
@@ -116,6 +116,10 @@ Ao iniciar uma rodada, somente as cartelas ativas e associadas existentes naquel
 Em marcação automática, toda pedra sorteada é considerada marcada. Nos modos manuais, apenas `CardMark` persistida pela API vale para a detecção do vencedor. O nome do vencedor só aparece na API pública e no telão após a revelação.
 
 Após a revelação, o operador confirma se o prêmio foi entregue. A confirmação conclui a etapa, mas o telão permanece na apresentação até `winner-presentation/close`. Se o vencedor não retirar o prêmio, a cartela é excluída apenas daquela etapa, o telão retorna ao sorteio e a mesma regra permanece ativa para encontrar outro vencedor.
+
+Em caso de empate, o backend atribui a cada cartela uma posição única de desempate por embaralhamento criptograficamente seguro. As posições vão de `1` até a quantidade de cartelas empatadas, portanto o desempate não fica limitado às 75 pedras do bingo.
+
+O núcleo possui teste de regressão com 1.000 cartelas elegíveis e 1.000 candidatos simultâneos. Isso valida a regra, a detecção e o desempate na aplicação; a carga de PostgreSQL, rede e SignalR deve ser medida no ambiente de implantação conforme o número esperado de conexões.
 
 ## SignalR
 

@@ -31,6 +31,11 @@ export function HelpPage() {
 						O sistema controla o sorteio, as marcações, a elegibilidade e os vencedores. Assim, o resultado não depende de uma
 						conferência manual.
 					</p>
+					<p>
+						O núcleo do sorteio foi validado com 1.000 cartelas elegíveis na mesma rodada, inclusive em um empate com 1.000
+						candidatos. Em eventos maiores, a organização também deve confirmar a capacidade da infraestrutura e da conexão
+						local.
+					</p>
 				</section>
 				<section className="panel" id="organizadores">
 					<p className="eyebrow">Para organizadores</p>

@@ -6,12 +6,15 @@ namespace BingoCompany.Application.Services;
 
 public sealed class BingoRoundGameplayService : IBingoRoundGameplayService
 {
+	private static readonly Guid AutomaticMarksKey = Guid.Empty;
+
 	public RoundDrawResult Draw(BingoRound round, IReadOnlyCollection<BingoCard> eligibleCards, IReadOnlyCollection<CardMark> marks, CardMarkingMode markingMode, IReadOnlySet<Guid> excludedCardIds)
 	{
 		var drawnNumber = round.DrawNext();
+		var markedNumbersByCard = GetMarkedNumbersByCard(round, marks, markingMode);
 		var winners = eligibleCards
 			.Where(card => !excludedCardIds.Contains(card.Id))
-			.Where(card => IsWinningCard(round, card, marks, markingMode))
+			.Where(card => IsWinningCard(round, card, markedNumbersByCard, markingMode))
 			.Select(card => new RoundWinner(round.Id, round.ActiveStage.Id, card.Id, card.ParticipantId!.Value, drawnNumber.Sequence))
 			.ToArray();
 
@@ -48,7 +51,7 @@ public sealed class BingoRoundGameplayService : IBingoRoundGameplayService
 		var tieBreakerApplied = candidates.Count > 1;
 		if (tieBreakerApplied)
 		{
-			var tieBreakers = SecureDrawSequence.Generate().Take(candidates.Count).ToArray();
+			var tieBreakers = SecureTieBreakerSequence.Generate(candidates.Count);
 			for (var index = 0; index < candidates.Count; index++)
 			{
 				candidates.ElementAt(index).AssignTieBreaker(tieBreakers[index]);
@@ -60,11 +63,23 @@ public sealed class BingoRoundGameplayService : IBingoRoundGameplayService
 		return new WinnerRevealResult(winner, tieBreakerApplied);
 	}
 
-	private static bool IsWinningCard(BingoRound round, BingoCard card, IReadOnlyCollection<CardMark> marks, CardMarkingMode markingMode)
+	private static IReadOnlyDictionary<Guid, IReadOnlySet<int>> GetMarkedNumbersByCard(BingoRound round, IReadOnlyCollection<CardMark> marks, CardMarkingMode markingMode)
+	{
+		if (markingMode == CardMarkingMode.Automatic)
+		{
+			return new Dictionary<Guid, IReadOnlySet<int>> { [AutomaticMarksKey] = round.DrawnNumbers.Select(item => item.Number).ToHashSet() };
+		}
+
+		return marks
+			.GroupBy(mark => mark.CardId)
+			.ToDictionary(group => group.Key, group => (IReadOnlySet<int>)group.Select(mark => mark.Number).ToHashSet());
+	}
+
+	private static bool IsWinningCard(BingoRound round, BingoCard card, IReadOnlyDictionary<Guid, IReadOnlySet<int>> markedNumbersByCard, CardMarkingMode markingMode)
 	{
 		var markedNumbers = markingMode == CardMarkingMode.Automatic
-			? round.DrawnNumbers.Select(item => item.Number).ToHashSet()
-			: marks.Where(mark => mark.CardId == card.Id).Select(mark => mark.Number).ToHashSet();
+			? markedNumbersByCard[AutomaticMarksKey]
+			: markedNumbersByCard.GetValueOrDefault(card.Id, new HashSet<int>());
 
 		return WinningPatternEvaluator.IsCompleted(card.Numbers, markedNumbers, round.ActiveStage.Pattern);
 	}

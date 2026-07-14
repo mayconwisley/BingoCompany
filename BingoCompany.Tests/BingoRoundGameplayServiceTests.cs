@@ -30,6 +30,36 @@ public sealed class BingoRoundGameplayServiceTests
 	}
 
 	[Fact]
+	public void Draw_supports_one_thousand_eligible_cards_and_detects_simultaneous_winners()
+	{
+		var eventId = Guid.CreateVersion7();
+		var round = CreateStartedRound(eventId, WinningPattern.BColumn);
+		var cards = Enumerable.Range(0, 1_000)
+			.Select(_ => new BingoCard(eventId, Guid.CreateVersion7(), CardType.Digital, CreateCard()))
+			.ToArray();
+		round.FreezeEligibility(cards);
+		var service = new BingoRoundGameplayService();
+
+		RoundDrawResult result = null!;
+		for (var index = 0; index < 5; index++)
+		{
+			result = service.Draw(round, cards, [], CardMarkingMode.Automatic, new HashSet<Guid>());
+		}
+
+		Assert.Equal(1_000, round.EligibleCards.Count);
+		Assert.True(result.HasWinners);
+		Assert.Equal(1_000, result.Winners.Count);
+		Assert.True(result.RequiresTieBreaker);
+		Assert.Equal(RoundStatus.TieBreaker, round.Status);
+
+		var revealResult = service.RevealWinner(round, result.Winners, DateTimeOffset.UtcNow);
+
+		Assert.True(revealResult.TieBreakerApplied);
+		Assert.Equal(1_000, result.Winners.Select(winner => winner.TieBreakerNumber).Distinct().Count());
+		Assert.All(result.Winners, winner => Assert.InRange(winner.TieBreakerNumber!.Value, 1, 1_000));
+	}
+
+	[Fact]
 	public void Reveal_winner_confirms_one_candidate_without_advancing_the_prize_stage_until_delivery()
 	{
 		var eventId = Guid.CreateVersion7();

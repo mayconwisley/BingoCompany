@@ -247,8 +247,10 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 	public async Task<ActionResult<object>> Draw(Guid eventId, Guid roundId)
 	{
 		var e = await db.Events.FindAsync(eventId); var round = await db.Rounds.Include(x => x.Stages).Include(x => x.DrawnNumbers).SingleOrDefaultAsync(x => x.Id == roundId && x.EventId == eventId); if (e is null || round is null) return NotFound();
-		var eligibleCardIds = await db.RoundEligibleCards.Where(item => item.RoundId == roundId).Select(item => item.CardId).ToListAsync();
-		var eligibleCards = await db.Cards.Where(item => eligibleCardIds.Contains(item.Id)).ToListAsync();
+		var eligibleCards = await db.Cards
+			.AsNoTracking()
+			.Join(db.RoundEligibleCards.Where(item => item.RoundId == roundId), card => card.Id, eligibleCard => eligibleCard.CardId, (card, _) => card)
+			.ToListAsync();
 		var marks = e.MarkingMode == CardMarkingMode.Automatic ? [] : await db.CardMarks.Where(item => item.RoundId == roundId).ToListAsync();
 		var excludedCardIds = await db.RoundWinners.Where(item => item.RoundId == roundId && item.StageId == round.ActiveStage.Id).Select(item => item.CardId).ToHashSetAsync();
 		RoundDrawResult drawResult;
@@ -293,7 +295,18 @@ public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hu
 		var winner = revealResult.Winner;
 		db.AuditEntries.Add(new AuditEntry(eventId, candidates.Count > 1 ? "Desempate concluído" : "Prêmio revelado", $"Prêmio {round.Stages.Single(stage => stage.Id == winner.StageId).PrizeName} revelado."));
 		await db.SaveChangesAsync();
-		var participant = await db.Participants.FindAsync(winner.ParticipantId); var card = await db.Cards.FindAsync(winner.CardId); var result = new { participantName = participant!.Name, cardCode = card!.PublicCode, prize = candidates.Count > 0 ? (await db.PrizeStages.FindAsync(winner.StageId))!.PrizeName : "", tieBreakers = candidates.Select(x => new { participantName = db.Participants.Find(x.ParticipantId)!.Name, x.TieBreakerNumber, x.IsWinner }) };
+		var participantNames = await db.Participants
+			.Where(participant => candidates.Select(candidate => candidate.ParticipantId).Contains(participant.Id))
+			.ToDictionaryAsync(participant => participant.Id, participant => participant.Name);
+		var card = await db.Cards.FindAsync(winner.CardId);
+		var prize = round.Stages.Single(stage => stage.Id == winner.StageId).PrizeName;
+		var result = new
+		{
+			participantName = participantNames[winner.ParticipantId],
+			cardCode = card!.PublicCode,
+			prize,
+			tieBreakers = candidates.Select(candidate => new { participantName = participantNames[candidate.ParticipantId], candidate.TieBreakerNumber, candidate.IsWinner })
+		};
 		var stageChanged = new { roundId, currentPrize = round.Stages.SingleOrDefault(stage => stage.IsActive)?.PrizeName, status = round.Status };
 		await hub.Clients.Group($"round:{roundId}").SendAsync("PrizeStageChanged", stageChanged);
 		await hub.Clients.Group($"event:{eventId}").SendAsync("PrizeStageChanged", stageChanged);
