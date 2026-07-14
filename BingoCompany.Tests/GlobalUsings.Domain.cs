@@ -1,2 +1,2 @@
+global using BingoCompany.Domain.Entities;
 global using BingoCompany.Domain.Enums;
-global using BingoCompany.Domain.Models;
