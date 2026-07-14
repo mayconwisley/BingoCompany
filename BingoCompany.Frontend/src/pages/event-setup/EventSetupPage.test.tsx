@@ -57,9 +57,7 @@ describe("EventSetupPage", () => {
 		vi.mocked(bingoApi.getEvent).mockResolvedValue({
 			...finishedEvent,
 			cards: 12,
-			awardedCards: [
-				{ publicCode: "BINGO-12", participantName: "Ana", roundName: "Rodada 1", prizeName: "Vale-presente" }
-			]
+			awardedCards: [{ publicCode: "BINGO-12", participantName: "Ana", roundName: "Rodada 1", prizeName: "Vale-presente" }]
 		});
 
 		render(

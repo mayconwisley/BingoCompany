@@ -175,7 +175,9 @@ export function EventSetupPage() {
 										<p className="eyebrow">Participantes</p>
 										<h2>Inscrições</h2>
 									</div>
-									<span className="participants-panel-icon" aria-hidden="true">✦</span>
+									<span className="participants-panel-icon" aria-hidden="true">
+										✦
+									</span>
 								</div>
 								<p>Abra a página pública de compartilhamento para exibir o QR Code aos participantes.</p>
 								<div className="participant-metrics">
@@ -225,11 +227,15 @@ export function EventSetupPage() {
 											<ul>
 												{event.data.awardedCards.map((card) => (
 													<li key={`${card.publicCode}-${card.roundName}-${card.prizeName}`}>
-														<span className="awarded-card-icon" aria-hidden="true">★</span>
+														<span className="awarded-card-icon" aria-hidden="true">
+															★
+														</span>
 														<div>
 															<strong>{card.publicCode}</strong>
 															<span>{card.participantName}</span>
-															<small>{card.roundName} · {card.prizeName}</small>
+															<small>
+																{card.roundName} · {card.prizeName}
+															</small>
 														</div>
 													</li>
 												))}

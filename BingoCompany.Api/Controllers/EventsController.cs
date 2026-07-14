@@ -1,10 +1,7 @@
+using BingoCompany.Api.Contracts;
 using BingoCompany.Api.Hubs;
 using BingoCompany.Api.Interfaces;
 using BingoCompany.Api.Security;
-using BingoCompany.Api.Contracts;
-using BingoCompany.Api.Services;
-using BingoCompany.Application;
-using BingoCompany.Application.Services;
 using BingoCompany.Application.Interfaces;
 using BingoCompany.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +9,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using BingoCompany.Domain;
 
 namespace BingoCompany.Api.Controllers;
 

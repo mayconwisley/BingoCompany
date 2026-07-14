@@ -1,14 +1,8 @@
-using BingoCompany.Application;
-using BingoCompany.Api.Contracts;
 using BingoCompany.Api.Interfaces;
-using BingoCompany.Api.Services;
-using BingoCompany.Domain;
-using BingoCompany.Infrastructure;
+using BingoCompany.Application;
 using BingoCompany.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using BingoCompany.Domain.Entities;
 
 namespace BingoCompany.Api.Controllers;
 
@@ -80,7 +74,7 @@ public sealed partial class PublicController(BingoDbContext db, IEventParticipan
 						pattern = presentationStage.Pattern,
 						prizeImageDataUrl = presentationStage.PrizeImageDataUrl,
 						isPrizeDeliveryPending = pendingPrizeWinner is not null,
-							tieBreakers = presentationWinners.Count > 1
+						tieBreakers = presentationWinners.Count > 1
 							? presentationWinners.OrderByDescending(item => item.TieBreakerNumber).Select(item => new { participantName = presentationParticipantNames.GetValueOrDefault(item.ParticipantId, "Participante indisponível"), number = item.TieBreakerNumber, isWinner = item.Id == winner.Id })
 							: []
 					}

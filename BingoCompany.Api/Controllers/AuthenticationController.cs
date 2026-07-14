@@ -1,13 +1,11 @@
-using BingoCompany.Api.Security;
 using BingoCompany.Api.Contracts;
-using BingoCompany.Domain.Entities;
+using BingoCompany.Api.Security;
 using BingoCompany.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
