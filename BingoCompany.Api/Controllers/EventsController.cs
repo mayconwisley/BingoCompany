@@ -20,16 +20,34 @@ namespace BingoCompany.Api.Controllers;
 public sealed class EventsController(BingoDbContext db, IHubContext<BingoHub> hub, IBingoRoundGameplayService gameplayService, IEventParticipantRegistrationService participantRegistrationService) : ControllerBase
 {
 	private const int MaximumPrizeImageLength = 2_800_000;
+	private const int DefaultEventsPageSize = 12;
+	private const int MaximumEventsPageSize = 100;
 	private static readonly string[] SupportedPrizeImagePrefixes = ["data:image/jpeg;base64,", "data:image/png;base64,", "data:image/webp;base64,"];
 	[HttpGet]
-	public async Task<ActionResult<object>> List() => Ok((await db.Events.Where(x => x.CompanyId == GetCompanyId()).Select(x => new { x.Id, x.Name, x.PublicCode, x.Status, x.MarkingMode, x.CreatedAt }).ToListAsync()).OrderByDescending(x => x.CreatedAt));
+	public async Task<ActionResult<object>> List([FromQuery] int page = 1, [FromQuery] int pageSize = DefaultEventsPageSize)
+	{
+		var normalizedPage = Math.Max(page, 1);
+		var normalizedPageSize = Math.Clamp(pageSize, 1, MaximumEventsPageSize);
+		var events = db.Events
+			.AsNoTracking()
+			.Where(item => item.CompanyId == GetCompanyId())
+			.OrderByDescending(item => item.CreatedAt)
+			.ThenByDescending(item => item.Id);
+		var totalItems = await events.CountAsync(HttpContext.RequestAborted);
+		var items = await events
+			.Skip((normalizedPage - 1) * normalizedPageSize)
+			.Take(normalizedPageSize)
+			.Select(item => new { item.Id, item.Name, item.PublicCode, item.Status, item.MarkingMode, item.CreatedAt })
+			.ToListAsync(HttpContext.RequestAborted);
+		return Ok(new { items, page = normalizedPage, pageSize = normalizedPageSize, totalItems, totalPages = (int)Math.Ceiling(totalItems / (double)normalizedPageSize) });
+	}
 	[HttpPost]
 	public async Task<ActionResult<object>> Create(CreateEventRequest request)
 	{
 		if (string.IsNullOrWhiteSpace(request.Name)) return BadRequest("Informe o nome do evento.");
 		var bingoEvent = new BingoEvent(GetCompanyId(), request.Name, request.CardsPerParticipant <= 0 ? 1 : request.CardsPerParticipant, request.MarkingMode);
 		db.Events.Add(bingoEvent); db.AuditEntries.Add(new AuditEntry(bingoEvent.Id, "Evento criado", $"Evento {bingoEvent.Name} criado.")); await db.SaveChangesAsync();
-		return CreatedAtAction(nameof(Get), new { eventId = bingoEvent.Id }, new { bingoEvent.Id, bingoEvent.Name, bingoEvent.PublicCode, bingoEvent.Status });
+		return CreatedAtAction(nameof(Get), new { eventId = bingoEvent.Id }, new { bingoEvent.Id, bingoEvent.Name, bingoEvent.PublicCode, bingoEvent.Status, bingoEvent.MarkingMode, bingoEvent.CreatedAt });
 	}
 	[HttpGet("{eventId:guid}")]
 	public async Task<ActionResult<object>> Get(Guid eventId)

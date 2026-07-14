@@ -272,6 +272,13 @@ main > h1 {
 	gap: 16px;
 	margin-top: 24px;
 }
+.pagination {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+	margin-top: 24px;
+}
 .event {
 	position: relative;
 	overflow: hidden;

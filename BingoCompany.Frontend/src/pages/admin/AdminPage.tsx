@@ -8,10 +8,13 @@ import { AppShell } from "../../shared/ui/AppShell";
 import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";
 import { PageState } from "../../shared/ui/PageState";
 
+const createdAtFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" });
+
 export function AdminPage() {
 	const [name, setName] = useState("");
 	const [mode, setMode] = useState<CardMarkingMode>("Automatic");
-	const loader = useCallback(() => bingoApi.listEvents(), []);
+	const [page, setPage] = useState(1);
+	const loader = useCallback(() => bingoApi.listEvents(page), [page]);
 	const events = useAsyncResource(loader);
 	const createEvent = useAsyncAction();
 
@@ -24,7 +27,8 @@ export function AdminPage() {
 
 		if (!event) return;
 		setName("");
-		await events.reload();
+		if (page === 1) await events.reload();
+		else setPage(1);
 	};
 
 	return (
@@ -63,13 +67,14 @@ export function AdminPage() {
 				</section>
 				<PageState loading={events.loading} error={events.error} onRetry={events.reload} />
 				<section className="grid">
-					{events.data?.map((event) => (
+					{events.data?.items.map((event) => (
 						<article className="event" key={event.id}>
 							<span className="badge">{eventStatusLabel(event.status)}</span>
 							<h2>{event.name}</h2>
 							<p>
 								Código público <strong>{event.publicCode}</strong>
 							</p>
+							<p>Criado em {createdAtFormatter.format(new Date(event.createdAt))}</p>
 							<div className="actions">
 								<Link className="button" to={`/admin/eventos/${event.id}?code=${event.publicCode}`}>
 									Configurar
@@ -81,6 +86,19 @@ export function AdminPage() {
 						</article>
 					))}
 				</section>
+				{events.data && events.data.totalPages > 1 && (
+					<nav className="pagination" aria-label="Paginação de eventos">
+						<button type="button" onClick={() => setPage(page - 1)} disabled={page === 1}>
+							Página anterior
+						</button>
+						<span aria-live="polite">
+							Página {events.data.page} de {events.data.totalPages}
+						</span>
+						<button type="button" onClick={() => setPage(page + 1)} disabled={page >= events.data.totalPages}>
+							Próxima página
+						</button>
+					</nav>
+				)}
 			</main>
 		</AppShell>
 	);

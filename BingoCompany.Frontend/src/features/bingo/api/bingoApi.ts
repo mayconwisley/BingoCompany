@@ -3,6 +3,7 @@ import type {
 	CardState,
 	CreateEventInput,
 	EventDetails,
+	EventPage,
 	EventSummary,
 	JoinEventInput,
 	PrizeDraft,
@@ -20,7 +21,7 @@ type PrintedCard = {
 };
 
 export const bingoApi = {
-	listEvents: () => http<EventSummary[]>("/api/events"),
+	listEvents: (page = 1, pageSize = 12) => http<EventPage>(`/api/events?page=${page}&pageSize=${pageSize}`),
 	getEvent: (eventId: string) => http<EventDetails>(`/api/events/${eventId}`),
 	createEvent: (request: CreateEventInput) => http<EventSummary>("/api/events", { method: "POST", body: JSON.stringify(request) }),
 	openRegistration: (eventId: string) => http<void>(`/api/events/${eventId}/registration/open`, { method: "POST" }),

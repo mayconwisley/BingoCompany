@@ -16,7 +16,15 @@ export type WinningPattern =
 	| "TPattern"
 	| "Frame"
 	| "Cross";
-export type EventSummary = { id: string; name: string; publicCode: string; status: string; markingMode: CardMarkingMode };
+export type EventSummary = {
+	id: string;
+	name: string;
+	publicCode: string;
+	status: string;
+	markingMode: CardMarkingMode;
+	createdAt: string;
+};
+export type EventPage = { items: EventSummary[]; page: number; pageSize: number; totalItems: number; totalPages: number };
 export type EventDetails = {
 	id: string;
 	name: string;
