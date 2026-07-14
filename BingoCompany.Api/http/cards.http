@@ -1,0 +1,50 @@
+@apiUrl = http://localhost:5138
+@origin = http://localhost:5173
+@eventId = SUBSTITUA_PELO_GUID_DO_EVENTO
+@cardCode = SUBSTITUA_PELO_CODIGO_DA_CARTELA
+@participantId = SUBSTITUA_PELO_GUID_DO_PARTICIPANTE
+
+# Execute primeiro o cadastro ou login em auth.http. O cliente HTTP deve preservar o cookie da sessão.
+
+### Gerar cartelas impressas
+POST {{apiUrl}}/api/events/{{eventId}}/cards/printed
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "quantity": 10
+}
+
+### Listar cartelas impressas e QR Codes
+GET {{apiUrl}}/api/events/{{eventId}}/cards/printed
+Accept: application/json
+
+### Associar cartela impressa a participante
+POST {{apiUrl}}/api/events/{{eventId}}/cards/{{cardCode}}/assign
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "participantId": "{{participantId}}"
+}
+
+### Ativar cartela impressa associada
+POST {{apiUrl}}/api/events/{{eventId}}/cards/{{cardCode}}/activate
+Origin: {{origin}}
+
+### Consultar estado de uma cartela
+GET {{apiUrl}}/api/events/{{eventId}}/cards/{{cardCode}}/state
+Accept: application/json
+
+### Registrar marcação manual (somente modo manual e pedra já sorteada)
+POST {{apiUrl}}/api/events/{{eventId}}/cards/{{cardCode}}/marks
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "number": 42
+}
+
+### Gerar próxima cartela digital quando a anterior estiver completa
+POST {{apiUrl}}/api/events/{{eventId}}/cards/{{cardCode}}/next
+Origin: {{origin}}

@@ -71,16 +71,16 @@ export function HelpPage() {
 					</p>
 					<ul>
 						<li>
+							<strong>Uma linha e duas linhas:</strong> completa uma ou duas linhas horizontais.
+						</li>
+						<li>
 							<strong>Colunas B, I, N, G e O:</strong> completa a coluna correspondente.
 						</li>
 						<li>
-							<strong>Uma linha:</strong> completa uma linha horizontal.
+							<strong>Diagonal B, diagonal O e X:</strong> completa a diagonal indicada ou as duas diagonais no X.
 						</li>
 						<li>
-							<strong>Duas linhas:</strong> completa duas linhas horizontais.
-						</li>
-						<li>
-							<strong>Quatro cantos:</strong> marca os quatro cantos da cartela.
+							<strong>Quatro cantos, T, moldura e cruz:</strong> completa o desenho correspondente na cartela.
 						</li>
 						<li>
 							<strong>Cartela cheia:</strong> completa todos os números da cartela.
@@ -117,8 +117,8 @@ export function HelpPage() {
 						<li>Quando seu código aparecer no telão, avise a organização e aguarde a revelação do nome.</li>
 					</ol>
 					<p>
-						Uma cartela completa pode gerar uma nova cartela apenas depois que a rodada anterior for encerrada e quando o evento
-						permitir essa renovação.
+						Uma cartela completa pode gerar uma nova cartela somente depois que a rodada anterior for encerrada, desde que tenha
+						participado dela e a próxima rodada ainda não tenha começado.
 					</p>
 				</section>
 				<section className="panel" id="telao">

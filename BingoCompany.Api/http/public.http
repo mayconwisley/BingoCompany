@@ -1,0 +1,35 @@
+@apiUrl = http://localhost:5138
+@origin = http://localhost:5173
+@publicCode = SUBSTITUA_PELO_CODIGO_PUBLICO
+
+### Saúde da API
+GET {{apiUrl}}/healthz
+
+### Consultar estado público do evento
+GET {{apiUrl}}/api/public/events/{{publicCode}}
+Accept: application/json
+
+### Inscrever participante e gerar cartela digital
+POST {{apiUrl}}/api/public/events/{{publicCode}}/join
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "name": "Ana Participante",
+  "type": "Employee"
+}
+
+### Inscrever familiar ou convidado
+POST {{apiUrl}}/api/public/events/{{publicCode}}/join
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "name": "Convidado da Ana",
+  "type": "Guest",
+  "responsibleEmployeeName": "Ana Participante"
+}
+
+### Consultar auditoria pública
+GET {{apiUrl}}/api/public/events/{{publicCode}}/audit
+Accept: application/json

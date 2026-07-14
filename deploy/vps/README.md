@@ -39,7 +39,13 @@ sudo chmod 600 /opt/bingo/.env
 
 Gere `BingoJwtKey` com pelo menos 32 bytes aleatórios (por exemplo, `openssl rand -base64 48`). Em produção, mantenha também `Authentication__CookiePath=/bingo`, as duas origens HTTPS em `Cors__AllowedOrigins__0` e `Cors__AllowedOrigins__1`, e os hosts em `AllowedHosts`, como no arquivo de exemplo. A API não inicia em produção sem a chave JWT.
 
-Instale a unidade e a configuração Nginx, validando ambas antes de ativá-las:
+O arquivo de Nginx fornecido já referencia o certificado de `mcnwly.com.br`. Antes de ativá-lo, obtenha o certificado. Se a porta 80 estiver livre, uma opção é usar o modo standalone:
+
+```bash
+sudo certbot certonly --standalone -d mcnwly.com.br -d www.mcnwly.com.br
+```
+
+Em seguida, instale a unidade e a configuração Nginx, validando ambas antes de ativá-las:
 
 ```bash
 sudo cp deploy/vps/bingo-api.service /etc/systemd/system/bingo-api.service
@@ -51,9 +57,7 @@ sudo systemctl enable bingo-api
 sudo systemctl reload nginx
 ```
 
-A configuração Nginx incluída contém HSTS, CSP e outros cabeçalhos de proteção. Após copiá-la, valide com `sudo nginx -t` antes de recarregar. Não exponha a porta da API (`5138`) ou do PgBouncer (`6432`) na internet; ambas devem continuar vinculadas a `127.0.0.1`.
-
-Em seguida, obtenha o certificado TLS com Certbot e inclua os blocos `listen 443 ssl` no virtual host. A API recebe `X-Forwarded-Proto` do Nginx, portanto reconhece corretamente a requisição HTTPS.
+A configuração Nginx incluída já contém os blocos `listen 443 ssl`, HSTS, CSP e outros cabeçalhos de proteção. Após copiá-la, valide com `sudo nginx -t` antes de recarregar. Não exponha a porta da API (`5138`) ou do PgBouncer (`6432`) na internet; ambas devem continuar vinculadas a `127.0.0.1`. A API recebe `X-Forwarded-Proto` do Nginx e, por isso, reconhece corretamente a requisição HTTPS.
 
 ## Segredos e variáveis do GitHub
 

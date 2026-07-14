@@ -1,0 +1,32 @@
+@apiUrl = http://localhost:5138
+@origin = http://localhost:5173
+
+### Informações da aplicação
+GET {{apiUrl}}/api/application/info
+Accept: application/json
+
+### Criar empresa e iniciar sessão
+POST {{apiUrl}}/api/auth/register
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "companyName": "Empresa de Demonstração",
+  "name": "Organizador",
+  "email": "organizador@example.test",
+  "password": "senha-segura-com-12-caracteres"
+}
+
+### Entrar em uma conta existente
+POST {{apiUrl}}/api/auth/login
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "email": "organizador@example.test",
+  "password": "senha-segura-com-12-caracteres"
+}
+
+### Encerrar sessão
+POST {{apiUrl}}/api/auth/logout
+Origin: {{origin}}

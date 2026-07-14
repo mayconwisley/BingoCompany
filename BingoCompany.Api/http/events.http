@@ -1,0 +1,85 @@
+@apiUrl = http://localhost:5138
+@origin = http://localhost:5173
+@eventId = SUBSTITUA_PELO_GUID_DO_EVENTO
+@roundId = SUBSTITUA_PELO_GUID_DA_RODADA
+
+# Execute primeiro o cadastro ou login em auth.http. O cliente HTTP deve preservar o cookie da sessão.
+
+### Listar eventos da empresa autenticada
+GET {{apiUrl}}/api/events?page=1&pageSize=12
+Accept: application/json
+
+### Criar evento com marcação automática
+POST {{apiUrl}}/api/events
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "name": "Bingo de Integração",
+  "cardsPerParticipant": 1,
+  "markingMode": "Automatic"
+}
+
+### Consultar detalhes administrativos do evento
+GET {{apiUrl}}/api/events/{{eventId}}
+Accept: application/json
+
+### Abrir inscrições
+POST {{apiUrl}}/api/events/{{eventId}}/registration/open
+Origin: {{origin}}
+
+### Inscrever pelo painel administrativo
+POST {{apiUrl}}/api/events/{{eventId}}/participants
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "name": "Bruno Participante",
+  "type": "Employee"
+}
+
+### Criar rodada com etapas progressivas
+POST {{apiUrl}}/api/events/{{eventId}}/rounds
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "name": "Rodada principal",
+  "stages": [
+    { "sequence": 1, "prizeName": "Vale-presente", "pattern": "HorizontalLine" },
+    { "sequence": 2, "prizeName": "Prêmio final", "pattern": "FullCard" }
+  ]
+}
+
+### Editar rodada ainda pronta
+PUT {{apiUrl}}/api/events/{{eventId}}/rounds/{{roundId}}
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "name": "Rodada principal revisada",
+  "stages": [
+    { "sequence": 1, "prizeName": "Vale-presente", "pattern": "HorizontalLine" },
+    { "sequence": 2, "prizeName": "Prêmio final", "pattern": "FullCard" }
+  ]
+}
+
+### Iniciar rodada e congelar elegibilidade
+POST {{apiUrl}}/api/events/{{eventId}}/rounds/{{roundId}}/start
+Origin: {{origin}}
+
+### Sortear próxima pedra
+POST {{apiUrl}}/api/events/{{eventId}}/rounds/{{roundId}}/draw
+Origin: {{origin}}
+
+### Revelar vencedor ou concluir desempate
+POST {{apiUrl}}/api/events/{{eventId}}/rounds/{{roundId}}/reveal
+Origin: {{origin}}
+
+### Fechar apresentação do vencedor
+POST {{apiUrl}}/api/events/{{eventId}}/rounds/{{roundId}}/winner-presentation/close
+Origin: {{origin}}
+
+### Finalizar evento (somente após todas as rodadas)
+POST {{apiUrl}}/api/events/{{eventId}}/finish
+Origin: {{origin}}

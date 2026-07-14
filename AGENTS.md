@@ -10,7 +10,7 @@ O Bingo Company é um sistema de bingo corporativo em tempo real. Participantes 
 | --- | --- |
 | `BingoCompany.Domain` | Entidades, enums e invariantes de negócio. Não depende de outros projetos. |
 | `BingoCompany.Application` | Regras puras: geração de cartelas, sequência segura e avaliação de padrões. |
-| `BingoCompany.Infrastructure` | EF Core, SQLite e mapeamento de persistência. |
+| `BingoCompany.Infrastructure` | EF Core, PostgreSQL e mapeamento de persistência. |
 | `BingoCompany.Api` | Endpoints REST, SignalR, serialização e inicialização do banco. |
 | `BingoCompany.Frontend` | React + TypeScript + Vite para participante, administração, operador, telão e auditoria. |
 | `BingoCompany.Tests` | Testes unitários e de integração do backend. |
@@ -33,7 +33,7 @@ O Bingo Company é um sistema de bingo corporativo em tempo real. Participantes 
 - Todas as alterações de estado relevantes devem ser persistidas antes de publicar eventos SignalR.
 - Preserve o contrato de eventos SignalR: `RoundStarted`, `NumberDrawn`, `WinningCardDetected` e `WinnerRevealed`.
 - Grupos SignalR usam `event:{eventId}` e `round:{roundId}`.
-- A API usa SQLite no MVP. Ao modificar o modelo persistido, prefira criar migrations EF Core. Não apague o arquivo `bingo.db` para resolver problemas de esquema.
+- A API usa PostgreSQL. Ao modificar o modelo persistido, prefira criar migrations EF Core. Não apague ou recrie o banco para resolver problemas de esquema.
 - Não exponha na API pública CPF, matrícula, e-mail, token de acesso ou dados internos de colaboradores.
 
 ## Frontend
@@ -62,7 +62,7 @@ src/
 Execute a partir da raiz:
 
 ```powershell
-dotnet test BingoCompany.slnx --no-restore -v minimal
+dotnet test BingoCompany.sln --no-restore -v minimal
 dotnet build BingoCompany.Api/BingoCompany.Api.csproj --no-restore -v minimal
 ```
 
