@@ -58,4 +58,20 @@ describe("AppShell", () => {
 
 		expect(container.firstElementChild).toHaveClass("app-shell");
 	});
+
+	it("oferece os links principais no menu compacto", () => {
+		render(
+			<MemoryRouter>
+				<AppShell>
+					<p>Conteúdo</p>
+				</AppShell>
+			</MemoryRouter>
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: "Abrir menu de navegação" }));
+
+		expect(screen.getByRole("navigation", { name: "Navegação principal" })).toHaveTextContent("Ajuda");
+		expect(screen.getByRole("navigation", { name: "Navegação principal" })).toHaveTextContent("Minhas cartelas");
+		expect(screen.getByRole("navigation", { name: "Navegação principal" })).toHaveTextContent("Entrar");
+	});
 });

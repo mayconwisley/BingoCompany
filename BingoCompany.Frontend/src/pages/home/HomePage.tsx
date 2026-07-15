@@ -4,11 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { useSession } from "../../shared/auth/SessionContext";
 import { AppShell } from "../../shared/ui/AppShell";
 
+type PublicAccessIntent = "join" | "audit";
+
 export function HomePage() {
 	const navigate = useNavigate();
 	const { session } = useSession();
 	const [eventCode, setEventCode] = useState("");
-	const [isJoinFormVisible, setIsJoinFormVisible] = useState(false);
+	const [publicAccessIntent, setPublicAccessIntent] = useState<PublicAccessIntent>();
 	const submitEventCode = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		const code = eventCode.trim();
@@ -45,11 +47,17 @@ export function HomePage() {
 							<button onClick={() => navigate("/entrar")}>Entrar</button>
 						</>
 					)}
-					<button onClick={() => setIsJoinFormVisible(true)}>Participar</button>
-					<button onClick={() => setIsJoinFormVisible(true)}>Auditoria pública</button>
+					<button onClick={() => setPublicAccessIntent("join")}>Participar</button>
+					<button onClick={() => setPublicAccessIntent("audit")}>Auditoria pública</button>
 				</div>
-				{isJoinFormVisible && (
+				{publicAccessIntent && (
 					<form className="panel" onSubmit={submitEventCode}>
+						<h2>{publicAccessIntent === "join" ? "Participar do bingo" : "Consultar auditoria pública"}</h2>
+						<p>
+							{publicAccessIntent === "join"
+								? "Informe o código compartilhado pela organização para abrir sua inscrição."
+								: "Informe o código do evento para conferir os resultados e registros públicos."}
+						</p>
 						<label>
 							Código do evento
 							<input
@@ -61,13 +69,15 @@ export function HomePage() {
 							/>
 						</label>
 						<div className="actions">
-							<button className="primary" type="submit" disabled={!eventCode.trim()}>
-								Acessar bingo
+							<button
+								className="primary"
+								type={publicAccessIntent === "join" ? "submit" : "button"}
+								disabled={!eventCode.trim()}
+								onClick={publicAccessIntent === "audit" ? openAudit : undefined}
+							>
+								{publicAccessIntent === "join" ? "Acessar bingo" : "Consultar auditoria"}
 							</button>
-							<button type="button" disabled={!eventCode.trim()} onClick={openAudit}>
-								Consultar auditoria
-							</button>
-							<button type="button" onClick={() => setIsJoinFormVisible(false)}>
+							<button type="button" onClick={() => setPublicAccessIntent(undefined)}>
 								Cancelar
 							</button>
 						</div>

@@ -23,19 +23,26 @@ export function JoinPage() {
 	const [activatingCode, setActivatingCode] = useState("");
 	const loader = useCallback(() => bingoApi.getPublicEvent(publicCode), [publicCode]);
 	const event = useAsyncResource(loader);
+	const participantSession = getSession();
+	const isCardPurchase = Boolean(event.data?.isCardPurchaseOpen);
+	const registrationsOpen = event.data?.status === "RegistrationOpen";
 
 	const createCard = async () => {
 		try {
 			setError("");
 			setIsSubmitting(true);
-			const registrationResult = await bingoApi.join(publicCode, {
-				name,
-				type,
-				employeeRegistration: registration || undefined,
-				responsibleEmployeeName: responsible || undefined,
-				cardsQuantity: event.data?.isCardPurchaseOpen ? cardsQuantity : undefined
-			});
-			if (!event.data?.isCardPurchaseOpen) {
+			const registrationResult = await bingoApi.join(
+				publicCode,
+				isCardPurchase
+					? { name: participantSession?.name, cardsQuantity }
+					: {
+							name,
+							type,
+							employeeRegistration: registration || undefined,
+							responsibleEmployeeName: responsible || undefined
+						}
+			);
+			if (!isCardPurchase) {
 				if (registrationResult.cards.length === 1) navigate(`/cartela/${event.data?.id}/${registrationResult.cards[0].publicCode}`);
 				else navigate(`/cartelas/${event.data?.id}?codes=${registrationResult.cards.map((card) => card.publicCode).join(",")}`);
 				return;
@@ -71,10 +78,19 @@ export function JoinPage() {
 		if (value === "Employee" || value === "FamilyMember" || value === "Guest") setType(value);
 	};
 
-	const needsResponsible = type !== "Employee";
-	const requiresParticipantAccount = Boolean(event.data?.isCardPurchaseOpen && getSession()?.accountType !== "participant");
+	const needsResponsible = !isCardPurchase && type !== "Employee";
+	const requiresParticipantAccount = Boolean(isCardPurchase && participantSession?.accountType !== "participant");
 	const availableCards = event.data?.cardPurchaseRemaining;
 	const cardPurchaseCancellationReason = event.data?.cardPurchaseCancellationReason;
+	const submitDisabledReason = requiresParticipantAccount
+		? "Entre ou crie uma conta de participante para comprar cartelas neste evento."
+		: availableCards === 0
+			? "Não há mais cartelas digitais disponíveis para compra."
+			: !isCardPurchase && !name.trim()
+				? "Informe seu nome para gerar uma cartela."
+				: needsResponsible && !responsible.trim()
+					? "Informe o colaborador responsável para continuar."
+					: undefined;
 	return (
 		<AppShell>
 			<main className="join">
@@ -85,10 +101,23 @@ export function JoinPage() {
 							<div>
 								<p className="eyebrow">Inscrição para o bingo</p>
 								<h1>{event.data.name}</h1>
-								<p className="subtitle">Informe seus dados para receber sua cartela digital.</p>
+								<p className="subtitle">
+									{isCardPurchase
+										? "Escolha quantas cartelas deseja comprar. Usaremos os dados da sua conta de participante."
+										: "Informe seus dados para receber sua cartela digital."}
+								</p>
 							</div>
 						</header>
-						{registrationResult ? (
+						{!registrationsOpen ? (
+							<section className="panel">
+								<p className="eyebrow">Inscrições encerradas</p>
+								<FeedbackMessage warning="As inscrições deste bingo estão fechadas." />
+								<p>
+									A primeira rodada já foi iniciada ou o evento foi encerrado. Não é mais possível gerar ou comprar
+									cartelas.
+								</p>
+							</section>
+						) : registrationResult ? (
 							<section className="panel">
 								<h2>Suas cartelas digitais</h2>
 								<p>Guarde estes códigos. Ative somente as cartelas que deseja usar neste evento.</p>
@@ -137,43 +166,52 @@ export function JoinPage() {
 										. Assim seus códigos ficarão disponíveis depois.
 									</p>
 								)}
-								<label>
-									Seu nome
-									<input aria-label="Seu nome" value={name} onChange={(event) => setName(event.target.value)} />
-								</label>
-								<label>
-									Tipo de participante
-									<select
-										aria-label="Tipo de participante"
-										value={type}
-										onChange={(event) => updateParticipantType(event.target.value)}
-									>
-										<option value="Employee">Colaborador</option>
-										<option value="FamilyMember">Familiar</option>
-										<option value="Guest">Convidado</option>
-									</select>
-								</label>
-								{type === "Employee" && (
-									<label>
-										Matrícula <small>(opcional)</small>
-										<input
-											aria-label="Matrícula"
-											value={registration}
-											onChange={(event) => setRegistration(event.target.value)}
-										/>
-									</label>
+								{isCardPurchase && participantSession?.accountType === "participant" && (
+									<p className="purchase-account-summary" role="status">
+										Comprando como <strong>{participantSession.name}</strong>.
+									</p>
 								)}
-								{needsResponsible && (
-									<label>
-										Colaborador responsável
-										<input
-											aria-label="Colaborador responsável"
-											value={responsible}
-											onChange={(event) => setResponsible(event.target.value)}
-										/>
-									</label>
+								{!isCardPurchase && (
+									<>
+										<label>
+											Seu nome
+											<input aria-label="Seu nome" value={name} onChange={(event) => setName(event.target.value)} />
+										</label>
+										<label>
+											Tipo de participante
+											<select
+												aria-label="Tipo de participante"
+												value={type}
+												onChange={(event) => updateParticipantType(event.target.value)}
+											>
+												<option value="Employee">Colaborador</option>
+												<option value="FamilyMember">Familiar</option>
+												<option value="Guest">Convidado</option>
+											</select>
+										</label>
+										{type === "Employee" && (
+											<label>
+												Matrícula <small>(opcional)</small>
+												<input
+													aria-label="Matrícula"
+													value={registration}
+													onChange={(event) => setRegistration(event.target.value)}
+												/>
+											</label>
+										)}
+										{needsResponsible && (
+											<label>
+												Colaborador responsável
+												<input
+													aria-label="Colaborador responsável"
+													value={responsible}
+													onChange={(event) => setResponsible(event.target.value)}
+												/>
+											</label>
+										)}
+									</>
 								)}
-								{event.data.isCardPurchaseOpen && (
+								{isCardPurchase && (
 									<label>
 										Quantas cartelas deseja adquirir?{" "}
 										{availableCards !== undefined && <small>({availableCards} disponível(is))</small>}
@@ -194,14 +232,20 @@ export function JoinPage() {
 									disabled={
 										requiresParticipantAccount ||
 										availableCards === 0 ||
-										!name.trim() ||
+										(!isCardPurchase && !name.trim()) ||
 										(needsResponsible && !responsible.trim()) ||
 										isSubmitting
 									}
+									aria-describedby={submitDisabledReason ? "join-submit-hint" : undefined}
 									onClick={createCard}
 								>
-									{isSubmitting ? "Gerando cartela..." : "Gerar minha cartela"}
+									{isSubmitting ? "Processando..." : isCardPurchase ? "Comprar cartelas" : "Gerar minha cartela"}
 								</button>
+								{submitDisabledReason && (
+									<p id="join-submit-hint" className="action-hint" role="status">
+										{submitDisabledReason}
+									</p>
+								)}
 								<FeedbackMessage error={error} onClose={() => setError("")} />
 							</section>
 						)}

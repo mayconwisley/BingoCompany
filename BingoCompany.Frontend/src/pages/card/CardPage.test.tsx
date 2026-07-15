@@ -57,6 +57,8 @@ describe("CardPage", () => {
 		const previousNumber = await screen.findByRole("button", { name: "Número 1, sorteado" });
 		const currentNumber = screen.getByRole("button", { name: "Número 16, sorteado" });
 		expect(screen.getByText("Manual obrigatória")).toBeInTheDocument();
+		expect(screen.getByRole("status")).toHaveTextContent("MARQUE AGORA");
+		expect(screen.getByRole("status")).toHaveTextContent("I-16");
 		expect(previousNumber).toBeDisabled();
 		expect(currentNumber).toBeEnabled();
 		fireEvent.click(currentNumber);

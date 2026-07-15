@@ -59,10 +59,36 @@ public sealed class EventParticipantRegistrationServiceTests
 		var account = new ParticipantAccount("Ana", "ana@example.com", "hash");
 		db.ParticipantAccounts.Add(account);
 		await db.SaveChangesAsync();
-		var registration = await service.Register(bingoEvent.Id, new JoinEventRequest("Ana", CardsQuantity: 4), account.Id, CancellationToken.None);
+		var registration = await service.Register(bingoEvent.Id, new JoinEventRequest(CardsQuantity: 4), account.Id, CancellationToken.None);
 
 		Assert.Equal(4, registration!.Cards.Count);
 		Assert.All(registration.Cards, card => Assert.Equal(CardStatus.Assigned, card.Status));
+	}
+
+	[Fact]
+	public async Task Register_uses_the_authenticated_account_data_when_buying_cards()
+	{
+		var options = new DbContextOptionsBuilder<BingoDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+		await using var db = new BingoDbContext(options);
+		var bingoEvent = new BingoEvent(Guid.CreateVersion7(), "Festa");
+		bingoEvent.OpenCardPurchase(10);
+		var account = new ParticipantAccount("Ana", "ana@example.com", "hash");
+		db.Events.Add(bingoEvent);
+		db.ParticipantAccounts.Add(account);
+		await db.SaveChangesAsync();
+		var service = new EventParticipantRegistrationService(db);
+
+		await service.Register(
+			bingoEvent.Id,
+			new JoinEventRequest("Outro nome", ParticipantType.Guest, "123", "Responsável", CardsQuantity: 1),
+			account.Id,
+			CancellationToken.None);
+
+		var participant = await db.Participants.SingleAsync();
+		Assert.Equal("Ana", participant.Name);
+		Assert.Equal(ParticipantType.Employee, participant.Type);
+		Assert.Null(participant.EmployeeRegistration);
+		Assert.Null(participant.ResponsibleEmployeeName);
 	}
 
 	[Fact]

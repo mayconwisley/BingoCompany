@@ -46,7 +46,7 @@ describe("HomePage", () => {
 		expect(screen.getByTestId("location")).toHaveTextContent("/admin");
 	});
 
-	it("solicita o código do evento em uma interface da aplicação", () => {
+	it("abre uma jornada específica para participar", () => {
 		render(
 			<MemoryRouter>
 				<HomePage />
@@ -55,6 +55,8 @@ describe("HomePage", () => {
 		);
 
 		fireEvent.click(screen.getByRole("button", { name: "Participar" }));
+		expect(screen.getByRole("heading", { name: "Participar do bingo" })).toBeInTheDocument();
+		expect(screen.queryByRole("button", { name: "Consultar auditoria" })).not.toBeInTheDocument();
 		fireEvent.change(screen.getByLabelText("Código do evento"), { target: { value: "AB12CD" } });
 		fireEvent.click(screen.getByRole("button", { name: "Acessar bingo" }));
 
@@ -70,6 +72,8 @@ describe("HomePage", () => {
 		);
 
 		fireEvent.click(screen.getByRole("button", { name: "Auditoria pública" }));
+		expect(screen.getByRole("heading", { name: "Consultar auditoria pública" })).toBeInTheDocument();
+		expect(screen.queryByRole("button", { name: "Acessar bingo" })).not.toBeInTheDocument();
 		fireEvent.change(screen.getByLabelText("Código do evento"), { target: { value: "AB12CD" } });
 		fireEvent.click(screen.getByRole("button", { name: "Consultar auditoria" }));
 

@@ -122,7 +122,7 @@ describe("EventSetupPage", () => {
 	});
 
 	it("oferece links copiáveis para o QR Code e para a inscrição", async () => {
-		vi.mocked(bingoApi.getEvent).mockResolvedValue({ ...finishedEvent, status: "Draft", rounds: [] });
+		vi.mocked(bingoApi.getEvent).mockResolvedValue({ ...finishedEvent, status: "RegistrationOpen", rounds: [] });
 
 		render(
 			<MemoryRouter initialEntries={["/admin/eventos/event-1?code=EVENTO1"]}>
@@ -134,5 +134,22 @@ describe("EventSetupPage", () => {
 
 		expect(await screen.findByRole("button", { name: "Copiar link do QR Code" })).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Copiar link de inscrição" })).toBeInTheDocument();
+	});
+
+	it("bloqueia os links de inscrição depois que a primeira rodada começa", async () => {
+		vi.mocked(bingoApi.getEvent).mockResolvedValue({ ...finishedEvent, status: "Running" });
+
+		render(
+			<MemoryRouter initialEntries={["/admin/eventos/event-1?code=EVENTO1"]}>
+				<Routes>
+					<Route path="/admin/eventos/:eventId" element={<EventSetupPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByText(/As inscrições estão fechadas/)).toBeInTheDocument();
+		expect(screen.getByText("Inscrição").closest("[aria-disabled]")).toHaveAttribute("aria-disabled", "true");
+		expect(screen.queryByRole("button", { name: "Copiar link do QR Code" })).not.toBeInTheDocument();
+		expect(screen.queryByRole("button", { name: "Copiar link de inscrição" })).not.toBeInTheDocument();
 	});
 });

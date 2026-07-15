@@ -20,6 +20,7 @@ vi.mock("../../features/bingo/hooks/useLiveBingo", () => ({ useLiveBingo: vi.fn(
 
 describe("OperatorPage", () => {
 	beforeEach(() => {
+		vi.clearAllMocks();
 		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
 			id: "event-1",
 			name: "Festa",
@@ -140,7 +141,7 @@ describe("OperatorPage", () => {
 		expect(bingoApi.closeWinnerPresentation).toHaveBeenCalledWith("event-1", "round-1");
 	});
 
-	it("registra que o vencedor não retirou o prêmio para manter a mesma regra em sorteio", async () => {
+	it("pede confirmação antes de registrar que o vencedor não retirou o prêmio", async () => {
 		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
 			id: "event-1",
 			name: "Festa",
@@ -171,6 +172,9 @@ describe("OperatorPage", () => {
 		);
 
 		fireEvent.click(await screen.findByRole("button", { name: "VENCEDOR NÃO RETIROU O PRÊMIO" }));
+		expect(screen.getByRole("dialog", { name: "Confirmar ausência do vencedor?" })).toBeInTheDocument();
+		expect(bingoApi.markPrizeDeclined).not.toHaveBeenCalled();
+		fireEvent.click(screen.getByRole("button", { name: "Confirmar ausência" }));
 
 		expect(bingoApi.markPrizeDeclined).toHaveBeenCalledWith("event-1", "round-1");
 	});
@@ -249,7 +253,7 @@ describe("OperatorPage", () => {
 		expect(revealButton).toBeDisabled();
 	});
 
-	it("permite cancelar uma rodada em sorteio", async () => {
+	it("pede confirmação antes de cancelar uma rodada em sorteio", async () => {
 		render(
 			<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}>
 				<Routes>
@@ -259,7 +263,26 @@ describe("OperatorPage", () => {
 		);
 
 		fireEvent.click(await screen.findByRole("button", { name: "CANCELAR RODADA" }));
+		expect(screen.getByRole("dialog", { name: "Cancelar esta rodada?" })).toBeInTheDocument();
+		expect(bingoApi.cancelRound).not.toHaveBeenCalled();
+		fireEvent.click(screen.getByRole("button", { name: "Cancelar rodada" }));
 
 		expect(bingoApi.cancelRound).toHaveBeenCalledWith("event-1", "round-1");
+	});
+
+	it("permite fechar a confirmação de cancelamento com Escape", async () => {
+		render(
+			<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}>
+				<Routes>
+					<Route path="/operacao/:eventId/:roundId" element={<OperatorPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		fireEvent.click(await screen.findByRole("button", { name: "CANCELAR RODADA" }));
+		fireEvent.keyDown(document, { key: "Escape" });
+
+		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		expect(bingoApi.cancelRound).not.toHaveBeenCalled();
 	});
 });

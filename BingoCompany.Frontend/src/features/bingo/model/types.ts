@@ -126,8 +126,8 @@ export type CardState = {
 export type PrizeDraft = { sequence: number; prizeName: string; pattern: WinningPattern; prizeImageDataUrl?: string };
 export type CreateEventInput = { name: string; markingMode: CardMarkingMode };
 export type JoinEventInput = {
-	name: string;
-	type: ParticipantType;
+	name?: string;
+	type?: ParticipantType;
 	employeeRegistration?: string;
 	responsibleEmployeeName?: string;
 	cardsQuantity?: number;

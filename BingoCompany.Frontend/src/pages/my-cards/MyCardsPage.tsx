@@ -20,6 +20,7 @@ export function MyCardsPage() {
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 	const [error, setError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [activatingCode, setActivatingCode] = useState("");
@@ -36,7 +37,7 @@ export function MyCardsPage() {
 			[page, session?.accountType]
 		)
 	);
-	const activeCards = cards.data?.activeCards ?? [];
+	const activeCards = useMemo(() => cards.data?.activeCards ?? [], [cards.data]);
 	const activeCardsByEvent = useMemo(() => {
 		const groups = new Map<string, typeof activeCards>();
 		for (const card of activeCards) groups.set(card.eventId, [...(groups.get(card.eventId) ?? []), card]);
@@ -97,14 +98,24 @@ export function MyCardsPage() {
 						</label>
 						<label>
 							Senha
-							<input
-								aria-label="Senha"
-								type="password"
-								minLength={12}
-								maxLength={128}
-								value={password}
-								onChange={(event) => setPassword(event.target.value)}
-							/>
+							<span className="password-field">
+								<input
+									aria-label="Senha"
+									type={isPasswordVisible ? "text" : "password"}
+									minLength={12}
+									maxLength={128}
+									value={password}
+									onChange={(event) => setPassword(event.target.value)}
+								/>
+								<button
+									aria-label={isPasswordVisible ? "Ocultar senha" : "Mostrar senha"}
+									className="password-visibility-toggle"
+									onClick={() => setIsPasswordVisible((isVisible) => !isVisible)}
+									type="button"
+								>
+									👁
+								</button>
+							</span>
 						</label>
 						<button
 							className="primary"

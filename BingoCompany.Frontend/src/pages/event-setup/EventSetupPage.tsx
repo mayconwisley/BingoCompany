@@ -60,8 +60,10 @@ export function EventSetupPage() {
 	const printedCards = event.data?.cardList.filter((card) => card.type === "Printed") ?? [];
 	const selectedCardState = printedCards.find((card) => card.publicCode === selectedCard)?.status;
 	const isFinished = event.data?.status === "Finished";
+	const registrationsOpen = event.data?.status === "RegistrationOpen";
 	const isCardPurchaseOpen = event.data?.isCardPurchaseOpen ?? false;
-	const isPublicRegistrationOpen = event.data?.status === "RegistrationOpen" && !isCardPurchaseOpen && !event.data?.cardPurchaseCancellationReason;
+	const isPublicRegistrationOpen =
+		event.data?.status === "RegistrationOpen" && !isCardPurchaseOpen && !event.data?.cardPurchaseCancellationReason;
 	const cardPurchaseRemaining = event.data?.cardPurchaseRemaining;
 	const cardPurchaseLimit = event.data?.cardPurchaseLimit;
 	useEffect(() => {
@@ -144,11 +146,11 @@ export function EventSetupPage() {
 								<p>Use estes atalhos para abrir ou compartilhar cada experiência do bingo.</p>
 							</div>
 							<nav className="access-menu" aria-label="Acessos do evento">
-								{isFinished ? (
+								{!registrationsOpen ? (
 									<span className="access-item is-disabled" aria-disabled="true">
 										<span aria-hidden="true">↗</span>
 										<strong>Inscrição</strong>
-										<small>Participantes entram no bingo</small>
+										<small>Inscrições encerradas</small>
 									</span>
 								) : (
 									<Link className="access-item" to={registrationPath}>
@@ -201,7 +203,11 @@ export function EventSetupPage() {
 										✦
 									</span>
 								</div>
-								<p>Abra a página pública de compartilhamento para exibir o QR Code aos participantes.</p>
+								<p>
+									{registrationsOpen
+										? "Abra a página pública de compartilhamento para exibir o QR Code aos participantes."
+										: "As inscrições estão fechadas. Elas são encerradas automaticamente quando a primeira rodada é iniciada."}
+								</p>
 								<div className="participant-metrics">
 									<div>
 										<span>Participantes</span>
@@ -213,70 +219,112 @@ export function EventSetupPage() {
 									</div>
 								</div>
 								<div className="actions participant-actions">
-									{isFinished ? (
+									{!registrationsOpen ? (
 										<span className="button is-disabled" aria-disabled="true">
 											Abrir QR Code de inscrição
 										</span>
 									) : (
 										<>
-											<Link className="button" to={registrationSharePath} target="_blank" rel="noopener noreferrer">Abrir QR Code de inscrição</Link>
-											<button type="button" onClick={() => void copyPublicLink(registrationSharePath, "Link do QR Code")}>Copiar link do QR Code</button>
+											<Link className="button" to={registrationSharePath} target="_blank" rel="noopener noreferrer">
+												Abrir QR Code de inscrição
+											</Link>
+											<button
+												type="button"
+												onClick={() => void copyPublicLink(registrationSharePath, "Link do QR Code")}
+											>
+												Copiar link do QR Code
+											</button>
 										</>
 									)}
-									{isFinished ? (
+									{!registrationsOpen ? (
 										<span className="button is-disabled" aria-disabled="true">
 											Visualizar inscrição
 										</span>
 									) : (
 										<>
-											<Link className="button" to={registrationPath}>Visualizar inscrição</Link>
-											<button type="button" onClick={() => void copyPublicLink(registrationPath, "Link de inscrição")}>Copiar link de inscrição</button>
+											<Link className="button" to={registrationPath}>
+												Visualizar inscrição
+											</Link>
+											<button
+												type="button"
+												onClick={() => void copyPublicLink(registrationPath, "Link de inscrição")}
+											>
+												Copiar link de inscrição
+											</button>
 										</>
 									)}
 									{event.data.status === "Draft" && (
 										<>
 											<label>
 												Cartelas digitais por participante
-												<input aria-label="Cartelas digitais por participante" type="number" min="1" max="100" value={registrationCardsQuantity} onChange={(input) => setRegistrationCardsQuantity(Math.min(100, Math.max(1, Number(input.target.value) || 1)))} />
+												<input
+													aria-label="Cartelas digitais por participante"
+													type="number"
+													min="1"
+													max="100"
+													value={registrationCardsQuantity}
+													onChange={(input) =>
+														setRegistrationCardsQuantity(
+															Math.min(100, Math.max(1, Number(input.target.value) || 1))
+														)
+													}
+												/>
 											</label>
-											<button className="primary" disabled={action.isPending} onClick={async () => { await action.execute(() => bingoApi.openRegistration(eventId, registrationCardsQuantity), "Inscrições públicas abertas."); await event.reload(); }}>
+											<button
+												className="primary"
+												disabled={action.isPending}
+												onClick={async () => {
+													await action.execute(
+														() => bingoApi.openRegistration(eventId, registrationCardsQuantity),
+														"Inscrições públicas abertas."
+													);
+													await event.reload();
+												}}
+											>
 												Abrir inscrições públicas
 											</button>
 										</>
 									)}
-									{isPublicRegistrationOpen && <p role="status">Inscrições públicas abertas. Cada participante receberá {event.data.cardsPerParticipant ?? registrationCardsQuantity} cartela(s) ativa(s).</p>}
+									{isPublicRegistrationOpen && (
+										<p role="status">
+											Inscrições públicas abertas. Cada participante receberá{" "}
+											{event.data.cardsPerParticipant ?? registrationCardsQuantity} cartela(s) ativa(s).
+										</p>
+									)}
 									{event.data.status === "Draft" && (
 										<>
 											<label>
-											Cartelas disponíveis para venda
-											<input
-												aria-label="Cartelas disponíveis para venda"
-												type="number"
-												min="1"
-												max="10000"
-												value={cardPurchaseQuantity}
-												onChange={(input) =>
-													setCardPurchaseQuantity(Math.min(10000, Math.max(1, Number(input.target.value) || 1)))
-												}
-											/>
+												Cartelas disponíveis para venda
+												<input
+													aria-label="Cartelas disponíveis para venda"
+													type="number"
+													min="1"
+													max="10000"
+													value={cardPurchaseQuantity}
+													onChange={(input) =>
+														setCardPurchaseQuantity(
+															Math.min(10000, Math.max(1, Number(input.target.value) || 1))
+														)
+													}
+												/>
 											</label>
 											<button
-										className="reveal"
-										disabled={
-											isFinished ||
-											isCardPurchaseOpen ||
-											(event.data.status !== "Draft" && event.data.status !== "RegistrationOpen") ||
-											action.isPending
-										}
-										onClick={async () => {
-											await action.execute(
-												() => bingoApi.openCardPurchase(eventId, cardPurchaseQuantity),
-												"Compra de cartelas aberta."
-											);
-											await event.reload();
-										}}
-									>
-										Abrir compra de cartelas
+												className="reveal"
+												disabled={
+													isFinished ||
+													isCardPurchaseOpen ||
+													(event.data.status !== "Draft" && event.data.status !== "RegistrationOpen") ||
+													action.isPending
+												}
+												onClick={async () => {
+													await action.execute(
+														() => bingoApi.openCardPurchase(eventId, cardPurchaseQuantity),
+														"Compra de cartelas aberta."
+													);
+													await event.reload();
+												}}
+											>
+												Abrir compra de cartelas
 											</button>
 										</>
 									)}
@@ -466,9 +514,53 @@ export function EventSetupPage() {
 											))}
 										</select>
 									</label>
-									<label>Nome do participante<input aria-label="Nome do participante da cartela impressa" disabled={isFinished} value={printedParticipantName} onChange={(input) => setPrintedParticipantName(input.target.value)} /></label>
-									<label>Tipo de participante<select aria-label="Tipo do participante da cartela impressa" disabled={isFinished} value={printedParticipantType} onChange={(input) => { const value = input.target.value; if (value === "Employee" || value === "FamilyMember" || value === "Guest") setPrintedParticipantType(value); }}><option value="Employee">Colaborador</option><option value="FamilyMember">Familiar</option><option value="Guest">Convidado</option></select></label>
-									{printedParticipantType === "Employee" ? <label>Matrícula <small>(opcional)</small><input aria-label="Matrícula do participante da cartela impressa" disabled={isFinished} value={printedParticipantRegistration} onChange={(input) => setPrintedParticipantRegistration(input.target.value)} /></label> : <label>Colaborador responsável<input aria-label="Colaborador responsável da cartela impressa" disabled={isFinished} value={printedParticipantResponsible} onChange={(input) => setPrintedParticipantResponsible(input.target.value)} /></label>}
+									<label>
+										Nome do participante
+										<input
+											aria-label="Nome do participante da cartela impressa"
+											disabled={isFinished}
+											value={printedParticipantName}
+											onChange={(input) => setPrintedParticipantName(input.target.value)}
+										/>
+									</label>
+									<label>
+										Tipo de participante
+										<select
+											aria-label="Tipo do participante da cartela impressa"
+											disabled={isFinished}
+											value={printedParticipantType}
+											onChange={(input) => {
+												const value = input.target.value;
+												if (value === "Employee" || value === "FamilyMember" || value === "Guest")
+													setPrintedParticipantType(value);
+											}}
+										>
+											<option value="Employee">Colaborador</option>
+											<option value="FamilyMember">Familiar</option>
+											<option value="Guest">Convidado</option>
+										</select>
+									</label>
+									{printedParticipantType === "Employee" ? (
+										<label>
+											Matrícula <small>(opcional)</small>
+											<input
+												aria-label="Matrícula do participante da cartela impressa"
+												disabled={isFinished}
+												value={printedParticipantRegistration}
+												onChange={(input) => setPrintedParticipantRegistration(input.target.value)}
+											/>
+										</label>
+									) : (
+										<label>
+											Colaborador responsável
+											<input
+												aria-label="Colaborador responsável da cartela impressa"
+												disabled={isFinished}
+												value={printedParticipantResponsible}
+												onChange={(input) => setPrintedParticipantResponsible(input.target.value)}
+											/>
+										</label>
+									)}
 									<div className="actions">
 										<button
 											disabled={
@@ -481,10 +573,18 @@ export function EventSetupPage() {
 											}
 											onClick={async () => {
 												await action.execute(
-													() => bingoApi.registerPrintedCard(eventId, selectedCard, { name: printedParticipantName, type: printedParticipantType, employeeRegistration: printedParticipantRegistration || undefined, responsibleEmployeeName: printedParticipantResponsible || undefined }),
+													() =>
+														bingoApi.registerPrintedCard(eventId, selectedCard, {
+															name: printedParticipantName,
+															type: printedParticipantType,
+															employeeRegistration: printedParticipantRegistration || undefined,
+															responsibleEmployeeName: printedParticipantResponsible || undefined
+														}),
 													"Participante registrado e cartela ativada para a rodada."
 												);
-												setPrintedParticipantName(""); setPrintedParticipantRegistration(""); setPrintedParticipantResponsible("");
+												setPrintedParticipantName("");
+												setPrintedParticipantRegistration("");
+												setPrintedParticipantResponsible("");
 												await event.reload();
 											}}
 										>
@@ -547,7 +647,14 @@ export function EventSetupPage() {
 								</button>
 							</section>
 						)}
-						<FeedbackMessage error={action.error} success={action.success || copiedLink} onClose={() => { action.clear(); setCopiedLink(""); }} />
+						<FeedbackMessage
+							error={action.error}
+							success={action.success || copiedLink}
+							onClose={() => {
+								action.clear();
+								setCopiedLink("");
+							}}
+						/>
 					</>
 				)}
 			</main>

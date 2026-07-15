@@ -28,13 +28,23 @@ public sealed class EventParticipantRegistrationService(BingoDbContext db) : IEv
 			throw new UnauthorizedAccessException("Entre com sua conta de participante para comprar cartelas.");
 
 		var participantName = request.Name;
+		var participantType = request.Type ?? ParticipantType.Employee;
+		var employeeRegistration = request.EmployeeRegistration;
+		var responsibleEmployeeName = request.ResponsibleEmployeeName;
 		if (participantAccountId.HasValue)
 		{
 			var account = await db.ParticipantAccounts.SingleOrDefaultAsync(item => item.Id == participantAccountId.Value, cancellationToken);
 			if (account is null) throw new UnauthorizedAccessException("A conta de participante não foi encontrada.");
 			participantName = account.Name;
+			participantType = ParticipantType.Employee;
+			employeeRegistration = null;
+			responsibleEmployeeName = null;
 		}
-		var participant = new Participant(eventId, participantName, request.Type, request.EmployeeRegistration, request.ResponsibleEmployeeName, participantAccountId);
+		else if (string.IsNullOrWhiteSpace(participantName))
+		{
+			throw new InvalidOperationException("Informe seu nome para gerar uma cartela.");
+		}
+		var participant = new Participant(eventId, participantName!, participantType, employeeRegistration, responsibleEmployeeName, participantAccountId);
 		var cardsQuantity = ResolveCardsQuantity(bingoEvent, request.CardsQuantity);
 		if (bingoEvent.CardPurchaseLimit.HasValue)
 		{

@@ -52,6 +52,8 @@ describe("JoinPage", () => {
 		);
 
 		await screen.findByText("Festa");
+		expect(screen.getByText("Informe seu nome para gerar uma cartela.")).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "Gerar minha cartela" })).toBeDisabled();
 		fireEvent.change(screen.getByLabelText("Seu nome"), { target: { value: "Ana" } });
 		fireEvent.click(screen.getByRole("button", { name: "Gerar minha cartela" }));
 
@@ -85,11 +87,36 @@ describe("JoinPage", () => {
 		);
 
 		await screen.findByText("Festa");
-		fireEvent.change(screen.getByLabelText("Seu nome"), { target: { value: "Ana" } });
+		expect(screen.queryByLabelText("Seu nome")).not.toBeInTheDocument();
+		expect(screen.queryByLabelText("Tipo de participante")).not.toBeInTheDocument();
+		expect(screen.queryByLabelText("Matrícula")).not.toBeInTheDocument();
 		fireEvent.change(screen.getByLabelText("Quantidade de cartelas digitais"), { target: { value: "4" } });
-		fireEvent.click(screen.getByRole("button", { name: "Gerar minha cartela" }));
+		fireEvent.click(screen.getByRole("button", { name: "Comprar cartelas" }));
 
 		expect(await screen.findByText(/CARD001/)).toBeInTheDocument();
-		expect(bingoApi.join).toHaveBeenCalledWith("EVENTO", expect.objectContaining({ cardsQuantity: 4 }));
+		expect(bingoApi.join).toHaveBeenCalledWith("EVENTO", { name: "Ana", cardsQuantity: 4 });
+	});
+
+	it("bloqueia a inscrição quando o evento não aceita mais participantes", async () => {
+		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
+			id: "event-1",
+			name: "Festa",
+			publicCode: "EVENTO",
+			status: "Running",
+			markingMode: "Automatic",
+			participants: 1,
+			cards: 1
+		});
+		render(
+			<MemoryRouter initialEntries={["/participar/EVENTO"]}>
+				<Routes>
+					<Route path="/participar/:publicCode" element={<JoinPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByText("As inscrições deste bingo estão fechadas.")).toBeInTheDocument();
+		expect(screen.queryByLabelText("Quantidade de cartelas digitais")).not.toBeInTheDocument();
+		expect(screen.queryByRole("button", { name: "Comprar cartelas" })).not.toBeInTheDocument();
 	});
 });

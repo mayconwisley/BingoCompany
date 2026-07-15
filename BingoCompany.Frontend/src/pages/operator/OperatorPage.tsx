@@ -6,6 +6,9 @@ import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
 import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";
 import { PageState } from "../../shared/ui/PageState";
+import { ConfirmationDialog } from "../../shared/ui/ConfirmationDialog";
+
+type PendingConfirmation = "cancelRound" | "declinePrize";
 
 export function OperatorPage() {
 	const { eventId = "", roundId = "" } = useParams();
@@ -13,6 +16,7 @@ export function OperatorPage() {
 	const navigate = useNavigate();
 	const [error, setError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation>();
 	const code = query.get("code") ?? "";
 	const loader = useCallback(() => bingoApi.getPublicEvent(code), [code]);
 	const event = useAsyncResource(loader);
@@ -38,6 +42,13 @@ export function OperatorPage() {
 	const actionLabel = canStart ? "INICIAR RODADA" : "SORTEAR PRÓXIMA PEDRA";
 	const isFinished = isCurrentRound && (round.status === "Finished" || round.status === "Cancelled");
 	const isCancelled = isCurrentRound && round.status === "Cancelled";
+	const actionDisabledReason = !isCurrentRound
+		? "Abra a rodada atual para realizar ações."
+		: round.status === "Ready" && !hasCards
+			? "Ative ao menos uma cartela antes de iniciar a rodada."
+			: hasWinnerPresentation
+				? "O telão está apresentando o vencedor. Conclua essa apresentação antes de continuar o sorteio."
+				: undefined;
 
 	const performAction = async () => {
 		try {
@@ -107,6 +118,18 @@ export function OperatorPage() {
 			setError(getErrorMessage(error, "Não foi possível cancelar a rodada."));
 		}
 	};
+	const confirmPendingAction = async () => {
+		const action = pendingConfirmation;
+		if (!action) return;
+		setIsSubmitting(true);
+		try {
+			if (action === "cancelRound") await cancelRound();
+			else await markPrizeDeclined();
+			setPendingConfirmation(undefined);
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
 
 	return (
 		<AppShell>
@@ -125,12 +148,28 @@ export function OperatorPage() {
 						<p>{isCancelled ? "Rodada cancelada" : round.currentPrize || "Rodada finalizada"}</p>
 					</section>
 					<section className="panel controls">
-						{needsPrintedValidation && isCurrentRound && round.status !== "Ready" && round.status !== "Finished" && round.status !== "Cancelled" && (
-							<button onClick={() => navigate(`/operacao/${eventId}/${roundId}/conferir-cartelas`)}>CONFERIR CARTELA IMPRESSA</button>
-						)}
-						<button className="primary big" disabled={!canStart && !canDraw} onClick={performAction}>
+						{needsPrintedValidation &&
+							isCurrentRound &&
+							round.status !== "Ready" &&
+							round.status !== "Finished" &&
+							round.status !== "Cancelled" && (
+								<button onClick={() => navigate(`/operacao/${eventId}/${roundId}/conferir-cartelas`)}>
+									CONFERIR CARTELA IMPRESSA
+								</button>
+							)}
+						<button
+							className="primary big"
+							disabled={!canStart && !canDraw}
+							aria-describedby={actionDisabledReason ? "operator-action-hint" : undefined}
+							onClick={performAction}
+						>
 							{actionLabel}
 						</button>
+						{actionDisabledReason && (
+							<p id="operator-action-hint" className="action-hint" role="status">
+								{actionDisabledReason}
+							</p>
+						)}
 						<button
 							className="reveal"
 							disabled={
@@ -142,7 +181,7 @@ export function OperatorPage() {
 						>
 							{round.status === "TieBreaker" ? "REALIZAR DESEMPATE" : "REVELAR VENCEDOR"}
 						</button>
-						<button className="danger" disabled={!canCancel} onClick={cancelRound}>
+						<button className="danger" disabled={!canCancel} onClick={() => setPendingConfirmation("cancelRound")}>
 							CANCELAR RODADA
 						</button>
 						{hasWinnerPresentation && (
@@ -165,7 +204,7 @@ export function OperatorPage() {
 								<button className="primary" disabled={isSubmitting} onClick={markPrizeDelivered}>
 									PRÊMIO ENTREGUE
 								</button>
-								<button className="danger" onClick={markPrizeDeclined}>
+								<button className="danger" disabled={isSubmitting} onClick={() => setPendingConfirmation("declinePrize")}>
 									VENCEDOR NÃO RETIROU O PRÊMIO
 								</button>
 							</>
@@ -198,6 +237,26 @@ export function OperatorPage() {
 						<FeedbackMessage error={error} onClose={() => setError("")} />
 					</section>
 				</div>
+				{pendingConfirmation === "cancelRound" && (
+					<ConfirmationDialog
+						title="Cancelar esta rodada?"
+						description="A rodada será encerrada sem vencedor e não poderá voltar ao sorteio."
+						confirmLabel="Cancelar rodada"
+						isConfirming={isSubmitting}
+						onCancel={() => setPendingConfirmation(undefined)}
+						onConfirm={confirmPendingAction}
+					/>
+				)}
+				{pendingConfirmation === "declinePrize" && (
+					<ConfirmationDialog
+						title="Confirmar ausência do vencedor?"
+						description="O prêmio não será entregue a este vencedor e a etapa continuará procurando outra cartela válida."
+						confirmLabel="Confirmar ausência"
+						isConfirming={isSubmitting}
+						onCancel={() => setPendingConfirmation(undefined)}
+						onConfirm={confirmPendingAction}
+					/>
+				)}
 			</main>
 		</AppShell>
 	);

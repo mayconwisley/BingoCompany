@@ -27,6 +27,7 @@ export function CardPage() {
 	const isMandatoryManual = card.data.markingMode === "ManualRequired";
 	const isEventFinished = card.data.eventStatus === "Finished";
 	const currentNumber = card.data.drawnNumbers.at(-1);
+	const currentBall = currentNumber === undefined ? undefined : bingoBallLabel(currentNumber);
 	const generateNextCard = async () => {
 		try {
 			setNextCardError("");
@@ -65,6 +66,17 @@ export function CardPage() {
 				</header>
 				{isEventFinished && (
 					<FeedbackMessage warning="Este evento foi encerrado. Esta cartela permanece disponível apenas para consulta." />
+				)}
+				{manual && (
+					<section className="current-draw" role="status" aria-live="polite" aria-atomic="true">
+						<span>{isMandatoryManual ? "MARQUE AGORA" : "ÚLTIMA PEDRA SORTEADA"}</span>
+						<strong>{currentBall ?? "Aguardando a primeira pedra"}</strong>
+						<p>
+							{isMandatoryManual
+								? "Toque nesta pedra na sua cartela antes do próximo sorteio."
+								: "Os números sorteados ficam destacados e podem ser marcados na cartela."}
+						</p>
+					</section>
 				)}
 				<BingoCardGrid
 					numbers={card.data.numbers}
