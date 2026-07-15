@@ -8,6 +8,8 @@ import { AppShell } from "../../shared/ui/AppShell";
 import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";
 import { PageState } from "../../shared/ui/PageState";
 
+const CardsPerPage = 5;
+
 export function MyCardsPage() {
 	const session = getSession();
 	const navigate = useNavigate();
@@ -19,8 +21,12 @@ export function MyCardsPage() {
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const cards = useAsyncResource(useCallback(() => (session?.accountType === "participant" ? bingoApi.getMyCards() : Promise.resolve([])), [session?.accountType]));
 	const [activatingCode, setActivatingCode] = useState("");
+	const [page, setPage] = useState(1);
+	const cards = useAsyncResource(useCallback(() => (session?.accountType === "participant" ? bingoApi.getMyCards(page, CardsPerPage) : Promise.resolve({ activeCards: [], history: { items: [], page: 1, pageSize: CardsPerPage, totalItems: 0, totalPages: 0 } })), [page, session?.accountType]));
+	const activeCards = cards.data?.activeCards ?? [];
+	const historyCards = cards.data?.history.items ?? [];
+	const totalPages = Math.max(1, cards.data?.history.totalPages ?? 1);
 
 	const authenticate = async () => {
 		try {
@@ -71,7 +77,22 @@ export function MyCardsPage() {
 			<main className="join my-cards-page">
 				<header className="pagehead"><div><p className="eyebrow">Participante</p><h1>Minhas cartelas</h1><p className="subtitle">Consulte códigos, situação e histórico das suas cartelas.</p></div></header>
 				<PageState loading={cards.loading} error={cards.error} onRetry={cards.reload} />
-				{cards.data && <section className="panel"><div className="card-purchase-list">{cards.data.length === 0 ? <p>Nenhuma cartela adquirida ainda.</p> : cards.data.map((card) => <article key={`${card.eventId}-${card.publicCode}`}><div className="card-purchase-code"><span>{card.eventName} · {card.eventStatus === "Finished" && card.status === "Cancelled" ? "Não utilizada — invalidada" : card.status}</span><code>{card.publicCode}</code>{card.status === "Cancelled" && <small>Motivo: {card.invalidationReason ?? card.eventCancellationReason ?? "Cartela indisponível para este evento."}</small>}</div>{card.status === "Active" ? <Link className="button" to={`/cartela/${card.eventId}/${card.publicCode}`}>Abrir cartela</Link> : card.status === "Assigned" ? <button className="primary" disabled={Boolean(activatingCode)} onClick={() => activateCard(card.eventPublicCode, card.publicCode)}>{activatingCode === card.publicCode ? "Ativando..." : "Ativar cartela"}</button> : <span className="badge">Invalidada</span>}</article>)}</div><FeedbackMessage error={error} onClose={() => setError("")} /></section>}
+				{cards.data && (
+					<>
+						<section className="panel active-cards-panel" aria-labelledby="active-cards-title">
+							<p className="eyebrow">Prontas para jogar</p>
+							<h2 id="active-cards-title">Cartelas ativas</h2>
+							{activeCards.length === 0 ? <p>Nenhuma cartela ativa no momento.</p> : <div className="active-cards-grid">{activeCards.map((card) => <article key={`${card.eventId}-${card.publicCode}`}><div className="card-purchase-code"><span>{card.eventName}</span><code>{card.publicCode}</code></div><Link className="button" to={`/cartela/${card.eventId}/${card.publicCode}`}>Abrir cartela</Link></article>)}</div>}
+						</section>
+						<section className="panel" aria-labelledby="card-history-title">
+							<p className="eyebrow">Acompanhar</p>
+							<h2 id="card-history-title">Outras cartelas</h2>
+							<div className="card-purchase-list">{historyCards.length === 0 ? <p>Nenhuma outra cartela para exibir.</p> : historyCards.map((card) => <article key={`${card.eventId}-${card.publicCode}`}><div className="card-purchase-code"><span>{card.eventName} · {card.eventStatus === "Finished" && card.status === "Cancelled" ? "Não utilizada — invalidada" : card.status}</span><code>{card.publicCode}</code>{card.status === "Cancelled" && <small>Motivo: {card.invalidationReason ?? card.eventCancellationReason ?? "Cartela indisponível para este evento."}</small>}</div>{card.status === "Assigned" ? <button className="primary" disabled={Boolean(activatingCode)} onClick={() => activateCard(card.eventPublicCode, card.publicCode)}>{activatingCode === card.publicCode ? "Ativando..." : "Ativar cartela"}</button> : <span className="badge">Invalidada</span>}</article>)}</div>
+							{totalPages > 1 && <nav className="pagination" aria-label="Paginação das cartelas"><button type="button" onClick={() => setPage(page - 1)} disabled={page === 1}>Página anterior</button><span aria-live="polite">Página {cards.data.history.page} de {totalPages}</span><button type="button" onClick={() => setPage(page + 1)} disabled={page === totalPages}>Próxima página</button></nav>}
+						</section>
+						<FeedbackMessage error={error} onClose={() => setError("")} />
+					</>
+				)}
 			</main>
 		</AppShell>
 	);

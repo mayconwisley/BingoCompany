@@ -102,6 +102,7 @@ Ao alterar uma regra de negócio, cubra o caso no projeto `BingoCompany.Tests`. 
 - Controllers apenas recebem requisições e delegam para a camada de Application.
 - A camada Application orquestra casos de uso, mas não contém regras de infraestrutura.
 - Infrastructure contém EF Core, SignalR, acesso a banco, serviços externos e implementações concretas.
+- Para consultas, filtros e paginação, Controllers devem somente validar a entrada/autorização e traduzir o resultado para HTTP. A regra de consulta e paginação deve ficar em um caso de uso na Application, com interface em `Application/Interfaces`; o contrato de repositório deve ficar no Domain e sua implementação EF Core na Infrastructure. Nunca injete `BingoDbContext` em Controllers ou serviços da Application.
 
 ### SOLID
 

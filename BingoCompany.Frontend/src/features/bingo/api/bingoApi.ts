@@ -66,7 +66,7 @@ export const bingoApi = {
 	activateDigitalCard: (eventCode: string, cardCode: string) =>
 		http<void>(`/api/public/events/${eventCode}/cards/${cardCode}/activate`, { method: "POST" }),
 	getAudit: (code: string) => http<PublicAudit>(`/api/public/events/${code}/audit`),
-	getMyCards: () => http<ParticipantCard[]>("/api/participant/cards")
+	getMyCards: (page = 1, pageSize = 5) => http<ParticipantCardsPage>(`/api/participant/cards?page=${page}&pageSize=${pageSize}`)
 };
 
 export type RegistrationResult = {
@@ -75,3 +75,4 @@ export type RegistrationResult = {
 };
 
 export type ParticipantCard = { eventId: string; eventPublicCode: string; eventName: string; eventStatus: string; publicCode: string; status: string; invalidationReason?: string; eventCancellationReason?: string; createdAt: string };
+export type ParticipantCardsPage = { activeCards: ParticipantCard[]; history: { items: ParticipantCard[]; page: number; pageSize: number; totalItems: number; totalPages: number } };

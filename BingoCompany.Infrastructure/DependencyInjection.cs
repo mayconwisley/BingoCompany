@@ -21,6 +21,7 @@ public static class DependencyInjection
 
 		services.AddDbContextPool<BingoDbContext>(options => PostgresConfiguration.Configure(options, connectionString), poolSize);
 		services.AddScoped<IEventCardPurchaseRepository, EventCardPurchaseRepository>();
+		services.AddScoped<IParticipantCardsRepository, ParticipantCardsRepository>();
 		return services;
 	}
 }
