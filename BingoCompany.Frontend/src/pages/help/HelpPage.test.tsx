@@ -14,8 +14,9 @@ describe("HelpPage", () => {
 		expect(screen.getByRole("heading", { name: "Como usar o Bingo Company" })).toBeInTheDocument();
 		expect(screen.getByRole("heading", { name: "Organize um evento do começo ao fim" })).toBeInTheDocument();
 		expect(screen.getByRole("heading", { name: "Entre no bingo e use sua cartela" })).toBeInTheDocument();
-		expect(screen.getByRole("heading", { name: "Veja a auditoria sem fazer login" })).toBeInTheDocument();
-		expect(screen.getByText(/Se o vencedor não retirar/i)).toBeInTheDocument();
-		expect(screen.getByText(/1\.000 cartelas elegíveis/i)).toBeInTheDocument();
+		expect(screen.getByRole("heading", { name: "Telão e auditoria" })).toBeInTheDocument();
+		expect(screen.getByRole("heading", { name: "Conduza o sorteio ao vivo" })).toBeInTheDocument();
+		expect(screen.getByText(/Somente cartela associada e ativa concorre/i)).toBeInTheDocument();
+		expect(screen.getByText(/O hash SHA-256 é publicado no começo da rodada/i)).toBeInTheDocument();
 	});
 });
