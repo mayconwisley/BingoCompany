@@ -11,6 +11,7 @@ public sealed class BingoCardConfiguration : IEntityTypeConfiguration<BingoCard>
 	{
 		builder.HasKey(item => item.Id);
 		builder.HasIndex(item => item.PublicCode).IsUnique();
+		builder.Property(item => item.InvalidationReason).HasMaxLength(500);
 		builder.Property(item => item.Numbers).HasConversion(
 			numbers => JsonSerializer.Serialize(Enumerable.Range(0, 5).Select(row => Enumerable.Range(0, 5).Select(column => numbers[row, column]).ToArray()).ToArray()),
 			json => DeserializeNumbers(json));

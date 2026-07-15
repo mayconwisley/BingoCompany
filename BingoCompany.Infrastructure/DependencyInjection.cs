@@ -1,4 +1,6 @@
 using BingoCompany.Infrastructure.Persistence;
+using BingoCompany.Infrastructure.Persistence.Repositories;
+using BingoCompany.Domain.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,6 +20,7 @@ public static class DependencyInjection
 			: 128;
 
 		services.AddDbContextPool<BingoDbContext>(options => PostgresConfiguration.Configure(options, connectionString), poolSize);
+		services.AddScoped<IEventCardPurchaseRepository, EventCardPurchaseRepository>();
 		return services;
 	}
 }

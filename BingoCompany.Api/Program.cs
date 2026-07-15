@@ -75,7 +75,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 		}
 	};
 });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options => options.AddPolicy("company-user", policy => policy.RequireClaim("company_id")));
 builder.Services.AddBingoApplication();
 builder.Services.AddBingoInfrastructure(builder.Configuration);
 builder.Services.AddScoped<IEventParticipantRegistrationService, EventParticipantRegistrationService>();

@@ -12,8 +12,8 @@ using System.Security.Claims;
 
 namespace BingoCompany.Api.Controllers;
 
-[ApiController, Route("api/events"), Authorize, ServiceFilter<CompanyEventOwnerFilter>]
-public sealed partial class EventsController(BingoDbContext db, IHubContext<BingoHub> hub, IBingoRoundGameplayService gameplayService, IEventParticipantRegistrationService participantRegistrationService) : ControllerBase
+[ApiController, Route("api/events"), Authorize(Policy = "company-user"), ServiceFilter<CompanyEventOwnerFilter>]
+public sealed partial class EventsController(BingoDbContext db, IHubContext<BingoHub> hub, IBingoRoundGameplayService gameplayService, IEventParticipantRegistrationService participantRegistrationService, IEventCardPurchaseService cardPurchaseService) : ControllerBase
 {
 	private const int MaximumPrizeImageLength = 2_800_000;
 	private const int DefaultEventsPageSize = 12;
@@ -33,7 +33,7 @@ public sealed partial class EventsController(BingoDbContext db, IHubContext<Bing
 		var items = await events
 			.Skip((normalizedPage - 1) * normalizedPageSize)
 			.Take(normalizedPageSize)
-			.Select(item => new { item.Id, item.Name, item.PublicCode, item.Status, item.MarkingMode, item.CreatedAt })
+			.Select(item => new { item.Id, item.Name, item.PublicCode, item.Status, item.MarkingMode, item.IsCardPurchaseOpen, item.CreatedAt })
 			.ToListAsync(HttpContext.RequestAborted);
 		return Ok(new { items, page = normalizedPage, pageSize = normalizedPageSize, totalItems, totalPages = (int)Math.Ceiling(totalItems / (double)normalizedPageSize) });
 	}
@@ -43,7 +43,7 @@ public sealed partial class EventsController(BingoDbContext db, IHubContext<Bing
 		if (string.IsNullOrWhiteSpace(request.Name)) return BadRequest("Informe o nome do evento.");
 		var bingoEvent = new BingoEvent(GetCompanyId(), request.Name, request.CardsPerParticipant <= 0 ? 1 : request.CardsPerParticipant, request.MarkingMode);
 		db.Events.Add(bingoEvent); db.AuditEntries.Add(new AuditEntry(bingoEvent.Id, "Evento criado", $"Evento {bingoEvent.Name} criado.")); await db.SaveChangesAsync();
-		return CreatedAtAction(nameof(Get), new { eventId = bingoEvent.Id }, new { bingoEvent.Id, bingoEvent.Name, bingoEvent.PublicCode, bingoEvent.Status, bingoEvent.MarkingMode, bingoEvent.CreatedAt });
+		return CreatedAtAction(nameof(Get), new { eventId = bingoEvent.Id }, new { bingoEvent.Id, bingoEvent.Name, bingoEvent.PublicCode, bingoEvent.Status, bingoEvent.MarkingMode, bingoEvent.IsCardPurchaseOpen, bingoEvent.CreatedAt });
 	}
 	[HttpGet("{eventId:guid}")]
 	public async Task<ActionResult<object>> Get(Guid eventId)
@@ -64,19 +64,68 @@ public sealed partial class EventsController(BingoDbContext db, IHubContext<Bing
 				select new AwardedCardSummary(card.PublicCode, participant.Name, round.Name, stage.PrizeName)
 			).ToArrayAsync();
 
-		return Ok(new { e.Id, e.Name, e.PublicCode, e.Status, participants = e.Participants.Count, cards = e.Cards.Count, participantList = e.Participants.OrderBy(item => item.Name).Select(item => new { item.Id, item.Name, item.Type }), cardList = e.Cards.OrderByDescending(item => item.CreatedAt).Select(item => new { item.PublicCode, item.Type, item.Status, item.Fingerprint, item.ParticipantId }), awardedCards, rounds = e.Rounds.OrderBy(x => x.CreatedAt).ThenBy(x => x.Sequence).Select(x => new { x.Id, x.Name, x.Status, x.CreatedAt, stages = x.Stages.OrderBy(stage => stage.Sequence).Select(stage => new { stage.Sequence, stage.PrizeName, stage.Pattern, stage.PrizeImageDataUrl, stage.IsActive, stage.IsCompleted }) }) });
+		var purchasedCards = await GetPurchasedCardsCount(eventId);
+		var cardPurchaseRemaining = e.CardPurchaseLimit.HasValue ? Math.Max(0, e.CardPurchaseLimit.Value - purchasedCards) : (int?)null;
+		return Ok(new { e.Id, e.Name, e.PublicCode, e.Status, e.IsCardPurchaseOpen, e.CardPurchaseLimit, e.CardPurchaseCancellationReason, cardPurchaseRemaining, participants = e.Participants.Count, cards = e.Cards.Count, participantList = e.Participants.OrderBy(item => item.Name).Select(item => new { item.Id, item.Name, item.Type }), cardList = e.Cards.OrderByDescending(item => item.CreatedAt).Select(item => new { item.PublicCode, item.Type, item.Status, item.Fingerprint, item.ParticipantId }), awardedCards, rounds = e.Rounds.OrderBy(x => x.CreatedAt).ThenBy(x => x.Sequence).Select(x => new { x.Id, x.Name, x.Status, x.CreatedAt, stages = x.Stages.OrderBy(stage => stage.Sequence).Select(stage => new { stage.Sequence, stage.PrizeName, stage.Pattern, stage.PrizeImageDataUrl, stage.IsActive, stage.IsCompleted }) }) });
+	}
+	[HttpPut("{eventId:guid}/card-purchase")]
+	public async Task<IActionResult> UpdateCardPurchase(Guid eventId, OpenCardPurchaseRequest request)
+	{
+		try
+		{
+			if (!await cardPurchaseService.UpdateLimit(eventId, request.Quantity, HttpContext.RequestAborted)) return NotFound();
+			return NoContent();
+		}
+		catch (InvalidOperationException exception)
+		{
+			return Conflict(exception.Message);
+		}
+	}
+	[HttpPost("{eventId:guid}/card-purchase/cancel")]
+	public async Task<IActionResult> CancelCardPurchase(Guid eventId, CancelCardPurchaseRequest request)
+	{
+		try
+		{
+			if (await cardPurchaseService.Cancel(eventId, request.Reason, HttpContext.RequestAborted) is null) return NotFound();
+			return NoContent();
+		}
+		catch (InvalidOperationException exception)
+		{
+			return Conflict(exception.Message);
+		}
 	}
 	[HttpPost("{eventId:guid}/registration/open")]
 	public async Task<IActionResult> OpenRegistration(Guid eventId) { var e = await db.Events.FindAsync(eventId); if (e is null) return NotFound(); e.OpenRegistration(); db.AuditEntries.Add(new AuditEntry(eventId, "Inscrições abertas", "As inscrições do evento foram abertas.")); await db.SaveChangesAsync(); return NoContent(); }
+	[HttpPost("{eventId:guid}/card-purchase/open")]
+	public async Task<IActionResult> OpenCardPurchase(Guid eventId, OpenCardPurchaseRequest request)
+	{
+		var bingoEvent = await db.Events.FindAsync(eventId);
+		if (bingoEvent is null) return NotFound();
+		try
+		{
+			bingoEvent.OpenCardPurchase(request.Quantity);
+			db.AuditEntries.Add(new AuditEntry(eventId, "Compra de cartelas aberta", $"Venda de até {request.Quantity} cartelas digitais liberada."));
+			await db.SaveChangesAsync();
+			return NoContent();
+		}
+		catch (InvalidOperationException exception)
+		{
+			return Conflict(exception.Message);
+		}
+		catch (UnauthorizedAccessException exception)
+		{
+			return Unauthorized(exception.Message);
+		}
+	}
 	[HttpPost("{eventId:guid}/participants")]
 	public async Task<ActionResult<object>> Join(Guid eventId, JoinEventRequest request)
 	{
 		try
 		{
-			var registration = await participantRegistrationService.Register(eventId, request, HttpContext.RequestAborted);
+			var registration = await participantRegistrationService.Register(eventId, request, null, HttpContext.RequestAborted);
 			return registration is null
 				? NotFound()
-				: Ok(new { participantId = registration.ParticipantId, cardId = registration.CardId, registration.PublicCode, registration.Numbers });
+				: Ok(new { participantId = registration.ParticipantId, cards = registration.Cards.Select(card => new { card.CardId, card.PublicCode, card.Numbers, card.Status }) });
 		}
 		catch (InvalidOperationException exception)
 		{
@@ -84,6 +133,7 @@ public sealed partial class EventsController(BingoDbContext db, IHubContext<Bing
 		}
 	}
 	private static int[][] ToRows(int[,] card) => Enumerable.Range(0, 5).Select(r => Enumerable.Range(0, 5).Select(c => card[r, c]).ToArray()).ToArray();
+	private Task<int> GetPurchasedCardsCount(Guid eventId) => db.Cards.Join(db.Participants, card => card.ParticipantId, participant => participant.Id, (card, participant) => new { card, participant }).CountAsync(item => item.card.EventId == eventId && item.card.Type == CardType.Digital && item.participant.ParticipantAccountId.HasValue && item.card.Status != CardStatus.Cancelled);
 	private sealed record AwardedCardSummary(string PublicCode, string ParticipantName, string RoundName, string PrizeName);
 	private async Task<RoundWinner?> FindPendingWinner(Guid roundId, Guid stageId) => (await db.RoundWinners
 		.Where(item => item.RoundId == roundId && item.StageId == stageId && item.IsWinner && item.RevealedAt.HasValue && !item.PrizeDeliveredAt.HasValue && !item.PrizeDeclinedAt.HasValue)

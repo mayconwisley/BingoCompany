@@ -8,6 +8,7 @@ public sealed class BingoDbContext(DbContextOptions<BingoDbContext> options) : D
 	public DbSet<BingoEvent> Events => Set<BingoEvent>();
 	public DbSet<Company> Companies => Set<Company>();
 	public DbSet<CompanyUser> CompanyUsers => Set<CompanyUser>();
+	public DbSet<ParticipantAccount> ParticipantAccounts => Set<ParticipantAccount>();
 	public DbSet<Participant> Participants => Set<Participant>();
 	public DbSet<BingoCard> Cards => Set<BingoCard>();
 	public DbSet<BingoRound> Rounds => Set<BingoRound>();

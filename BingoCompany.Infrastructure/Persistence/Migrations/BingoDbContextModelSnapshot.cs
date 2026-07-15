@@ -68,6 +68,10 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("InvalidationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("Numbers")
                         .IsRequired()
                         .HasColumnType("text");
@@ -106,6 +110,16 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("CardsPerParticipant")
                         .HasColumnType("integer");
+
+                    b.Property<int?>("CardPurchaseLimit")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CardPurchaseCancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsCardPurchaseOpen")
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
@@ -293,6 +307,9 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("EventId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ParticipantAccountId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTimeOffset>("JoinedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -310,7 +327,40 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("EventId");
 
+                    b.HasIndex("ParticipantAccountId");
+
                     b.ToTable("Participants", "bingo");
+                });
+
+            modelBuilder.Entity("BingoCompany.Domain.Models.ParticipantAccount", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("ParticipantAccounts", "bingo");
                 });
 
             modelBuilder.Entity("BingoCompany.Domain.Models.PrizeStage", b =>
@@ -477,6 +527,11 @@ namespace BingoCompany.Infrastructure.Persistence.Migrations
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("BingoCompany.Domain.Models.ParticipantAccount", null)
+                        .WithMany()
+                        .HasForeignKey("ParticipantAccountId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("BingoCompany.Domain.Models.PrizeStage", b =>

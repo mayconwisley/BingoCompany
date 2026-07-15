@@ -25,8 +25,14 @@ export const bingoApi = {
 	getEvent: (eventId: string) => http<EventDetails>(`/api/events/${eventId}`),
 	createEvent: (request: CreateEventInput) => http<EventSummary>("/api/events", { method: "POST", body: JSON.stringify(request) }),
 	openRegistration: (eventId: string) => http<void>(`/api/events/${eventId}/registration/open`, { method: "POST" }),
+	openCardPurchase: (eventId: string, quantity: number) =>
+		http<void>(`/api/events/${eventId}/card-purchase/open`, { method: "POST", body: JSON.stringify({ quantity }) }),
+	updateCardPurchase: (eventId: string, quantity: number) =>
+		http<void>(`/api/events/${eventId}/card-purchase`, { method: "PUT", body: JSON.stringify({ quantity }) }),
+	cancelCardPurchase: (eventId: string, reason: string) =>
+		http<void>(`/api/events/${eventId}/card-purchase/cancel`, { method: "POST", body: JSON.stringify({ reason }) }),
 	joinEvent: (eventId: string, request: JoinEventInput) =>
-		http<{ publicCode: string }>(`/api/events/${eventId}/participants`, { method: "POST", body: JSON.stringify(request) }),
+		http<RegistrationResult>(`/api/events/${eventId}/participants`, { method: "POST", body: JSON.stringify(request) }),
 	createRound: (eventId: string, name: string, stages: PrizeDraft[]) =>
 		http<{ id: string }>(`/api/events/${eventId}/rounds`, { method: "POST", body: JSON.stringify({ name, stages }) }),
 	updateRound: (eventId: string, roundId: string, name: string, stages: PrizeDraft[]) =>
@@ -56,6 +62,16 @@ export const bingoApi = {
 		http<void>(`/api/events/${eventId}/cards/${cardCode}/marks`, { method: "POST", body: JSON.stringify({ number }) }),
 	getPublicEvent: (code: string) => http<PublicEvent>(`/api/public/events/${code}`),
 	join: (code: string, request: JoinEventInput) =>
-		http<{ publicCode: string }>(`/api/public/events/${code}/join`, { method: "POST", body: JSON.stringify(request) }),
-	getAudit: (code: string) => http<PublicAudit>(`/api/public/events/${code}/audit`)
+		http<RegistrationResult>(`/api/public/events/${code}/join`, { method: "POST", body: JSON.stringify(request) }),
+	activateDigitalCard: (eventCode: string, cardCode: string) =>
+		http<void>(`/api/public/events/${eventCode}/cards/${cardCode}/activate`, { method: "POST" }),
+	getAudit: (code: string) => http<PublicAudit>(`/api/public/events/${code}/audit`),
+	getMyCards: () => http<ParticipantCard[]>("/api/participant/cards")
 };
+
+export type RegistrationResult = {
+	participantId: string;
+	cards: { cardId: string; publicCode: string; numbers: number[][]; status: string }[];
+};
+
+export type ParticipantCard = { eventId: string; eventPublicCode: string; eventName: string; eventStatus: string; publicCode: string; status: string; invalidationReason?: string; eventCancellationReason?: string; createdAt: string };

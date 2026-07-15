@@ -29,7 +29,7 @@ public sealed class EventsControllerManualMarkingTests
 		db.Cards.Add(card);
 		db.Rounds.Add(round);
 		await db.SaveChangesAsync();
-		var controller = new EventsController(db, null!, null!, null!);
+		var controller = new EventsController(db, null!, null!, null!, null!);
 
 		var response = await controller.Mark(bingoEvent.Id, card.PublicCode, new MarkNumberRequest(1));
 

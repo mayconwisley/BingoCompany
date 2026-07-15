@@ -6,7 +6,7 @@ namespace BingoCompany.Domain.Entities;
 public sealed class BingoCard
 {
 	private BingoCard() { }
-	public BingoCard(Guid eventId, Guid? participantId, CardType type, int[,] numbers)
+	public BingoCard(Guid eventId, Guid? participantId, CardType type, int[,] numbers, bool activateImmediately = true)
 	{
 		Id = Guid.CreateVersion7();
 		EventId = eventId;
@@ -14,7 +14,9 @@ public sealed class BingoCard
 		Type = type;
 		Numbers = numbers;
 		PublicCode = Convert.ToHexString(Guid.NewGuid().ToByteArray())[..12];
-		Status = participantId.HasValue ? CardStatus.Active : type == CardType.Printed ? CardStatus.Printed : CardStatus.Generated;
+		Status = participantId.HasValue
+			? activateImmediately ? CardStatus.Active : CardStatus.Assigned
+			: type == CardType.Printed ? CardStatus.Printed : CardStatus.Generated;
 		Fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{eventId:N}|{string.Join(',', Enumerable.Range(0, 5).SelectMany(row => Enumerable.Range(0, 5).Select(column => numbers[row, column])))}")));
 		CreatedAt = DateTimeOffset.UtcNow;
 	}
@@ -28,6 +30,7 @@ public sealed class BingoCard
 	public DateTimeOffset CreatedAt { get; private set; }
 	public string Fingerprint { get; private set; } = null!;
 	public Guid? ReplacementCardId { get; private set; }
+	public string? InvalidationReason { get; private set; }
 	public bool IsEligible => Status == CardStatus.Active && ParticipantId.HasValue;
 	public void Assign(Guid participantId)
 	{
@@ -57,5 +60,18 @@ public sealed class BingoCard
 
 		ReplacementCardId = replacement.Id;
 		Status = CardStatus.Cancelled;
+	}
+	public void InvalidateUnused()
+	{
+		if (Status != CardStatus.Assigned) throw new InvalidOperationException("Apenas cartelas aguardando ativação podem ser invalidadas.");
+		Status = CardStatus.Cancelled;
+	}
+	public void InvalidateForCancelledSale(string reason)
+	{
+		if (Status is not (CardStatus.Assigned or CardStatus.Active)) throw new InvalidOperationException("A cartela não pode ser invalidada por cancelamento de venda.");
+		if (string.IsNullOrWhiteSpace(reason)) throw new InvalidOperationException("Informe o motivo da invalidação.");
+
+		Status = CardStatus.Cancelled;
+		InvalidationReason = reason.Trim();
 	}
 }

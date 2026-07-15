@@ -111,7 +111,10 @@ public sealed partial class EventsController
 		var bingoEvent = await db.Events.Include(item => item.Rounds).SingleOrDefaultAsync(item => item.Id == eventId);
 		if (bingoEvent is null) return NotFound();
 		bingoEvent.Finish();
+		var unusedCards = await db.Cards.Where(item => item.EventId == eventId && item.Type == CardType.Digital && item.Status == CardStatus.Assigned).ToListAsync();
+		foreach (var card in unusedCards) card.InvalidateUnused();
 		db.AuditEntries.Add(new AuditEntry(eventId, "Evento encerrado", "O evento foi encerrado e tornou-se imutável."));
+		if (unusedCards.Count > 0) db.AuditEntries.Add(new AuditEntry(eventId, "Cartelas não utilizadas invalidadas", $"{unusedCards.Count} cartela(s) digital(is) não ativada(s) foram invalidadas."));
 		await db.SaveChangesAsync();
 		await hub.Clients.Group($"event:{eventId}").SendAsync("EventFinished", new { eventId });
 		return NoContent();

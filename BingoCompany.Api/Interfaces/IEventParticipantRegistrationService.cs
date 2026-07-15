@@ -5,5 +5,5 @@ namespace BingoCompany.Api.Interfaces;
 
 public interface IEventParticipantRegistrationService
 {
-	Task<EventParticipantRegistration?> Register(Guid eventId, JoinEventRequest request, CancellationToken cancellationToken);
+	Task<EventParticipantRegistration?> Register(Guid eventId, JoinEventRequest request, Guid? participantAccountId, CancellationToken cancellationToken);
 }

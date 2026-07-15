@@ -14,6 +14,7 @@ const EventSetupPage = lazy(() => import("../pages/event-setup/EventSetupPage").
 const HelpPage = lazy(() => import("../pages/help/HelpPage").then(({ HelpPage: page }) => ({ default: page })));
 const HomePage = lazy(() => import("../pages/home/HomePage").then(({ HomePage: page }) => ({ default: page })));
 const JoinPage = lazy(() => import("../pages/join/JoinPage").then(({ JoinPage: page }) => ({ default: page })));
+const MyCardsPage = lazy(() => import("../pages/my-cards/MyCardsPage").then(({ MyCardsPage: page }) => ({ default: page })));
 const OperatorPage = lazy(() => import("../pages/operator/OperatorPage").then(({ OperatorPage: page }) => ({ default: page })));
 const PrintCardsPage = lazy(() => import("../pages/print-cards/PrintCardsPage").then(({ PrintCardsPage: page }) => ({ default: page })));
 const RegistrationSharePage = lazy(() =>
@@ -54,6 +55,7 @@ export function App() {
 				/>
 				<Route path="/inscricao/:publicCode" element={<RegistrationSharePage />} />
 				<Route path="/participar/:publicCode" element={<JoinPage />} />
+				<Route path="/minhas-cartelas" element={<MyCardsPage />} />
 				<Route path="/cartela/:eventId/:cardCode" element={<CardPage />} />
 				<Route
 					path="/operacao/:eventId/:roundId"

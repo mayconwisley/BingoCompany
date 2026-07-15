@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { bingoApi } from "../../features/bingo";
-import type { ParticipantType } from "../../features/bingo";
+import type { ParticipantType, RegistrationResult } from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
+import { getSession } from "../../shared/auth/session";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
 import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";
@@ -15,8 +16,11 @@ export function JoinPage() {
 	const [type, setType] = useState<ParticipantType>("Employee");
 	const [registration, setRegistration] = useState("");
 	const [responsible, setResponsible] = useState("");
+	const [cardsQuantity, setCardsQuantity] = useState(1);
 	const [error, setError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [registrationResult, setRegistrationResult] = useState<RegistrationResult>();
+	const [activatingCode, setActivatingCode] = useState("");
 	const loader = useCallback(() => bingoApi.getPublicEvent(publicCode), [publicCode]);
 	const event = useAsyncResource(loader);
 
@@ -24,17 +28,38 @@ export function JoinPage() {
 		try {
 			setError("");
 			setIsSubmitting(true);
-			const card = await bingoApi.join(publicCode, {
+			const registrationResult = await bingoApi.join(publicCode, {
 				name,
 				type,
 				employeeRegistration: registration || undefined,
-				responsibleEmployeeName: responsible || undefined
+				responsibleEmployeeName: responsible || undefined,
+				cardsQuantity: event.data?.isCardPurchaseOpen ? cardsQuantity : undefined
 			});
-			navigate(`/cartela/${event.data?.id}/${card.publicCode}`);
+			if (registrationResult.cards.length === 1 && !event.data?.isCardPurchaseOpen) {
+				navigate(`/cartela/${event.data?.id}/${registrationResult.cards[0].publicCode}`);
+				return;
+			}
+			setRegistrationResult(registrationResult);
 		} catch (error) {
 			setError(getErrorMessage(error, "Não foi possível gerar sua cartela. Tente novamente em alguns instantes."));
 		} finally {
 			setIsSubmitting(false);
+		}
+	};
+	const activateAndUseCard = async (cardCode: string) => {
+		try {
+			setError("");
+			setActivatingCode(cardCode);
+			await bingoApi.activateDigitalCard(publicCode, cardCode);
+			setRegistrationResult((current) =>
+				current
+					? { ...current, cards: current.cards.map((card) => (card.publicCode === cardCode ? { ...card, status: "Active" } : card)) }
+					: current
+			);
+		} catch (activationError) {
+			setError(getErrorMessage(activationError, "Não foi possível ativar esta cartela. Tente novamente."));
+		} finally {
+			setActivatingCode("");
 		}
 	};
 
@@ -43,6 +68,9 @@ export function JoinPage() {
 	};
 
 	const needsResponsible = type !== "Employee";
+	const requiresParticipantAccount = Boolean(event.data?.isCardPurchaseOpen && getSession()?.accountType !== "participant");
+	const availableCards = event.data?.cardPurchaseRemaining;
+	const cardPurchaseCancellationReason = event.data?.cardPurchaseCancellationReason;
 	return (
 		<AppShell>
 			<main className="join">
@@ -56,7 +84,39 @@ export function JoinPage() {
 								<p className="subtitle">Informe seus dados para receber sua cartela digital.</p>
 							</div>
 						</header>
+						{registrationResult ? (
+							<section className="panel">
+								<h2>Suas cartelas digitais</h2>
+								<p>Guarde estes códigos. Ative somente as cartelas que deseja usar neste evento.</p>
+								<ul className="card-purchase-list">
+									{registrationResult.cards.map((card, index) => (
+										<li key={card.publicCode}>
+											<div className="card-purchase-code">
+												<span>Cartela {index + 1}</span>
+												<code>{card.publicCode}</code>
+											</div>
+											{card.status === "Active" ? (
+												<button className="primary" onClick={() => navigate(`/cartela/${event.data?.id}/${card.publicCode}`)}>
+													Abrir cartela
+												</button>
+											) : (
+												<button
+													className="primary"
+													disabled={Boolean(activatingCode)}
+													onClick={() => activateAndUseCard(card.publicCode)}
+												>
+													{activatingCode === card.publicCode ? "Ativando..." : "Ativar"}
+												</button>
+											)}
+										</li>
+									))}
+								</ul>
+								<FeedbackMessage error={error} onClose={() => setError("")} />
+							</section>
+						) : (
 						<section className="panel">
+							{cardPurchaseCancellationReason && <p role="status">A venda de cartelas foi cancelada. Motivo: {cardPurchaseCancellationReason}. As inscrições comuns continuam disponíveis.</p>}
+							{requiresParticipantAccount && <p role="status">Para comprar cartelas, <Link to={`/minhas-cartelas?returnTo=${encodeURIComponent(`/participar/${publicCode}`)}`}>entre ou crie sua conta de participante</Link>. Assim seus códigos ficarão disponíveis depois.</p>}
 							<label>
 								Seu nome
 								<input aria-label="Seu nome" value={name} onChange={(event) => setName(event.target.value)} />
@@ -93,15 +153,29 @@ export function JoinPage() {
 									/>
 								</label>
 							)}
+							{event.data.isCardPurchaseOpen && (
+								<label>
+									Quantas cartelas deseja adquirir? {availableCards !== undefined && <small>({availableCards} disponível(is))</small>}
+									<input
+										aria-label="Quantidade de cartelas digitais"
+										type="number"
+										min="1"
+										max={availableCards ?? 100}
+										value={cardsQuantity}
+										onChange={(input) => setCardsQuantity(Math.min(100, Math.max(1, Number(input.target.value) || 1)))}
+									/>
+								</label>
+							)}
 							<button
 								className="primary"
-								disabled={!name.trim() || (needsResponsible && !responsible.trim()) || isSubmitting}
+								disabled={requiresParticipantAccount || availableCards === 0 || !name.trim() || (needsResponsible && !responsible.trim()) || isSubmitting}
 								onClick={createCard}
 							>
 								{isSubmitting ? "Gerando cartela..." : "Gerar minha cartela"}
 							</button>
 							<FeedbackMessage error={error} onClose={() => setError("")} />
 						</section>
+						)}
 					</>
 				)}
 			</main>

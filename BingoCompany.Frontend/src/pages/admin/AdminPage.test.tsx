@@ -69,4 +69,27 @@ describe("AdminPage", () => {
 		expect(displayLink).toHaveAttribute("target", "_blank");
 		expect(displayLink).toHaveAttribute("rel", "noopener noreferrer");
 	});
+	it("envia a quantidade configurada de cartelas digitais por participante", async () => {
+		vi.mocked(bingoApi.createEvent).mockResolvedValue({
+			id: "2",
+			name: "Festa 2026",
+			publicCode: "DEF456",
+			status: "Draft",
+			markingMode: "Automatic",
+			createdAt: "2026-07-13T14:30:00Z"
+		});
+		render(
+			<MemoryRouter>
+				<AdminPage />
+			</MemoryRouter>
+		);
+
+		fireEvent.change(screen.getByLabelText("Nome do evento"), { target: { value: "Festa" } });
+		fireEvent.change(screen.getByLabelText("Cartelas digitais por participante"), { target: { value: "3" } });
+		fireEvent.click(screen.getByRole("button", { name: "Criar evento" }));
+
+		await waitFor(() =>
+			expect(bingoApi.createEvent).toHaveBeenCalledWith({ name: "Festa", markingMode: "Automatic", cardsPerParticipant: 3 })
+		);
+	});
 });

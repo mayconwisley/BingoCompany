@@ -22,6 +22,10 @@ export type EventSummary = {
 	publicCode: string;
 	status: string;
 	markingMode: CardMarkingMode;
+	isCardPurchaseOpen?: boolean;
+	cardPurchaseLimit?: number;
+	cardPurchaseRemaining?: number;
+	cardPurchaseCancellationReason?: string;
 	createdAt: string;
 };
 export type EventPage = { items: EventSummary[]; page: number; pageSize: number; totalItems: number; totalPages: number };
@@ -30,6 +34,10 @@ export type EventDetails = {
 	name: string;
 	publicCode: string;
 	status: string;
+	isCardPurchaseOpen?: boolean;
+	cardPurchaseLimit?: number;
+	cardPurchaseRemaining?: number;
+	cardPurchaseCancellationReason?: string;
 	participants: number;
 	cards: number;
 	participantList: { id: string; name: string; type: string }[];
@@ -64,6 +72,10 @@ export type PublicEvent = {
 	publicCode: string;
 	status: string;
 	markingMode: string;
+	isCardPurchaseOpen?: boolean;
+	cardPurchaseLimit?: number;
+	cardPurchaseRemaining?: number;
+	cardPurchaseCancellationReason?: string;
 	participants: number;
 	cards: number;
 	round?: {
@@ -109,7 +121,7 @@ export type CardState = {
 };
 export type PrizeDraft = { sequence: number; prizeName: string; pattern: WinningPattern; prizeImageDataUrl?: string };
 export type CreateEventInput = { name: string; markingMode: CardMarkingMode; cardsPerParticipant: number };
-export type JoinEventInput = { name: string; type: ParticipantType; employeeRegistration?: string; responsibleEmployeeName?: string };
+export type JoinEventInput = { name: string; type: ParticipantType; employeeRegistration?: string; responsibleEmployeeName?: string; cardsQuantity?: number };
 export type PublicAudit = {
 	eventInfo: { name: string; publicCode: string; status: string; createdAt: string };
 	participants: { id: string; name: string; joinedAt: string }[];

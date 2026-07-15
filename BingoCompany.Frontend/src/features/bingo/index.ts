@@ -3,6 +3,8 @@ export type { ApplicationInfo } from "./api/applicationInfoApi";
 export { authApi } from "./api/authApi";
 export type { AuthSession } from "./api/authApi";
 export { bingoApi } from "./api/bingoApi";
+export type { RegistrationResult } from "./api/bingoApi";
+export type { ParticipantCard } from "./api/bingoApi";
 export { BingoCardGrid } from "./components/BingoCardGrid";
 export { DrawSuspense } from "./components/DrawSuspense";
 export { PrizeStageEditor } from "./components/PrizeStageEditor";

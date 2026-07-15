@@ -41,6 +41,12 @@ public sealed partial class PublicController(BingoDbContext db, IEventParticipan
 			: await db.RoundWinners.CountAsync(item => item.RoundId == round.Id && item.StageId == activeStage.Id);
 		var statistics = await CalculateStatistics(round, activeStage, bingoEvent.MarkingMode);
 
+		var purchasedCards = bingoEvent.CardPurchaseLimit.HasValue
+			? await db.Cards.Join(db.Participants, card => card.ParticipantId, participant => participant.Id, (card, participant) => new { card, participant })
+				.CountAsync(item => item.card.EventId == bingoEvent.Id && item.card.Type == CardType.Digital && item.participant.ParticipantAccountId.HasValue)
+			: 0;
+		var cardPurchaseRemaining = bingoEvent.CardPurchaseLimit.HasValue ? Math.Max(0, bingoEvent.CardPurchaseLimit.Value - purchasedCards) : (int?)null;
+
 		return Ok(new
 		{
 			bingoEvent.Id,
@@ -48,6 +54,10 @@ public sealed partial class PublicController(BingoDbContext db, IEventParticipan
 			bingoEvent.PublicCode,
 			bingoEvent.Status,
 			bingoEvent.MarkingMode,
+			bingoEvent.IsCardPurchaseOpen,
+			bingoEvent.CardPurchaseLimit,
+			bingoEvent.CardPurchaseCancellationReason,
+			cardPurchaseRemaining,
 			participants = await db.Participants.CountAsync(item => item.EventId == bingoEvent.Id),
 			cards = await db.Cards.CountAsync(item => item.EventId == bingoEvent.Id),
 			round = round is null ? null : new

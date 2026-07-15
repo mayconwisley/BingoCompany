@@ -11,6 +11,7 @@ public sealed class BingoEventConfiguration : IEntityTypeConfiguration<BingoEven
 		builder.HasKey(item => item.Id);
 		builder.HasIndex(item => item.PublicCode).IsUnique();
 		builder.HasIndex(item => item.CompanyId);
+		builder.Property(item => item.CardPurchaseCancellationReason).HasMaxLength(500);
 		builder.HasOne<Company>().WithMany().HasForeignKey(item => item.CompanyId);
 		builder.HasMany(item => item.Rounds).WithOne().HasForeignKey(item => item.EventId);
 		builder.HasMany(item => item.Cards).WithOne().HasForeignKey(item => item.EventId);

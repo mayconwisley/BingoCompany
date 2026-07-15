@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { bingoApi, PrizeStageEditor, QrCardScanner, roundStatusLabel } from "../../features/bingo";
 import type { PrizeDraft } from "../../features/bingo";
@@ -38,6 +38,8 @@ export function EventSetupPage() {
 	]);
 	const [editingRoundId, setEditingRoundId] = useState<string>();
 	const [printedQuantity, setPrintedQuantity] = useState(10);
+	const [cardPurchaseQuantity, setCardPurchaseQuantity] = useState(100);
+	const [cardPurchaseCancellationReason, setCardPurchaseCancellationReason] = useState("");
 	const [selectedCard, setSelectedCard] = useState("");
 	const [selectedParticipant, setSelectedParticipant] = useState("");
 	const openRound = (roundId: string) => navigate(`/operacao/${eventId}/${roundId}?code=${code}`);
@@ -45,6 +47,12 @@ export function EventSetupPage() {
 	const printedCards = event.data?.cardList.filter((card) => card.type === "Printed") ?? [];
 	const selectedCardState = printedCards.find((card) => card.publicCode === selectedCard)?.status;
 	const isFinished = event.data?.status === "Finished";
+	const isCardPurchaseOpen = event.data?.isCardPurchaseOpen ?? false;
+	const cardPurchaseRemaining = event.data?.cardPurchaseRemaining;
+	const cardPurchaseLimit = event.data?.cardPurchaseLimit;
+	useEffect(() => {
+		if (cardPurchaseLimit) setCardPurchaseQuantity(cardPurchaseLimit);
+	}, [cardPurchaseLimit]);
 	const hasEligibleCard = event.data?.cardList.some((card) => card.status === "Active" && Boolean(card.participantId)) ?? false;
 	const canFinishEvent =
 		event.data?.status === "Running" &&
@@ -219,6 +227,80 @@ export function EventSetupPage() {
 									>
 										Abrir inscrições
 									</button>
+									{!isCardPurchaseOpen && (
+										<label>
+											Cartelas disponíveis para venda
+											<input
+												aria-label="Cartelas disponíveis para venda"
+												type="number"
+												min="1"
+												max="10000"
+												value={cardPurchaseQuantity}
+												onChange={(input) => setCardPurchaseQuantity(Math.min(10000, Math.max(1, Number(input.target.value) || 1)))}
+											/>
+										</label>
+									)}
+									<button
+										className="reveal"
+										disabled={
+											isFinished ||
+											isCardPurchaseOpen ||
+											(event.data.status !== "Draft" && event.data.status !== "RegistrationOpen") ||
+											action.isPending
+										}
+										onClick={async () => {
+											await action.execute(() => bingoApi.openCardPurchase(eventId, cardPurchaseQuantity), "Compra de cartelas aberta.");
+											await event.reload();
+										}}
+									>
+										{isCardPurchaseOpen ? "Compra de cartelas aberta" : "Abrir compra de cartelas"}
+									</button>
+									{isCardPurchaseOpen && <p role="status">{cardPurchaseRemaining ?? 0} cartela(s) ainda disponível(is) para venda.</p>}
+									{event.data.cardPurchaseCancellationReason && <p role="status">Venda cancelada: {event.data.cardPurchaseCancellationReason}</p>}
+									{isCardPurchaseOpen && (
+										<>
+											<label>
+												Limite de cartelas para venda
+												<input
+													aria-label="Limite de cartelas para venda"
+													type="number"
+													min="1"
+													max="10000"
+													value={cardPurchaseQuantity}
+													onChange={(input) => setCardPurchaseQuantity(Math.min(10000, Math.max(1, Number(input.target.value) || 1)))}
+												/>
+											</label>
+											<button
+												disabled={isFinished || action.isPending || cardPurchaseQuantity === cardPurchaseLimit}
+												onClick={async () => {
+													await action.execute(() => bingoApi.updateCardPurchase(eventId, cardPurchaseQuantity), "Limite de venda atualizado.");
+													await event.reload();
+												}}
+											>
+												Atualizar quantidade
+											</button>
+											<label>
+												Motivo do cancelamento
+												<input
+													aria-label="Motivo do cancelamento da venda"
+													value={cardPurchaseCancellationReason}
+													onChange={(input) => setCardPurchaseCancellationReason(input.target.value)}
+													placeholder="Ex.: alteração na programação do evento"
+												/>
+											</label>
+											<button
+												className="reveal"
+												disabled={isFinished || action.isPending || cardPurchaseCancellationReason.trim().length < 3}
+												onClick={async () => {
+													await action.execute(() => bingoApi.cancelCardPurchase(eventId, cardPurchaseCancellationReason), "Venda cancelada e cartelas invalidadas.");
+													setCardPurchaseCancellationReason("");
+													await event.reload();
+												}}
+											>
+												Cancelar venda de cartelas
+											</button>
+										</>
+									)}
 								</div>
 								{isFinished && (
 									<div className="awarded-cards" aria-labelledby="awarded-cards-title">

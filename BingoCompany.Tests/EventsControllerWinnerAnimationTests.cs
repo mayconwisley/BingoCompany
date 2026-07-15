@@ -36,7 +36,7 @@ public sealed class EventsControllerWinnerAnimationTests
 		db.Rounds.AddRange(awardedRound, nextRound);
 		db.RoundWinners.Add(winner);
 		await db.SaveChangesAsync();
-		var controller = new EventsController(db, null!, null!, null!);
+		var controller = new EventsController(db, null!, null!, null!, null!);
 
 		var response = Assert.IsType<OkObjectResult>((await controller.CardState(bingoEvent.Id, card.PublicCode)).Result);
 		using var stateJson = JsonDocument.Parse(JsonSerializer.Serialize(response.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));

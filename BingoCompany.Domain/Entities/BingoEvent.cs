@@ -22,6 +22,9 @@ public sealed class BingoEvent
 	public string PublicCode { get; private set; } = null!;
 	public EventStatus Status { get; private set; } = EventStatus.Draft;
 	public int CardsPerParticipant { get; private set; }
+	public bool IsCardPurchaseOpen { get; private set; }
+	public int? CardPurchaseLimit { get; private set; }
+	public string? CardPurchaseCancellationReason { get; private set; }
 	public CardMarkingMode MarkingMode { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public IReadOnlyCollection<BingoRound> Rounds => _rounds;
@@ -33,6 +36,34 @@ public sealed class BingoEvent
 			Status = EventStatus.RegistrationOpen;
 		else
 			throw new InvalidOperationException("O evento não pode aceitar inscrições agora.");
+	}
+	public void OpenCardPurchase(int quantity)
+	{
+		if (quantity is < 1 or > 10_000) throw new InvalidOperationException("Informe entre 1 e 10000 cartelas para venda.");
+		if (CardPurchaseCancellationReason is not null) throw new InvalidOperationException("A venda de cartelas foi cancelada e não pode ser reaberta.");
+		if (Status is EventStatus.Draft)
+			Status = EventStatus.RegistrationOpen;
+		else if (Status is not EventStatus.RegistrationOpen)
+			throw new InvalidOperationException("O evento não pode vender cartelas agora.");
+
+		IsCardPurchaseOpen = true;
+		CardPurchaseLimit = quantity;
+	}
+	public void UpdateCardPurchaseLimit(int quantity, int soldCards)
+	{
+		if (!IsCardPurchaseOpen || Status != EventStatus.RegistrationOpen) throw new InvalidOperationException("A venda de cartelas não está aberta para alteração.");
+		if (quantity is < 1 or > 10_000) throw new InvalidOperationException("Informe entre 1 e 10000 cartelas para venda.");
+		if (quantity < soldCards) throw new InvalidOperationException("A quantidade não pode ser menor que as cartelas já vendidas.");
+
+		CardPurchaseLimit = quantity;
+	}
+	public void CancelCardPurchase(string reason)
+	{
+		if (!IsCardPurchaseOpen || Status != EventStatus.RegistrationOpen) throw new InvalidOperationException("A venda de cartelas não está aberta para cancelamento.");
+		if (string.IsNullOrWhiteSpace(reason)) throw new InvalidOperationException("Informe o motivo do cancelamento.");
+
+		IsCardPurchaseOpen = false;
+		CardPurchaseCancellationReason = reason.Trim();
 	}
 	public void Start()
 	{
