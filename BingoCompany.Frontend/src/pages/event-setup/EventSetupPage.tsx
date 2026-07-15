@@ -236,7 +236,9 @@ export function EventSetupPage() {
 												min="1"
 												max="10000"
 												value={cardPurchaseQuantity}
-												onChange={(input) => setCardPurchaseQuantity(Math.min(10000, Math.max(1, Number(input.target.value) || 1)))}
+												onChange={(input) =>
+													setCardPurchaseQuantity(Math.min(10000, Math.max(1, Number(input.target.value) || 1)))
+												}
 											/>
 										</label>
 									)}
@@ -249,14 +251,21 @@ export function EventSetupPage() {
 											action.isPending
 										}
 										onClick={async () => {
-											await action.execute(() => bingoApi.openCardPurchase(eventId, cardPurchaseQuantity), "Compra de cartelas aberta.");
+											await action.execute(
+												() => bingoApi.openCardPurchase(eventId, cardPurchaseQuantity),
+												"Compra de cartelas aberta."
+											);
 											await event.reload();
 										}}
 									>
 										{isCardPurchaseOpen ? "Compra de cartelas aberta" : "Abrir compra de cartelas"}
 									</button>
-									{isCardPurchaseOpen && <p role="status">{cardPurchaseRemaining ?? 0} cartela(s) ainda disponível(is) para venda.</p>}
-									{event.data.cardPurchaseCancellationReason && <p role="status">Venda cancelada: {event.data.cardPurchaseCancellationReason}</p>}
+									{isCardPurchaseOpen && (
+										<p role="status">{cardPurchaseRemaining ?? 0} cartela(s) ainda disponível(is) para venda.</p>
+									)}
+									{event.data.cardPurchaseCancellationReason && (
+										<p role="status">Venda cancelada: {event.data.cardPurchaseCancellationReason}</p>
+									)}
 									{isCardPurchaseOpen && (
 										<>
 											<label>
@@ -267,13 +276,20 @@ export function EventSetupPage() {
 													min="1"
 													max="10000"
 													value={cardPurchaseQuantity}
-													onChange={(input) => setCardPurchaseQuantity(Math.min(10000, Math.max(1, Number(input.target.value) || 1)))}
+													onChange={(input) =>
+														setCardPurchaseQuantity(
+															Math.min(10000, Math.max(1, Number(input.target.value) || 1))
+														)
+													}
 												/>
 											</label>
 											<button
 												disabled={isFinished || action.isPending || cardPurchaseQuantity === cardPurchaseLimit}
 												onClick={async () => {
-													await action.execute(() => bingoApi.updateCardPurchase(eventId, cardPurchaseQuantity), "Limite de venda atualizado.");
+													await action.execute(
+														() => bingoApi.updateCardPurchase(eventId, cardPurchaseQuantity),
+														"Limite de venda atualizado."
+													);
 													await event.reload();
 												}}
 											>
@@ -290,9 +306,14 @@ export function EventSetupPage() {
 											</label>
 											<button
 												className="reveal"
-												disabled={isFinished || action.isPending || cardPurchaseCancellationReason.trim().length < 3}
+												disabled={
+													isFinished || action.isPending || cardPurchaseCancellationReason.trim().length < 3
+												}
 												onClick={async () => {
-													await action.execute(() => bingoApi.cancelCardPurchase(eventId, cardPurchaseCancellationReason), "Venda cancelada e cartelas invalidadas.");
+													await action.execute(
+														() => bingoApi.cancelCardPurchase(eventId, cardPurchaseCancellationReason),
+														"Venda cancelada e cartelas invalidadas."
+													);
 													setCardPurchaseCancellationReason("");
 													await event.reload();
 												}}

@@ -31,7 +31,10 @@ export function HomePage() {
 				<p>Cartelas digitais, sorteio auditável e uma experiência de telão feita para criar suspense.</p>
 				<div className="actions">
 					{session ? (
-						<button className="primary" onClick={() => navigate(session.accountType === "participant" ? "/minhas-cartelas" : "/admin")}>
+						<button
+							className="primary"
+							onClick={() => navigate(session.accountType === "participant" ? "/minhas-cartelas" : "/admin")}
+						>
 							{session.accountType === "participant" ? "Minhas cartelas" : "Acessar administração"}
 						</button>
 					) : (

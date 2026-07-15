@@ -122,7 +122,13 @@ export type CardState = {
 };
 export type PrizeDraft = { sequence: number; prizeName: string; pattern: WinningPattern; prizeImageDataUrl?: string };
 export type CreateEventInput = { name: string; markingMode: CardMarkingMode; cardsPerParticipant: number };
-export type JoinEventInput = { name: string; type: ParticipantType; employeeRegistration?: string; responsibleEmployeeName?: string; cardsQuantity?: number };
+export type JoinEventInput = {
+	name: string;
+	type: ParticipantType;
+	employeeRegistration?: string;
+	responsibleEmployeeName?: string;
+	cardsQuantity?: number;
+};
 export type PublicAudit = {
 	eventInfo: { name: string; publicCode: string; status: string; createdAt: string };
 	participants: { id: string; name: string; joinedAt: string }[];

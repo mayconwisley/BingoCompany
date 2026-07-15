@@ -37,10 +37,15 @@ export function AppShell({ children, showAdministration = true }: Props) {
 					</Link>
 					{session?.accountType === "participant" ? (
 						<>
-							<Link className="navlink" to="/minhas-cartelas">Minhas cartelas</Link>
-							<button className="navlink" onClick={logout}>Sair</button>
+							<Link className="navlink" to="/minhas-cartelas">
+								Minhas cartelas
+							</Link>
+							<button className="navlink" onClick={logout}>
+								Sair
+							</button>
 						</>
-					) : showAdministration &&
+					) : (
+						showAdministration &&
 						(session ? (
 							<>
 								<Link className="navlink" to="/admin">
@@ -52,10 +57,15 @@ export function AppShell({ children, showAdministration = true }: Props) {
 							</>
 						) : (
 							<>
-								<Link className="navlink" to="/minhas-cartelas">Minhas cartelas</Link>
-								<Link className="navlink" to="/entrar">Entrar</Link>
+								<Link className="navlink" to="/minhas-cartelas">
+									Minhas cartelas
+								</Link>
+								<Link className="navlink" to="/entrar">
+									Entrar
+								</Link>
 							</>
-						))}
+						))
+					)}
 					<ThemeToggle />
 				</div>
 			</nav>

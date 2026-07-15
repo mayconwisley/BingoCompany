@@ -5,7 +5,12 @@ import { describe, expect, it, vi } from "vitest";
 import { AuthenticationPage } from "./AuthenticationPage";
 
 vi.mock("../../features/bingo", () => ({ authApi: { login: vi.fn(), register: vi.fn() } }));
-vi.mock("../../shared/auth/session", () => ({ clearSession: vi.fn(), getSession: vi.fn(), saveSession: vi.fn(), sessionChangedEvent: "bingo-company-session-changed" }));
+vi.mock("../../shared/auth/session", () => ({
+	clearSession: vi.fn(),
+	getSession: vi.fn(),
+	saveSession: vi.fn(),
+	sessionChangedEvent: "bingo-company-session-changed"
+}));
 vi.mock("../../shared/ui/AppShell", () => ({ AppShell: ({ children }: { children: ReactNode }) => children }));
 
 describe("AuthenticationPage", () => {

@@ -53,7 +53,10 @@ export function JoinPage() {
 			await bingoApi.activateDigitalCard(publicCode, cardCode);
 			setRegistrationResult((current) =>
 				current
-					? { ...current, cards: current.cards.map((card) => (card.publicCode === cardCode ? { ...card, status: "Active" } : card)) }
+					? {
+							...current,
+							cards: current.cards.map((card) => (card.publicCode === cardCode ? { ...card, status: "Active" } : card))
+						}
 					: current
 			);
 		} catch (activationError) {
@@ -96,7 +99,10 @@ export function JoinPage() {
 												<code>{card.publicCode}</code>
 											</div>
 											{card.status === "Active" ? (
-												<button className="primary" onClick={() => navigate(`/cartela/${event.data?.id}/${card.publicCode}`)}>
+												<button
+													className="primary"
+													onClick={() => navigate(`/cartela/${event.data?.id}/${card.publicCode}`)}
+												>
 													Abrir cartela
 												</button>
 											) : (
@@ -114,67 +120,89 @@ export function JoinPage() {
 								<FeedbackMessage error={error} onClose={() => setError("")} />
 							</section>
 						) : (
-						<section className="panel">
-							{cardPurchaseCancellationReason && <p role="status">A venda de cartelas foi cancelada. Motivo: {cardPurchaseCancellationReason}. As inscrições comuns continuam disponíveis.</p>}
-							{requiresParticipantAccount && <p role="status">Para comprar cartelas, <Link to={`/minhas-cartelas?returnTo=${encodeURIComponent(`/participar/${publicCode}`)}`}>entre ou crie sua conta de participante</Link>. Assim seus códigos ficarão disponíveis depois.</p>}
-							<label>
-								Seu nome
-								<input aria-label="Seu nome" value={name} onChange={(event) => setName(event.target.value)} />
-							</label>
-							<label>
-								Tipo de participante
-								<select
-									aria-label="Tipo de participante"
-									value={type}
-									onChange={(event) => updateParticipantType(event.target.value)}
+							<section className="panel">
+								{cardPurchaseCancellationReason && (
+									<p role="status">
+										A venda de cartelas foi cancelada. Motivo: {cardPurchaseCancellationReason}. As inscrições comuns
+										continuam disponíveis.
+									</p>
+								)}
+								{requiresParticipantAccount && (
+									<p role="status">
+										Para comprar cartelas,{" "}
+										<Link to={`/minhas-cartelas?returnTo=${encodeURIComponent(`/participar/${publicCode}`)}`}>
+											entre ou crie sua conta de participante
+										</Link>
+										. Assim seus códigos ficarão disponíveis depois.
+									</p>
+								)}
+								<label>
+									Seu nome
+									<input aria-label="Seu nome" value={name} onChange={(event) => setName(event.target.value)} />
+								</label>
+								<label>
+									Tipo de participante
+									<select
+										aria-label="Tipo de participante"
+										value={type}
+										onChange={(event) => updateParticipantType(event.target.value)}
+									>
+										<option value="Employee">Colaborador</option>
+										<option value="FamilyMember">Familiar</option>
+										<option value="Guest">Convidado</option>
+									</select>
+								</label>
+								{type === "Employee" && (
+									<label>
+										Matrícula <small>(opcional)</small>
+										<input
+											aria-label="Matrícula"
+											value={registration}
+											onChange={(event) => setRegistration(event.target.value)}
+										/>
+									</label>
+								)}
+								{needsResponsible && (
+									<label>
+										Colaborador responsável
+										<input
+											aria-label="Colaborador responsável"
+											value={responsible}
+											onChange={(event) => setResponsible(event.target.value)}
+										/>
+									</label>
+								)}
+								{event.data.isCardPurchaseOpen && (
+									<label>
+										Quantas cartelas deseja adquirir?{" "}
+										{availableCards !== undefined && <small>({availableCards} disponível(is))</small>}
+										<input
+											aria-label="Quantidade de cartelas digitais"
+											type="number"
+											min="1"
+											max={availableCards ?? 100}
+											value={cardsQuantity}
+											onChange={(input) =>
+												setCardsQuantity(Math.min(100, Math.max(1, Number(input.target.value) || 1)))
+											}
+										/>
+									</label>
+								)}
+								<button
+									className="primary"
+									disabled={
+										requiresParticipantAccount ||
+										availableCards === 0 ||
+										!name.trim() ||
+										(needsResponsible && !responsible.trim()) ||
+										isSubmitting
+									}
+									onClick={createCard}
 								>
-									<option value="Employee">Colaborador</option>
-									<option value="FamilyMember">Familiar</option>
-									<option value="Guest">Convidado</option>
-								</select>
-							</label>
-							{type === "Employee" && (
-								<label>
-									Matrícula <small>(opcional)</small>
-									<input
-										aria-label="Matrícula"
-										value={registration}
-										onChange={(event) => setRegistration(event.target.value)}
-									/>
-								</label>
-							)}
-							{needsResponsible && (
-								<label>
-									Colaborador responsável
-									<input
-										aria-label="Colaborador responsável"
-										value={responsible}
-										onChange={(event) => setResponsible(event.target.value)}
-									/>
-								</label>
-							)}
-							{event.data.isCardPurchaseOpen && (
-								<label>
-									Quantas cartelas deseja adquirir? {availableCards !== undefined && <small>({availableCards} disponível(is))</small>}
-									<input
-										aria-label="Quantidade de cartelas digitais"
-										type="number"
-										min="1"
-										max={availableCards ?? 100}
-										value={cardsQuantity}
-										onChange={(input) => setCardsQuantity(Math.min(100, Math.max(1, Number(input.target.value) || 1)))}
-									/>
-								</label>
-							)}
-							<button
-								className="primary"
-								disabled={requiresParticipantAccount || availableCards === 0 || !name.trim() || (needsResponsible && !responsible.trim()) || isSubmitting}
-								onClick={createCard}
-							>
-								{isSubmitting ? "Gerando cartela..." : "Gerar minha cartela"}
-							</button>
-							<FeedbackMessage error={error} onClose={() => setError("")} />
-						</section>
+									{isSubmitting ? "Gerando cartela..." : "Gerar minha cartela"}
+								</button>
+								<FeedbackMessage error={error} onClose={() => setError("")} />
+							</section>
 						)}
 					</>
 				)}

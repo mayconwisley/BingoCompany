@@ -12,7 +12,12 @@ vi.mock("../../features/bingo", () => ({
 		activateDigitalCard: vi.fn()
 	}
 }));
-vi.mock("../../shared/auth/session", () => ({ getSession: vi.fn(), saveSession: vi.fn(), clearSession: vi.fn(), sessionChangedEvent: "bingo-company-session-changed" }));
+vi.mock("../../shared/auth/session", () => ({
+	getSession: vi.fn(),
+	saveSession: vi.fn(),
+	clearSession: vi.fn(),
+	sessionChangedEvent: "bingo-company-session-changed"
+}));
 
 describe("JoinPage", () => {
 	beforeEach(() => {
@@ -91,9 +96,6 @@ describe("JoinPage", () => {
 		fireEvent.click(screen.getByRole("button", { name: "Gerar minha cartela" }));
 
 		expect(await screen.findByText(/CARD001/)).toBeInTheDocument();
-		expect(bingoApi.join).toHaveBeenCalledWith(
-			"EVENTO",
-			expect.objectContaining({ cardsQuantity: 4 })
-		);
+		expect(bingoApi.join).toHaveBeenCalledWith("EVENTO", expect.objectContaining({ cardsQuantity: 4 }));
 	});
 });

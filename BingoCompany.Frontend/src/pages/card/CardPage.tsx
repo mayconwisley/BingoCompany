@@ -16,7 +16,12 @@ export function CardPage() {
 	const [isGeneratingNextCard, setIsGeneratingNextCard] = useState(false);
 	const [nextCardError, setNextCardError] = useState("");
 
-	if (!card.data) return <AppShell showAdministration={false}><PageState loading={card.loading} error={card.error} /></AppShell>;
+	if (!card.data)
+		return (
+			<AppShell showAdministration={false}>
+				<PageState loading={card.loading} error={card.error} />
+			</AppShell>
+		);
 
 	const manual = card.data.markingMode !== "Automatic";
 	const isMandatoryManual = card.data.markingMode === "ManualRequired";
@@ -34,5 +39,72 @@ export function CardPage() {
 		}
 	};
 
-	return <AppShell showAdministration={false}><main className="cardpage"><header className="pagehead"><div><p className="eyebrow">{card.data.currentPrize || "Aguardando rodada"}</p><h1>Minha cartela</h1><p className="card-marking-mode">Tipo de marcação: <strong>{markingModeLabel(card.data.markingMode)}</strong></p>{card.data.participantName && <div className="card-owner"><span>Participante</span><strong>{card.data.participantName}</strong>{card.data.responsibleEmployeeName && <small>Colaborador responsável: {card.data.responsibleEmployeeName}</small>}</div>}{card.data.currentPattern && <p>Regra atual: {winningPatternLabel(card.data.currentPattern)}</p>}</div><ConnectionBadge status={connection} /></header><BingoCardGrid numbers={card.data.numbers} drawnNumbers={card.data.drawnNumbers} markedNumbers={card.data.markedNumbers} manual={manual} markableNumbers={isMandatoryManual && currentNumber ? [currentNumber] : undefined} isWinner={card.data.isWinner} onMark={async (number) => { await bingoApi.mark(eventId, cardCode, number); await card.reload(); }} />{card.data.isWinner && <p className="winner-card-message" role="status">🎉 Parabéns! Esta é a cartela vencedora.</p>}<p className="hint">{isMandatoryManual ? "Marque a pedra atual antes que a próxima seja sorteada." : manual ? "Toque nos números destacados para marcá-los." : "Os números sorteados são marcados automaticamente."}</p>{card.data.canGenerateNextCard && <section className="panel"><h2>Nova rodada</h2><p>Esta cartela participou da rodada concluída. Gere novos números para a próxima rodada.</p><button className="primary" onClick={generateNextCard} disabled={isGeneratingNextCard}>{isGeneratingNextCard ? "Gerando nova cartela..." : "Gerar nova cartela"}</button><FeedbackMessage error={nextCardError} onClose={() => setNextCardError("")} /></section>}<section className="history"><h2>Pedras sorteadas</h2><div>{card.data.drawnNumbers.map((number) => <span key={number}>{number}</span>)}</div></section></main></AppShell>;
+	return (
+		<AppShell showAdministration={false}>
+			<main className="cardpage">
+				<header className="pagehead">
+					<div>
+						<p className="eyebrow">{card.data.currentPrize || "Aguardando rodada"}</p>
+						<h1>Minha cartela</h1>
+						<p className="card-marking-mode">
+							Tipo de marcação: <strong>{markingModeLabel(card.data.markingMode)}</strong>
+						</p>
+						{card.data.participantName && (
+							<div className="card-owner">
+								<span>Participante</span>
+								<strong>{card.data.participantName}</strong>
+								{card.data.responsibleEmployeeName && (
+									<small>Colaborador responsável: {card.data.responsibleEmployeeName}</small>
+								)}
+							</div>
+						)}
+						{card.data.currentPattern && <p>Regra atual: {winningPatternLabel(card.data.currentPattern)}</p>}
+					</div>
+					<ConnectionBadge status={connection} />
+				</header>
+				<BingoCardGrid
+					numbers={card.data.numbers}
+					drawnNumbers={card.data.drawnNumbers}
+					markedNumbers={card.data.markedNumbers}
+					manual={manual}
+					markableNumbers={isMandatoryManual && currentNumber ? [currentNumber] : undefined}
+					isWinner={card.data.isWinner}
+					onMark={async (number) => {
+						await bingoApi.mark(eventId, cardCode, number);
+						await card.reload();
+					}}
+				/>
+				{card.data.isWinner && (
+					<p className="winner-card-message" role="status">
+						🎉 Parabéns! Esta é a cartela vencedora.
+					</p>
+				)}
+				<p className="hint">
+					{isMandatoryManual
+						? "Marque a pedra atual antes que a próxima seja sorteada."
+						: manual
+							? "Toque nos números destacados para marcá-los."
+							: "Os números sorteados são marcados automaticamente."}
+				</p>
+				{card.data.canGenerateNextCard && (
+					<section className="panel">
+						<h2>Nova rodada</h2>
+						<p>Esta cartela participou da rodada concluída. Gere novos números para a próxima rodada.</p>
+						<button className="primary" onClick={generateNextCard} disabled={isGeneratingNextCard}>
+							{isGeneratingNextCard ? "Gerando nova cartela..." : "Gerar nova cartela"}
+						</button>
+						<FeedbackMessage error={nextCardError} onClose={() => setNextCardError("")} />
+					</section>
+				)}
+				<section className="history">
+					<h2>Pedras sorteadas</h2>
+					<div>
+						{card.data.drawnNumbers.map((number) => (
+							<span key={number}>{number}</span>
+						))}
+					</div>
+				</section>
+			</main>
+		</AppShell>
+	);
 }

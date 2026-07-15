@@ -74,5 +74,18 @@ export type RegistrationResult = {
 	cards: { cardId: string; publicCode: string; numbers: number[][]; status: string }[];
 };
 
-export type ParticipantCard = { eventId: string; eventPublicCode: string; eventName: string; eventStatus: string; publicCode: string; status: string; invalidationReason?: string; eventCancellationReason?: string; createdAt: string };
-export type ParticipantCardsPage = { activeCards: ParticipantCard[]; history: { items: ParticipantCard[]; page: number; pageSize: number; totalItems: number; totalPages: number } };
+export type ParticipantCard = {
+	eventId: string;
+	eventPublicCode: string;
+	eventName: string;
+	eventStatus: string;
+	publicCode: string;
+	status: string;
+	invalidationReason?: string;
+	eventCancellationReason?: string;
+	createdAt: string;
+};
+export type ParticipantCardsPage = {
+	activeCards: ParticipantCard[];
+	history: { items: ParticipantCard[]; page: number; pageSize: number; totalItems: number; totalPages: number };
+};
