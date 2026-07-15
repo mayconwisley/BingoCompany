@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0.9-noble AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble AS build
 WORKDIR /src
 
 COPY BingoCompany.Domain/BingoCompany.Domain.csproj BingoCompany.Domain/
@@ -15,7 +15,7 @@ COPY BingoCompany.Api/ BingoCompany.Api/
 
 RUN dotnet publish BingoCompany.Api/BingoCompany.Api.csproj --configuration Release --no-restore --output /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.9-noble AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble AS final
 WORKDIR /app
 
 RUN apt-get update \
