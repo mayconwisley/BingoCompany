@@ -120,4 +120,19 @@ describe("EventSetupPage", () => {
 
 		expect(await screen.findByRole("button", { name: "Abrir operação" })).toBeDisabled();
 	});
+
+	it("oferece links copiáveis para o QR Code e para a inscrição", async () => {
+		vi.mocked(bingoApi.getEvent).mockResolvedValue({ ...finishedEvent, status: "Draft", rounds: [] });
+
+		render(
+			<MemoryRouter initialEntries={["/admin/eventos/event-1?code=EVENTO1"]}>
+				<Routes>
+					<Route path="/admin/eventos/:eventId" element={<EventSetupPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByRole("button", { name: "Copiar link do QR Code" })).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "Copiar link de inscrição" })).toBeInTheDocument();
+	});
 });

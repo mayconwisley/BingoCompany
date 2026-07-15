@@ -21,6 +21,7 @@ export type EventSummary = {
 	name: string;
 	publicCode: string;
 	status: string;
+	cardsPerParticipant?: number;
 	markingMode: CardMarkingMode;
 	isCardPurchaseOpen?: boolean;
 	cardPurchaseLimit?: number;
@@ -34,6 +35,7 @@ export type EventDetails = {
 	name: string;
 	publicCode: string;
 	status: string;
+	cardsPerParticipant?: number;
 	isCardPurchaseOpen?: boolean;
 	cardPurchaseLimit?: number;
 	cardPurchaseRemaining?: number;
@@ -106,6 +108,7 @@ export type PublicEvent = {
 export type CardState = {
 	id: string;
 	publicCode: string;
+	eventStatus?: string;
 	participantName?: string;
 	responsibleEmployeeName?: string;
 	isWinner: boolean;
@@ -121,7 +124,7 @@ export type CardState = {
 	canGenerateNextCard: boolean;
 };
 export type PrizeDraft = { sequence: number; prizeName: string; pattern: WinningPattern; prizeImageDataUrl?: string };
-export type CreateEventInput = { name: string; markingMode: CardMarkingMode; cardsPerParticipant: number };
+export type CreateEventInput = { name: string; markingMode: CardMarkingMode };
 export type JoinEventInput = {
 	name: string;
 	type: ParticipantType;

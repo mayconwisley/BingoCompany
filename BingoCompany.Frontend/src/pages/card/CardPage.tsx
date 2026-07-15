@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { BingoCardGrid, bingoApi, markingModeLabel, useLiveBingo, winningPatternLabel } from "../../features/bingo";
+import { BingoCardGrid, bingoApi, bingoBallLabel, markingModeLabel, useLiveBingo, winningPatternLabel } from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
@@ -25,6 +25,7 @@ export function CardPage() {
 
 	const manual = card.data.markingMode !== "Automatic";
 	const isMandatoryManual = card.data.markingMode === "ManualRequired";
+	const isEventFinished = card.data.eventStatus === "Finished";
 	const currentNumber = card.data.drawnNumbers.at(-1);
 	const generateNextCard = async () => {
 		try {
@@ -44,7 +45,7 @@ export function CardPage() {
 			<main className="cardpage">
 				<header className="pagehead">
 					<div>
-						<p className="eyebrow">{card.data.currentPrize || "Aguardando rodada"}</p>
+						<p className="eyebrow">{isEventFinished ? "Evento encerrado" : card.data.currentPrize || "Aguardando rodada"}</p>
 						<h1>Minha cartela</h1>
 						<p className="card-marking-mode">
 							Tipo de marcação: <strong>{markingModeLabel(card.data.markingMode)}</strong>
@@ -62,6 +63,9 @@ export function CardPage() {
 					</div>
 					<ConnectionBadge status={connection} />
 				</header>
+				{isEventFinished && (
+					<FeedbackMessage warning="Este evento foi encerrado. Esta cartela permanece disponível apenas para consulta." />
+				)}
 				<BingoCardGrid
 					numbers={card.data.numbers}
 					drawnNumbers={card.data.drawnNumbers}
@@ -100,7 +104,7 @@ export function CardPage() {
 					<h2>Pedras sorteadas</h2>
 					<div>
 						{card.data.drawnNumbers.map((number) => (
-							<span key={number}>{number}</span>
+							<span key={number}>{bingoBallLabel(number)}</span>
 						))}
 					</div>
 				</section>

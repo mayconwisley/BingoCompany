@@ -10,12 +10,12 @@ namespace BingoCompany.Tests;
 public sealed class EventParticipantRegistrationServiceTests
 {
 	[Fact]
-	public async Task Register_generates_a_lot_of_assigned_cards_when_the_event_allows_multiple_digital_cards()
+	public async Task Register_generates_active_cards_when_public_registration_allows_multiple_digital_cards()
 	{
 		var options = new DbContextOptionsBuilder<BingoDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
 		await using var db = new BingoDbContext(options);
 		var bingoEvent = new BingoEvent(Guid.CreateVersion7(), "Festa", cardsPerParticipant: 3);
-		bingoEvent.OpenRegistration();
+		bingoEvent.OpenRegistration(3);
 		db.Events.Add(bingoEvent);
 		await db.SaveChangesAsync();
 		var service = new EventParticipantRegistrationService(db);
@@ -24,7 +24,7 @@ public sealed class EventParticipantRegistrationServiceTests
 
 		Assert.NotNull(registration);
 		Assert.Equal(3, registration.Cards.Count);
-		Assert.All(registration.Cards, card => Assert.Equal(CardStatus.Assigned, card.Status));
+		Assert.All(registration.Cards, card => Assert.Equal(CardStatus.Active, card.Status));
 		Assert.Equal(3, registration.Cards.Select(card => card.PublicCode).Distinct().Count());
 	}
 

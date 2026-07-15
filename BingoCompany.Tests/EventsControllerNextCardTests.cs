@@ -47,6 +47,27 @@ public sealed class EventsControllerNextCardTests
 		Assert.True(card.ReplacementCardId.HasValue);
 	}
 
+	[Fact]
+	public async Task Includes_the_finished_event_status_in_card_state()
+	{
+		var options = new DbContextOptionsBuilder<BingoDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+		await using var db = new BingoDbContext(options);
+		var bingoEvent = new BingoEvent(Guid.CreateVersion7(), "Festa");
+		bingoEvent.OpenRegistration();
+		bingoEvent.Start();
+		bingoEvent.Finish();
+		var card = new BingoCard(bingoEvent.Id, null, CardType.Digital, CreateCard());
+		db.Events.Add(bingoEvent);
+		db.Cards.Add(card);
+		await db.SaveChangesAsync();
+		var controller = new EventsController(db, null!, null!, null!, null!);
+
+		var state = Assert.IsType<OkObjectResult>((await controller.CardState(bingoEvent.Id, card.PublicCode)).Result);
+		using var stateJson = JsonDocument.Parse(JsonSerializer.Serialize(state.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+
+		Assert.Equal("Finished", stateJson.RootElement.GetProperty("eventStatus").GetString());
+	}
+
 	private static int[,] CreateCard() => new[,]
 	{
 		{ 1, 16, 31, 46, 61 },

@@ -1,18 +1,23 @@
 import { useCallback } from "react";
-import { useParams } from "react-router-dom";
-import { BingoCardGrid, bingoApi, markingModeLabel, useLiveBingo, winningPatternLabel } from "../../features/bingo";
+import { useParams, useSearchParams } from "react-router-dom";
+import { BingoCardGrid, bingoApi, bingoBallLabel, markingModeLabel, useLiveBingo, winningPatternLabel } from "../../features/bingo";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
 import { ConnectionBadge } from "../../shared/ui/ConnectionBadge";
+import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";
 import { PageState } from "../../shared/ui/PageState";
 
 export function ActiveCardsPage() {
 	const { eventId = "" } = useParams();
+	const [searchParams] = useSearchParams();
+	const cardCodesParameter = searchParams.get("codes") ?? "";
 	const loader = useCallback(async () => {
+		const cardCodes = cardCodesParameter.split(",").filter(Boolean);
+		if (cardCodes.length > 0) return Promise.all(cardCodes.map((cardCode) => bingoApi.getCard(eventId, cardCode)));
 		const cards = await bingoApi.getMyCards();
 		const activeCards = cards.activeCards.filter((card) => card.eventId === eventId);
 		return Promise.all(activeCards.map((card) => bingoApi.getCard(eventId, card.publicCode)));
-	}, [eventId]);
+	}, [cardCodesParameter, eventId]);
 	const cards = useAsyncResource(loader);
 	const primaryCard = cards.data?.[0];
 	const connection = useLiveBingo(eventId, primaryCard?.roundId, cards.reload);
@@ -26,12 +31,13 @@ export function ActiveCardsPage() {
 
 	const manual = primaryCard.markingMode !== "Automatic";
 	const isMandatoryManual = primaryCard.markingMode === "ManualRequired";
+	const isEventFinished = primaryCard.eventStatus === "Finished";
 	return (
 		<AppShell showAdministration={false}>
 			<main className="cardpage active-cardspage">
 				<header className="pagehead">
 					<div>
-						<p className="eyebrow">{primaryCard.currentPrize || "Aguardando rodada"}</p>
+						<p className="eyebrow">{isEventFinished ? "Evento encerrado" : primaryCard.currentPrize || "Aguardando rodada"}</p>
 						<h1>Minhas cartelas</h1>
 						<p className="card-marking-mode">
 							Tipo de marcação: <strong>{markingModeLabel(primaryCard.markingMode)}</strong>
@@ -49,6 +55,9 @@ export function ActiveCardsPage() {
 					</div>
 					<ConnectionBadge status={connection} />
 				</header>
+				{isEventFinished && (
+					<FeedbackMessage warning="Este evento foi encerrado. Estas cartelas permanecem disponíveis apenas para consulta." />
+				)}
 				<section className="active-bingo-cards-grid" aria-label="Cartelas ativas no sorteio">
 					{cards.data.map((card) => {
 						const currentNumber = card.drawnNumbers.at(-1);
@@ -87,7 +96,7 @@ export function ActiveCardsPage() {
 					<h2>Pedras sorteadas</h2>
 					<div>
 						{primaryCard.drawnNumbers.map((number) => (
-							<span key={number}>{number}</span>
+							<span key={number}>{bingoBallLabel(number)}</span>
 						))}
 					</div>
 				</section>

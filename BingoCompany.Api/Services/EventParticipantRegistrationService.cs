@@ -20,6 +20,10 @@ public sealed class EventParticipantRegistrationService(BingoDbContext db) : IEv
 		{
 			throw new InvalidOperationException("As inscrições estão fechadas.");
 		}
+		if (bingoEvent.CardPurchaseCancellationReason is not null)
+		{
+			throw new InvalidOperationException("A venda de cartelas deste evento foi encerrada.");
+		}
 		if (bingoEvent.IsCardPurchaseOpen && !participantAccountId.HasValue)
 			throw new UnauthorizedAccessException("Entre com sua conta de participante para comprar cartelas.");
 
@@ -44,7 +48,7 @@ public sealed class EventParticipantRegistrationService(BingoDbContext db) : IEv
 				participant.Id,
 				CardType.Digital,
 				new Bingo75CardGenerator().Generate(),
-				activateImmediately: !bingoEvent.IsCardPurchaseOpen && cardsQuantity == 1))
+				activateImmediately: !bingoEvent.IsCardPurchaseOpen))
 			.ToArray();
 		db.Participants.Add(participant);
 		db.Cards.AddRange(cards);

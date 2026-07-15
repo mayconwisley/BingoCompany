@@ -85,11 +85,10 @@ describe("AdminPage", () => {
 		);
 
 		fireEvent.change(screen.getByLabelText("Nome do evento"), { target: { value: "Festa" } });
-		fireEvent.change(screen.getByLabelText("Cartelas digitais por participante"), { target: { value: "3" } });
 		fireEvent.click(screen.getByRole("button", { name: "Criar evento" }));
 
 		await waitFor(() =>
-			expect(bingoApi.createEvent).toHaveBeenCalledWith({ name: "Festa", markingMode: "Automatic", cardsPerParticipant: 3 })
+			expect(bingoApi.createEvent).toHaveBeenCalledWith({ name: "Festa", markingMode: "Automatic" })
 		);
 	});
 });

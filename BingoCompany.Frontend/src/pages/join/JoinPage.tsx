@@ -35,8 +35,9 @@ export function JoinPage() {
 				responsibleEmployeeName: responsible || undefined,
 				cardsQuantity: event.data?.isCardPurchaseOpen ? cardsQuantity : undefined
 			});
-			if (registrationResult.cards.length === 1 && !event.data?.isCardPurchaseOpen) {
-				navigate(`/cartela/${event.data?.id}/${registrationResult.cards[0].publicCode}`);
+			if (!event.data?.isCardPurchaseOpen) {
+				if (registrationResult.cards.length === 1) navigate(`/cartela/${event.data?.id}/${registrationResult.cards[0].publicCode}`);
+				else navigate(`/cartelas/${event.data?.id}?codes=${registrationResult.cards.map((card) => card.publicCode).join(",")}`);
 				return;
 			}
 			setRegistrationResult(registrationResult);

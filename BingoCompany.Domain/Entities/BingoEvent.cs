@@ -30,21 +30,19 @@ public sealed class BingoEvent
 	public IReadOnlyCollection<BingoRound> Rounds => _rounds;
 	public IReadOnlyCollection<BingoCard> Cards => _cards;
 	public IReadOnlyCollection<Participant> Participants => _participants;
-	public void OpenRegistration()
+	public void OpenRegistration(int cardsPerParticipant = 1)
 	{
-		if (Status is EventStatus.Draft)
-			Status = EventStatus.RegistrationOpen;
-		else
-			throw new InvalidOperationException("O evento não pode aceitar inscrições agora.");
+		if (cardsPerParticipant is < 1 or > 100) throw new InvalidOperationException("Informe entre 1 e 100 cartelas por participante.");
+		if (Status is not EventStatus.Draft) throw new InvalidOperationException("O evento não pode aceitar inscrições agora.");
+		CardsPerParticipant = cardsPerParticipant;
+		Status = EventStatus.RegistrationOpen;
 	}
 	public void OpenCardPurchase(int quantity)
 	{
 		if (quantity is < 1 or > 10_000) throw new InvalidOperationException("Informe entre 1 e 10000 cartelas para venda.");
 		if (CardPurchaseCancellationReason is not null) throw new InvalidOperationException("A venda de cartelas foi cancelada e não pode ser reaberta.");
-		if (Status is EventStatus.Draft)
-			Status = EventStatus.RegistrationOpen;
-		else if (Status is not EventStatus.RegistrationOpen)
-			throw new InvalidOperationException("O evento não pode vender cartelas agora.");
+		if (Status is not EventStatus.Draft) throw new InvalidOperationException("O evento não pode vender cartelas agora.");
+		Status = EventStatus.RegistrationOpen;
 
 		IsCardPurchaseOpen = true;
 		CardPurchaseLimit = quantity;

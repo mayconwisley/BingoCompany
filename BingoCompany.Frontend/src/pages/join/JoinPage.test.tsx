@@ -33,7 +33,7 @@ describe("JoinPage", () => {
 		});
 	});
 
-	it("exibe os códigos e permite ativar uma cartela de um lote", async () => {
+	it("abre todas as cartelas ativas após uma inscrição pública com múltiplas cartelas", async () => {
 		vi.mocked(bingoApi.join).mockResolvedValue({
 			participantId: "participant-1",
 			cards: [
@@ -41,12 +41,12 @@ describe("JoinPage", () => {
 				{ cardId: "card-2", publicCode: "CARD002", numbers: [], status: "Assigned" }
 			]
 		});
-		vi.mocked(bingoApi.activateDigitalCard).mockResolvedValue(undefined);
 		render(
 			<MemoryRouter initialEntries={["/participar/EVENTO"]}>
 				<Routes>
 					<Route path="/participar/:publicCode" element={<JoinPage />} />
 					<Route path="/cartela/:eventId/:cardCode" element={<p>Cartela aberta</p>} />
+					<Route path="/cartelas/:eventId" element={<p>Cartelas abertas</p>} />
 				</Routes>
 			</MemoryRouter>
 		);
@@ -55,14 +55,8 @@ describe("JoinPage", () => {
 		fireEvent.change(screen.getByLabelText("Seu nome"), { target: { value: "Ana" } });
 		fireEvent.click(screen.getByRole("button", { name: "Gerar minha cartela" }));
 
-		expect(await screen.findByText(/CARD001/)).toBeInTheDocument();
-		expect(screen.getByText(/CARD002/)).toBeInTheDocument();
-		fireEvent.click(screen.getAllByRole("button", { name: "Ativar" })[0]);
-		expect(await screen.findByRole("button", { name: "Abrir cartela" })).toBeInTheDocument();
-		fireEvent.click(screen.getByRole("button", { name: "Abrir cartela" }));
-
-		expect(await screen.findByText("Cartela aberta")).toBeInTheDocument();
-		expect(bingoApi.activateDigitalCard).toHaveBeenCalledWith("EVENTO", "CARD001");
+		expect(await screen.findByText("Cartelas abertas")).toBeInTheDocument();
+		expect(bingoApi.activateDigitalCard).not.toHaveBeenCalled();
 	});
 
 	it("envia a quantidade escolhida quando a compra de cartelas está aberta", async () => {

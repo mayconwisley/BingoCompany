@@ -13,7 +13,6 @@ const createdAtFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium
 export function AdminPage() {
 	const [name, setName] = useState("");
 	const [mode, setMode] = useState<CardMarkingMode>("Automatic");
-	const [cardsPerParticipant, setCardsPerParticipant] = useState(1);
 	const [page, setPage] = useState(1);
 	const loader = useCallback(() => bingoApi.listEvents(page), [page]);
 	const events = useAsyncResource(loader);
@@ -21,14 +20,13 @@ export function AdminPage() {
 
 	const submit = async () => {
 		const event = await createEvent.execute(
-			() => bingoApi.createEvent({ name, markingMode: mode, cardsPerParticipant }),
+			() => bingoApi.createEvent({ name, markingMode: mode }),
 			"Evento criado. Agora configure inscrições, cartelas e prêmios.",
 			"Não foi possível criar o evento. Revise os dados e tente novamente."
 		);
 
 		if (!event) return;
 		setName("");
-		setCardsPerParticipant(1);
 		if (page === 1) await events.reload();
 		else setPage(1);
 	};
@@ -73,17 +71,6 @@ export function AdminPage() {
 								<option value="ManualRequired">Manual obrigatória</option>
 								<option value="AssistedManual">Manual assistida</option>
 							</select>
-						</label>
-						<label>
-							Cartelas digitais por participante
-							<input
-								aria-label="Cartelas digitais por participante"
-								type="number"
-								min="1"
-								max="100"
-								value={cardsPerParticipant}
-								onChange={(event) => setCardsPerParticipant(Math.min(100, Math.max(1, Number(event.target.value) || 1)))}
-							/>
 						</label>
 						<button className="primary" disabled={!name.trim() || createEvent.isPending} onClick={submit}>
 							{createEvent.isPending ? "Criando..." : "Criar evento"}

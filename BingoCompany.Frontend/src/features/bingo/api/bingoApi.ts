@@ -24,7 +24,8 @@ export const bingoApi = {
 	listEvents: (page = 1, pageSize = 12) => http<EventPage>(`/api/events?page=${page}&pageSize=${pageSize}`),
 	getEvent: (eventId: string) => http<EventDetails>(`/api/events/${eventId}`),
 	createEvent: (request: CreateEventInput) => http<EventSummary>("/api/events", { method: "POST", body: JSON.stringify(request) }),
-	openRegistration: (eventId: string) => http<void>(`/api/events/${eventId}/registration/open`, { method: "POST" }),
+	openRegistration: (eventId: string, cardsPerParticipant: number) =>
+		http<void>(`/api/events/${eventId}/registration/open`, { method: "POST", body: JSON.stringify({ cardsPerParticipant }) }),
 	openCardPurchase: (eventId: string, quantity: number) =>
 		http<void>(`/api/events/${eventId}/card-purchase/open`, { method: "POST", body: JSON.stringify({ quantity }) }),
 	updateCardPurchase: (eventId: string, quantity: number) =>

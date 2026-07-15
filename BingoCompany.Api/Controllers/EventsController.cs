@@ -41,7 +41,7 @@ public sealed partial class EventsController(BingoDbContext db, IHubContext<Bing
 	public async Task<ActionResult<object>> Create(CreateEventRequest request)
 	{
 		if (string.IsNullOrWhiteSpace(request.Name)) return BadRequest("Informe o nome do evento.");
-		var bingoEvent = new BingoEvent(GetCompanyId(), request.Name, request.CardsPerParticipant <= 0 ? 1 : request.CardsPerParticipant, request.MarkingMode);
+		var bingoEvent = new BingoEvent(GetCompanyId(), request.Name, markingMode: request.MarkingMode);
 		db.Events.Add(bingoEvent); db.AuditEntries.Add(new AuditEntry(bingoEvent.Id, "Evento criado", $"Evento {bingoEvent.Name} criado.")); await db.SaveChangesAsync();
 		return CreatedAtAction(nameof(Get), new { eventId = bingoEvent.Id }, new { bingoEvent.Id, bingoEvent.Name, bingoEvent.PublicCode, bingoEvent.Status, bingoEvent.MarkingMode, bingoEvent.IsCardPurchaseOpen, bingoEvent.CreatedAt });
 	}
@@ -66,7 +66,7 @@ public sealed partial class EventsController(BingoDbContext db, IHubContext<Bing
 
 		var purchasedCards = await GetPurchasedCardsCount(eventId);
 		var cardPurchaseRemaining = e.CardPurchaseLimit.HasValue ? Math.Max(0, e.CardPurchaseLimit.Value - purchasedCards) : (int?)null;
-		return Ok(new { e.Id, e.Name, e.PublicCode, e.Status, e.IsCardPurchaseOpen, e.CardPurchaseLimit, e.CardPurchaseCancellationReason, cardPurchaseRemaining, participants = e.Participants.Count, cards = e.Cards.Count, participantList = e.Participants.OrderBy(item => item.Name).Select(item => new { item.Id, item.Name, item.Type }), cardList = e.Cards.OrderByDescending(item => item.CreatedAt).Select(item => new { item.PublicCode, item.Type, item.Status, item.Fingerprint, item.ParticipantId }), awardedCards, rounds = e.Rounds.OrderBy(x => x.CreatedAt).ThenBy(x => x.Sequence).Select(x => new { x.Id, x.Name, x.Status, x.CreatedAt, stages = x.Stages.OrderBy(stage => stage.Sequence).Select(stage => new { stage.Sequence, stage.PrizeName, stage.Pattern, stage.PrizeImageDataUrl, stage.IsActive, stage.IsCompleted }) }) });
+		return Ok(new { e.Id, e.Name, e.PublicCode, e.Status, e.CardsPerParticipant, e.IsCardPurchaseOpen, e.CardPurchaseLimit, e.CardPurchaseCancellationReason, cardPurchaseRemaining, participants = e.Participants.Count, cards = e.Cards.Count, participantList = e.Participants.OrderBy(item => item.Name).Select(item => new { item.Id, item.Name, item.Type }), cardList = e.Cards.OrderByDescending(item => item.CreatedAt).Select(item => new { item.PublicCode, item.Type, item.Status, item.Fingerprint, item.ParticipantId }), awardedCards, rounds = e.Rounds.OrderBy(x => x.CreatedAt).ThenBy(x => x.Sequence).Select(x => new { x.Id, x.Name, x.Status, x.CreatedAt, stages = x.Stages.OrderBy(stage => stage.Sequence).Select(stage => new { stage.Sequence, stage.PrizeName, stage.Pattern, stage.PrizeImageDataUrl, stage.IsActive, stage.IsCompleted }) }) });
 	}
 	[HttpPut("{eventId:guid}/card-purchase")]
 	public async Task<IActionResult> UpdateCardPurchase(Guid eventId, OpenCardPurchaseRequest request)
@@ -95,7 +95,7 @@ public sealed partial class EventsController(BingoDbContext db, IHubContext<Bing
 		}
 	}
 	[HttpPost("{eventId:guid}/registration/open")]
-	public async Task<IActionResult> OpenRegistration(Guid eventId) { var e = await db.Events.FindAsync(eventId); if (e is null) return NotFound(); e.OpenRegistration(); db.AuditEntries.Add(new AuditEntry(eventId, "Inscrições abertas", "As inscrições do evento foram abertas.")); await db.SaveChangesAsync(); return NoContent(); }
+	public async Task<IActionResult> OpenRegistration(Guid eventId, OpenRegistrationRequest request) { var e = await db.Events.FindAsync(eventId); if (e is null) return NotFound(); try { e.OpenRegistration(request.CardsPerParticipant); db.AuditEntries.Add(new AuditEntry(eventId, "Inscrições públicas abertas", $"{request.CardsPerParticipant} cartela(s) por participante.")); await db.SaveChangesAsync(); return NoContent(); } catch (InvalidOperationException exception) { return Conflict(exception.Message); } }
 	[HttpPost("{eventId:guid}/card-purchase/open")]
 	public async Task<IActionResult> OpenCardPurchase(Guid eventId, OpenCardPurchaseRequest request)
 	{

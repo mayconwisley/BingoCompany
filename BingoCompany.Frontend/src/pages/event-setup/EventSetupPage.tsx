@@ -39,15 +39,26 @@ export function EventSetupPage() {
 	const [editingRoundId, setEditingRoundId] = useState<string>();
 	const [printedQuantity, setPrintedQuantity] = useState(10);
 	const [cardPurchaseQuantity, setCardPurchaseQuantity] = useState(100);
+	const [registrationCardsQuantity, setRegistrationCardsQuantity] = useState(1);
 	const [cardPurchaseCancellationReason, setCardPurchaseCancellationReason] = useState("");
 	const [selectedCard, setSelectedCard] = useState("");
 	const [selectedParticipant, setSelectedParticipant] = useState("");
+	const [copiedLink, setCopiedLink] = useState("");
 	const openRound = (roundId: string) => navigate(`/operacao/${eventId}/${roundId}?code=${code}`);
 	const onCardCodeRead = useCallback((cardCode: string) => setSelectedCard(cardCode), []);
+	const copyPublicLink = async (path: string, label: string) => {
+		try {
+			await navigator.clipboard.writeText(new URL(path, window.location.origin).toString());
+			setCopiedLink(`${label} copiado.`);
+		} catch {
+			setCopiedLink("Não foi possível copiar o link. Copie-o pela barra de endereço.");
+		}
+	};
 	const printedCards = event.data?.cardList.filter((card) => card.type === "Printed") ?? [];
 	const selectedCardState = printedCards.find((card) => card.publicCode === selectedCard)?.status;
 	const isFinished = event.data?.status === "Finished";
 	const isCardPurchaseOpen = event.data?.isCardPurchaseOpen ?? false;
+	const isPublicRegistrationOpen = event.data?.status === "RegistrationOpen" && !isCardPurchaseOpen && !event.data?.cardPurchaseCancellationReason;
 	const cardPurchaseRemaining = event.data?.cardPurchaseRemaining;
 	const cardPurchaseLimit = event.data?.cardPurchaseLimit;
 	useEffect(() => {
@@ -204,31 +215,36 @@ export function EventSetupPage() {
 											Abrir QR Code de inscrição
 										</span>
 									) : (
-										<Link className="button" to={registrationSharePath} target="_blank" rel="noopener noreferrer">
-											Abrir QR Code de inscrição
-										</Link>
+										<>
+											<Link className="button" to={registrationSharePath} target="_blank" rel="noopener noreferrer">Abrir QR Code de inscrição</Link>
+											<button type="button" onClick={() => void copyPublicLink(registrationSharePath, "Link do QR Code")}>Copiar link do QR Code</button>
+										</>
 									)}
 									{isFinished ? (
 										<span className="button is-disabled" aria-disabled="true">
 											Visualizar inscrição
 										</span>
 									) : (
-										<Link className="button" to={registrationPath}>
-											Visualizar inscrição
-										</Link>
+										<>
+											<Link className="button" to={registrationPath}>Visualizar inscrição</Link>
+											<button type="button" onClick={() => void copyPublicLink(registrationPath, "Link de inscrição")}>Copiar link de inscrição</button>
+										</>
 									)}
-									<button
-										className="primary"
-										disabled={isFinished || event.data.status !== "Draft" || action.isPending}
-										onClick={async () => {
-											await action.execute(() => bingoApi.openRegistration(eventId), "Inscrições abertas.");
-											await event.reload();
-										}}
-									>
-										Abrir inscrições
-									</button>
-									{!isCardPurchaseOpen && (
-										<label>
+									{event.data.status === "Draft" && (
+										<>
+											<label>
+												Cartelas digitais por participante
+												<input aria-label="Cartelas digitais por participante" type="number" min="1" max="100" value={registrationCardsQuantity} onChange={(input) => setRegistrationCardsQuantity(Math.min(100, Math.max(1, Number(input.target.value) || 1)))} />
+											</label>
+											<button className="primary" disabled={action.isPending} onClick={async () => { await action.execute(() => bingoApi.openRegistration(eventId, registrationCardsQuantity), "Inscrições públicas abertas."); await event.reload(); }}>
+												Abrir inscrições públicas
+											</button>
+										</>
+									)}
+									{isPublicRegistrationOpen && <p role="status">Inscrições públicas abertas. Cada participante receberá {event.data.cardsPerParticipant ?? registrationCardsQuantity} cartela(s) ativa(s).</p>}
+									{event.data.status === "Draft" && (
+										<>
+											<label>
 											Cartelas disponíveis para venda
 											<input
 												aria-label="Cartelas disponíveis para venda"
@@ -240,9 +256,8 @@ export function EventSetupPage() {
 													setCardPurchaseQuantity(Math.min(10000, Math.max(1, Number(input.target.value) || 1)))
 												}
 											/>
-										</label>
-									)}
-									<button
+											</label>
+											<button
 										className="reveal"
 										disabled={
 											isFinished ||
@@ -258,8 +273,10 @@ export function EventSetupPage() {
 											await event.reload();
 										}}
 									>
-										{isCardPurchaseOpen ? "Compra de cartelas aberta" : "Abrir compra de cartelas"}
-									</button>
+										Abrir compra de cartelas
+											</button>
+										</>
+									)}
 									{isCardPurchaseOpen && (
 										<p role="status">{cardPurchaseRemaining ?? 0} cartela(s) ainda disponível(is) para venda.</p>
 									)}
@@ -551,7 +568,7 @@ export function EventSetupPage() {
 								</button>
 							</section>
 						)}
-						<FeedbackMessage error={action.error} success={action.success} onClose={action.clear} />
+						<FeedbackMessage error={action.error} success={action.success || copiedLink} onClose={() => { action.clear(); setCopiedLink(""); }} />
 					</>
 				)}
 			</main>

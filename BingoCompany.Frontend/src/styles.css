@@ -1038,6 +1038,10 @@ main > h1 {
 @media (max-width: 620px) {
 	.active-cardspage { max-width: none; }
 	.active-bingo-cards-grid { grid-template-columns: 1fr; }
+	.active-cardspage .pagehead { gap: 1rem; }
+	.active-cardspage .pagehead > div { min-width: 0; }
+	.active-cardspage .history { margin-top: 1.5rem; }
+	.active-cardspage .history div { justify-content: flex-start; }
 }
 .bingocard {
 	width: 100%;
@@ -1405,6 +1409,7 @@ main > h1 {
 }
 .registration-share .registration-link {
 	text-align: left;
+	word-break: break-all;
 }
 
 :root {

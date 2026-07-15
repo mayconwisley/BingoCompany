@@ -90,6 +90,57 @@ describe("CardPage", () => {
 		expect(screen.getByText("Colaborador responsável: Carlos Silva")).toBeInTheDocument();
 	});
 
+	it("informa que o evento encerrado mantém a cartela apenas para consulta", async () => {
+		vi.mocked(bingoApi.getCard).mockResolvedValue({
+			id: "card-1",
+			publicCode: "ENCERRADA",
+			eventStatus: "Finished",
+			isWinner: false,
+			numbers: [[1, 16, 31, 46, 61]],
+			markingMode: "Automatic",
+			drawnNumbers: [],
+			markedNumbers: [],
+			lastSequence: 0,
+			canGenerateNextCard: false
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/cartela/event-1/ENCERRADA"]}>
+				<Routes>
+					<Route path="/cartela/:eventId/:cardCode" element={<CardPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByText("Evento encerrado")).toBeInTheDocument();
+		expect(screen.getByText("Este evento foi encerrado. Esta cartela permanece disponível apenas para consulta.")).toBeInTheDocument();
+		expect(screen.queryByText("Aguardando rodada")).not.toBeInTheDocument();
+	});
+
+	it("exibe a coluna de bingo no histórico de pedras sorteadas", async () => {
+		vi.mocked(bingoApi.getCard).mockResolvedValue({
+			id: "card-1",
+			publicCode: "HISTORICO",
+			isWinner: false,
+			numbers: [[1, 16, 31, 46, 61]],
+			markingMode: "Automatic",
+			drawnNumbers: [54],
+			markedNumbers: [54],
+			lastSequence: 1,
+			canGenerateNextCard: false
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/cartela/event-1/HISTORICO"]}>
+				<Routes>
+					<Route path="/cartela/:eventId/:cardCode" element={<CardPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByText("G-54")).toBeInTheDocument();
+	});
+
 	it("permite gerar uma nova cartela quando a anterior está completa", async () => {
 		vi.mocked(bingoApi.getCard).mockResolvedValue({
 			id: "card-1",

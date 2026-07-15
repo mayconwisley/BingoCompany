@@ -145,7 +145,7 @@ public sealed partial class EventsController
 				&& !item.stage.IsWinnerPresentationClosed
 				&& (!currentRoundSequence.HasValue || item.winnerRound.Sequence >= currentRoundSequence.Value));
 		var activeStage = round?.Stages.SingleOrDefault(item => item.IsActive);
-		return Ok(new { card.Id, card.PublicCode, participantName = participant?.Name, responsibleEmployeeName = participant?.ResponsibleEmployeeName, isWinner, numbers = ToRows(card.Numbers), markingMode = e!.MarkingMode, roundId = round?.Id, roundStatus = round?.Status, currentPrize = activeStage?.PrizeName, currentPattern = activeStage?.Pattern, drawnNumbers = round?.DrawnNumbers.OrderBy(x => x.Sequence).Select(x => x.Number) ?? [], markedNumbers = marks, lastSequence = round?.DrawnNumbers.Count ?? 0, canGenerateNextCard });
+		return Ok(new { card.Id, card.PublicCode, participantName = participant?.Name, responsibleEmployeeName = participant?.ResponsibleEmployeeName, isWinner, numbers = ToRows(card.Numbers), eventStatus = e!.Status.ToString(), markingMode = e.MarkingMode, roundId = round?.Id, roundStatus = round?.Status, currentPrize = activeStage?.PrizeName, currentPattern = activeStage?.Pattern, drawnNumbers = round?.DrawnNumbers.OrderBy(x => x.Sequence).Select(x => x.Number) ?? [], markedNumbers = marks, lastSequence = round?.DrawnNumbers.Count ?? 0, canGenerateNextCard });
 	}
 
 }
