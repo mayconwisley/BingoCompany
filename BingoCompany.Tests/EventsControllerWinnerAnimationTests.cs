@@ -44,6 +44,39 @@ public sealed class EventsControllerWinnerAnimationTests
 		Assert.False(stateJson.RootElement.GetProperty("isWinner").GetBoolean());
 	}
 
+	[Fact]
+	public async Task Hides_the_winner_highlight_when_the_prize_is_declined()
+	{
+		var options = new DbContextOptionsBuilder<BingoDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+		await using var db = new BingoDbContext(options);
+		var bingoEvent = new BingoEvent(Guid.CreateVersion7(), "Festa");
+		bingoEvent.OpenRegistration();
+		bingoEvent.Start();
+		var participant = new Participant(bingoEvent.Id, "Ana");
+		var card = new BingoCard(bingoEvent.Id, participant.Id, CardType.Digital, CreateCard());
+		var round = new BingoRound(bingoEvent.Id, 1, "Rodada 1");
+		var stage = new PrizeStage(round.Id, 1, "Vale-presente", WinningPattern.HorizontalLine);
+		round.AddStage(stage);
+		round.Start(Enumerable.Range(1, 75).ToArray(), "hash-1");
+		var winner = new RoundWinner(round.Id, stage.Id, card.Id, participant.Id, 1);
+		winner.Confirm(DateTimeOffset.UtcNow);
+		winner.MarkPrizeDeclined(DateTimeOffset.UtcNow);
+		round.DetectWinner();
+		round.ResumeDrawingAfterPrizeDeclined();
+		db.Events.Add(bingoEvent);
+		db.Participants.Add(participant);
+		db.Cards.Add(card);
+		db.Rounds.Add(round);
+		db.RoundWinners.Add(winner);
+		await db.SaveChangesAsync();
+		var controller = new EventsController(db, null!, null!, null!, null!);
+
+		var response = Assert.IsType<OkObjectResult>((await controller.CardState(bingoEvent.Id, card.PublicCode)).Result);
+		using var stateJson = JsonDocument.Parse(JsonSerializer.Serialize(response.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+
+		Assert.False(stateJson.RootElement.GetProperty("isWinner").GetBoolean());
+	}
+
 	private static int[,] CreateCard() => new[,]
 	{
 		{ 1, 16, 31, 46, 61 },

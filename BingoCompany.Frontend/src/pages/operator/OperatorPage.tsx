@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { bingoApi, useLiveBingo } from "../../features/bingo";
+import { bingoApi, bingoBallLabel, useLiveBingo } from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
@@ -26,9 +26,10 @@ export function OperatorPage() {
 		);
 
 	const round = event.data.round;
+	const lastDrawnNumber = round.drawnNumbers.at(-1);
 	const isCurrentRound = round.id === roundId;
 	const hasWinnerPresentation = Boolean(round.winner);
-	const isPrizeDeliveryPending = round.winner?.isPrizeDeliveryPending ?? false;
+	const isPrizeDeliveryPending = isCurrentRound && (round.winner?.isPrizeDeliveryPending ?? round.hasPrizeDeliveryPending ?? false);
 	const hasCards = event.data.cards > 0;
 	const canStart = isCurrentRound && round.status === "Ready" && hasCards;
 	const canDraw = isCurrentRound && round.status === "Drawing" && !hasWinnerPresentation;
@@ -119,7 +120,7 @@ export function OperatorPage() {
 				<div className="operator">
 					<section className="drawball">
 						<small>ÚLTIMA PEDRA</small>
-						<strong>{round.drawnNumbers.at(-1) ?? "—"}</strong>
+						<strong>{lastDrawnNumber === undefined ? "—" : bingoBallLabel(lastDrawnNumber)}</strong>
 						<p>{isCancelled ? "Rodada cancelada" : round.currentPrize || "Rodada finalizada"}</p>
 					</section>
 					<section className="panel controls">
@@ -128,7 +129,11 @@ export function OperatorPage() {
 						</button>
 						<button
 							className="reveal"
-							disabled={isSubmitting || (round.status !== "WinnerDetected" && round.status !== "TieBreaker")}
+							disabled={
+								isSubmitting ||
+								isPrizeDeliveryPending ||
+								(round.status !== "WinnerDetected" && round.status !== "TieBreaker")
+							}
 							onClick={revealWinner}
 						>
 							{round.status === "TieBreaker" ? "REALIZAR DESEMPATE" : "REVELAR VENCEDOR"}
@@ -141,20 +146,24 @@ export function OperatorPage() {
 								<FeedbackMessage
 									success={`O telão está exibindo ${round.winner?.participantName}, vencedor(a) de ${round.winner?.prizeName}.`}
 								/>
-								{isPrizeDeliveryPending ? (
-									<>
-										<button className="primary" disabled={isSubmitting} onClick={markPrizeDelivered}>
-											PRÊMIO ENTREGUE
-										</button>
-										<button className="danger" onClick={markPrizeDeclined}>
-											VENCEDOR NÃO RETIROU O PRÊMIO
-										</button>
-									</>
-								) : (
+								{!isPrizeDeliveryPending && (
 									<button className="primary" onClick={continueDraw}>
 										CONTINUAR SORTEIO NO TELÃO
 									</button>
 								)}
+							</>
+						)}
+						{isPrizeDeliveryPending && (
+							<>
+								{!hasWinnerPresentation && (
+									<FeedbackMessage warning="O vencedor já foi registrado. Confirme a entrega do prêmio para concluir esta etapa." />
+								)}
+								<button className="primary" disabled={isSubmitting} onClick={markPrizeDelivered}>
+									PRÊMIO ENTREGUE
+								</button>
+								<button className="danger" onClick={markPrizeDeclined}>
+									VENCEDOR NÃO RETIROU O PRÊMIO
+								</button>
 							</>
 						)}
 						{isFinished && (

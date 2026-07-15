@@ -1,12 +1,12 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { getSession } from "../../shared/auth/session";
+import { useSession } from "../../shared/auth/SessionContext";
 import { AppShell } from "../../shared/ui/AppShell";
 
 export function HomePage() {
 	const navigate = useNavigate();
-	const session = getSession();
+	const { session } = useSession();
 	const [eventCode, setEventCode] = useState("");
 	const [isJoinFormVisible, setIsJoinFormVisible] = useState(false);
 	const submitEventCode = (event: FormEvent<HTMLFormElement>) => {

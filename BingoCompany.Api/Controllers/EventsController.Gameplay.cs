@@ -64,11 +64,18 @@ public sealed partial class EventsController
 	public async Task<ActionResult<object>> Reveal(Guid eventId, Guid roundId)
 	{
 		var round = await db.Rounds.Include(x => x.Stages).SingleOrDefaultAsync(x => x.Id == roundId && x.EventId == eventId); if (round is null || (round.Status != RoundStatus.WinnerDetected && round.Status != RoundStatus.TieBreaker)) return Conflict("Não há vencedor aguardando revelação.");
-		var candidates = await db.RoundWinners.Where(x => x.RoundId == roundId && x.StageId == round.ActiveStage.Id).ToListAsync(); if (candidates.Count == 0) return NotFound();
-		if (candidates.Any(candidate => candidate.RevealedAt.HasValue)) return Conflict("O vencedor desta etapa já foi revelado.");
+		var candidates = await db.RoundWinners
+			.Where(x => x.RoundId == roundId && x.StageId == round.ActiveStage.Id && !x.PrizeDeliveredAt.HasValue && !x.PrizeDeclinedAt.HasValue)
+			.ToListAsync();
+		if (candidates.Count == 0) return NotFound();
+		var requiresWinnerRecovery = candidates.Any(candidate => candidate.RevealedAt.HasValue) && candidates.All(candidate => !candidate.IsWinner);
+		if (candidates.Any(candidate => candidate.RevealedAt.HasValue) && !requiresWinnerRecovery) return Conflict("O vencedor desta etapa já foi revelado.");
 		var revealResult = gameplayService.RevealWinner(round, candidates, DateTimeOffset.UtcNow);
 		var winner = revealResult.Winner;
-		db.AuditEntries.Add(new AuditEntry(eventId, candidates.Count > 1 ? "Desempate concluído" : "Prêmio revelado", $"Prêmio {round.Stages.Single(stage => stage.Id == winner.StageId).PrizeName} revelado."));
+		var auditAction = requiresWinnerRecovery
+			? "Vencedor recuperado"
+			: candidates.Count > 1 ? "Desempate concluído" : "Prêmio revelado";
+		db.AuditEntries.Add(new AuditEntry(eventId, auditAction, $"Prêmio {round.Stages.Single(stage => stage.Id == winner.StageId).PrizeName} revelado."));
 		try
 		{
 			await db.SaveChangesAsync();

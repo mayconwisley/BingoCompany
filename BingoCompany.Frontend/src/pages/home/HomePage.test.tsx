@@ -5,7 +5,7 @@ import { HomePage } from "./HomePage";
 
 const { getSession } = vi.hoisted(() => ({ getSession: vi.fn() }));
 
-vi.mock("../../shared/auth/session", () => ({ clearSession: vi.fn(), getSession }));
+vi.mock("../../shared/auth/session", () => ({ clearSession: vi.fn(), getSession, sessionChangedEvent: "bingo-company-session-changed" }));
 
 function Location() {
 	return <span data-testid="location">{useLocation().pathname}</span>;

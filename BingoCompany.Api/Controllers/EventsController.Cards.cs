@@ -141,6 +141,7 @@ public sealed partial class EventsController
 				item.winner.CardId == card.Id
 				&& item.winner.IsWinner
 				&& item.winner.RevealedAt.HasValue
+				&& !item.winner.PrizeDeclinedAt.HasValue
 				&& !item.stage.IsWinnerPresentationClosed
 				&& (!currentRoundSequence.HasValue || item.winnerRound.Sequence >= currentRoundSequence.Value));
 		var activeStage = round?.Stages.SingleOrDefault(item => item.IsActive);

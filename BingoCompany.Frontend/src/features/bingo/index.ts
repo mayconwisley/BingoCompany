@@ -12,4 +12,5 @@ export { QrCardScanner } from "./components/QrCardScanner";
 export { RegistrationQrCode } from "./components/RegistrationQrCode";
 export { useLiveBingo } from "./hooks/useLiveBingo";
 export type { CardMarkingMode, ParticipantType, PrizeDraft } from "./model/types";
+export { bingoBallLabel } from "./model/bingoBallLabel";
 export { eventStatusLabel, markingModeLabel, roundStatusLabel, winningPatternLabel } from "./model/winningPatternLabel";

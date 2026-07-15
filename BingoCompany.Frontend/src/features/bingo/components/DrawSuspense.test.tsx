@@ -12,7 +12,7 @@ describe("DrawSuspense", () => {
 		expect(screen.getByText("A próxima pedra é...")).toBeInTheDocument();
 		act(() => vi.advanceTimersByTime(1600));
 		expect(screen.getByText("ÚLTIMA PEDRA")).toBeInTheDocument();
-		expect(screen.getByText("11")).toBeInTheDocument();
+		expect(screen.getByText("B-11")).toBeInTheDocument();
 		vi.useRealTimers();
 	});
 });

@@ -62,6 +62,30 @@ public sealed class AuthenticationController(BingoDbContext db, JwtKeyProvider j
 		return NoContent();
 	}
 
+	[HttpGet("session"), Microsoft.AspNetCore.Authorization.Authorize]
+	public async Task<ActionResult<AuthenticatedSessionResponse>> GetSession(CancellationToken cancellationToken)
+	{
+		var name = User.FindFirstValue(ClaimTypes.Name);
+		if (string.IsNullOrWhiteSpace(name)) return Unauthorized();
+
+		var participantAccountId = User.FindFirstValue("participant_account_id");
+		if (!string.IsNullOrWhiteSpace(participantAccountId))
+		{
+			return Ok(new AuthenticatedSessionResponse(name, string.Empty, "participant"));
+		}
+
+		var companyIdValue = User.FindFirstValue("company_id");
+		if (!Guid.TryParse(companyIdValue, out var companyId)) return Unauthorized();
+
+		var companyName = await db.Companies
+			.Where(company => company.Id == companyId)
+			.Select(company => company.Name)
+			.SingleOrDefaultAsync(cancellationToken);
+		if (companyName is null) return Unauthorized();
+
+		return Ok(new AuthenticatedSessionResponse(name, companyName, "company"));
+	}
+
 	private AuthResponse CreateResponse(CompanyUser user, string companyName)
 	{
 		var key = jwtKeyProvider.GetKey();

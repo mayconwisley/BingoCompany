@@ -91,6 +91,7 @@ export type PublicEvent = {
 		drawnNumbers: number[];
 		winnerDetectedCount: number;
 		tieBreakerRequired: boolean;
+		hasPrizeDeliveryPending?: boolean;
 		statistics?: RoundStatistics;
 		winner?: {
 			participantName: string;

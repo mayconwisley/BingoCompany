@@ -56,6 +56,38 @@ describe("OperatorPage", () => {
 		expect(bingoApi.startRound).not.toHaveBeenCalled();
 	});
 
+	it("exibe a última pedra com a letra da coluna da cartela", async () => {
+		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
+			id: "event-1",
+			name: "Festa",
+			publicCode: "ABC",
+			status: "Running",
+			markingMode: "Automatic",
+			participants: 1,
+			cards: 1,
+			round: {
+				id: "round-1",
+				name: "Rodada 1",
+				sequence: 1,
+				status: "Drawing",
+				stages: [],
+				drawnNumbers: [46],
+				winnerDetectedCount: 0,
+				tieBreakerRequired: false
+			}
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}>
+				<Routes>
+					<Route path="/operacao/:eventId/:roundId" element={<OperatorPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByText("G-46", { selector: "strong" })).toBeInTheDocument();
+	});
+
 	it("volta para as configurações do evento", async () => {
 		render(
 			<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}>
@@ -141,6 +173,42 @@ describe("OperatorPage", () => {
 		fireEvent.click(await screen.findByRole("button", { name: "VENCEDOR NÃO RETIROU O PRÊMIO" }));
 
 		expect(bingoApi.markPrizeDeclined).toHaveBeenCalledWith("event-1", "round-1");
+	});
+
+	it("permite confirmar a entrega quando o vencedor já foi revelado, mas ainda não foi carregado", async () => {
+		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
+			id: "event-1",
+			name: "Festa",
+			publicCode: "ABC",
+			status: "Running",
+			markingMode: "Automatic",
+			participants: 1,
+			cards: 1,
+			round: {
+				id: "round-1",
+				name: "Rodada 1",
+				sequence: 1,
+				status: "WinnerDetected",
+				stages: [],
+				drawnNumbers: [51],
+				winnerDetectedCount: 1,
+				tieBreakerRequired: false,
+				hasPrizeDeliveryPending: true
+			}
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}>
+				<Routes>
+					<Route path="/operacao/:eventId/:roundId" element={<OperatorPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		fireEvent.click(await screen.findByRole("button", { name: "PRÊMIO ENTREGUE" }));
+
+		expect(bingoApi.markPrizeDelivered).toHaveBeenCalledWith("event-1", "round-1");
+		expect(screen.getByRole("button", { name: "REVELAR VENCEDOR" })).toBeDisabled();
 	});
 
 	it("impede uma segunda revelação enquanto a primeira está em andamento", async () => {

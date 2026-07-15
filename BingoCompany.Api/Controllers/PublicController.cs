@@ -74,6 +74,7 @@ public sealed partial class PublicController(BingoDbContext db, IEventParticipan
 				drawnNumbers = round.DrawnNumbers.OrderBy(item => item.Sequence).Select(item => item.Number),
 				winnerDetectedCount,
 				tieBreakerRequired = round.Status == RoundStatus.TieBreaker,
+				hasPrizeDeliveryPending = pendingPrizeWinner is not null,
 				statistics,
 				winner = winner is null
 					? null

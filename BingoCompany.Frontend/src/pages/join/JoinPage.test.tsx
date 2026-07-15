@@ -12,7 +12,7 @@ vi.mock("../../features/bingo", () => ({
 		activateDigitalCard: vi.fn()
 	}
 }));
-vi.mock("../../shared/auth/session", () => ({ getSession: vi.fn(), saveSession: vi.fn(), clearSession: vi.fn() }));
+vi.mock("../../shared/auth/session", () => ({ getSession: vi.fn(), saveSession: vi.fn(), clearSession: vi.fn(), sessionChangedEvent: "bingo-company-session-changed" }));
 
 describe("JoinPage", () => {
 	beforeEach(() => {

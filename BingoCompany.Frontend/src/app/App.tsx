@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "../shared/ui/ProtectedRoute";
 import { RouteLoadingState } from "../shared/ui/RouteLoadingState";
+import { useSession } from "../shared/auth/SessionContext";
 
 const AdminPage = lazy(() => import("../pages/admin/AdminPage").then(({ AdminPage: page }) => ({ default: page })));
 const AuditPage = lazy(() => import("../pages/audit/AuditPage").then(({ AuditPage: page }) => ({ default: page })));
@@ -9,6 +10,7 @@ const AuthenticationPage = lazy(() =>
 	import("../pages/authentication/AuthenticationPage").then(({ AuthenticationPage: page }) => ({ default: page }))
 );
 const CardPage = lazy(() => import("../pages/card/CardPage").then(({ CardPage: page }) => ({ default: page })));
+const ActiveCardsPage = lazy(() => import("../pages/card/ActiveCardsPage").then(({ ActiveCardsPage: page }) => ({ default: page })));
 const DisplayPage = lazy(() => import("../pages/display/DisplayPage").then(({ DisplayPage: page }) => ({ default: page })));
 const EventSetupPage = lazy(() => import("../pages/event-setup/EventSetupPage").then(({ EventSetupPage: page }) => ({ default: page })));
 const HelpPage = lazy(() => import("../pages/help/HelpPage").then(({ HelpPage: page }) => ({ default: page })));
@@ -22,6 +24,9 @@ const RegistrationSharePage = lazy(() =>
 );
 
 export function App() {
+	const { isLoading } = useSession();
+	if (isLoading) return <RouteLoadingState />;
+
 	return (
 		<Suspense fallback={<RouteLoadingState />}>
 			<Routes>
@@ -57,6 +62,7 @@ export function App() {
 				<Route path="/participar/:publicCode" element={<JoinPage />} />
 				<Route path="/minhas-cartelas" element={<MyCardsPage />} />
 				<Route path="/cartela/:eventId/:cardCode" element={<CardPage />} />
+				<Route path="/cartelas/:eventId" element={<ActiveCardsPage />} />
 				<Route
 					path="/operacao/:eventId/:roundId"
 					element={

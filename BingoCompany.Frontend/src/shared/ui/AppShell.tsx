@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { clearSession, getSession } from "../auth/session";
+import { clearSession } from "../auth/session";
+import { useSession } from "../auth/SessionContext";
 import { authApi } from "../../features/bingo";
 import { useApplicationInfo } from "../../app/ApplicationInfoContext";
 import { ApplicationFooter } from "./ApplicationFooter";
@@ -9,7 +10,7 @@ type Props = PropsWithChildren<{ showAdministration?: boolean }>;
 
 export function AppShell({ children, showAdministration = true }: Props) {
 	const navigate = useNavigate();
-	const session = getSession();
+	const { session } = useSession();
 	const application = useApplicationInfo();
 
 	const logout = async () => {

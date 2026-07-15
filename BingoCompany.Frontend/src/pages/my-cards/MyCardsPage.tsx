@@ -1,8 +1,9 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { authApi, bingoApi } from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
-import { getSession, saveSession } from "../../shared/auth/session";
+import { saveSession } from "../../shared/auth/session";
+import { useSession } from "../../shared/auth/SessionContext";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
 import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";
@@ -11,7 +12,7 @@ import { PageState } from "../../shared/ui/PageState";
 const CardsPerPage = 5;
 
 export function MyCardsPage() {
-	const session = getSession();
+	const { session } = useSession();
 	const navigate = useNavigate();
 	const [searchParams] = useSearchParams();
 	const returnTo = searchParams.get("returnTo");
@@ -25,6 +26,11 @@ export function MyCardsPage() {
 	const [page, setPage] = useState(1);
 	const cards = useAsyncResource(useCallback(() => (session?.accountType === "participant" ? bingoApi.getMyCards(page, CardsPerPage) : Promise.resolve({ activeCards: [], history: { items: [], page: 1, pageSize: CardsPerPage, totalItems: 0, totalPages: 0 } })), [page, session?.accountType]));
 	const activeCards = cards.data?.activeCards ?? [];
+	const activeCardsByEvent = useMemo(() => {
+		const groups = new Map<string, typeof activeCards>();
+		for (const card of activeCards) groups.set(card.eventId, [...(groups.get(card.eventId) ?? []), card]);
+		return [...groups.values()];
+	}, [activeCards]);
 	const historyCards = cards.data?.history.items ?? [];
 	const totalPages = Math.max(1, cards.data?.history.totalPages ?? 1);
 
@@ -82,7 +88,7 @@ export function MyCardsPage() {
 						<section className="panel active-cards-panel" aria-labelledby="active-cards-title">
 							<p className="eyebrow">Prontas para jogar</p>
 							<h2 id="active-cards-title">Cartelas ativas</h2>
-							{activeCards.length === 0 ? <p>Nenhuma cartela ativa no momento.</p> : <div className="active-cards-grid">{activeCards.map((card) => <article key={`${card.eventId}-${card.publicCode}`}><div className="card-purchase-code"><span>{card.eventName}</span><code>{card.publicCode}</code></div><Link className="button" to={`/cartela/${card.eventId}/${card.publicCode}`}>Abrir cartela</Link></article>)}</div>}
+							{activeCards.length === 0 ? <p>Nenhuma cartela ativa no momento.</p> : activeCardsByEvent.map((eventCards) => <section className="active-event-group" key={eventCards[0].eventId}><div className="active-event-group-header"><h3>{eventCards[0].eventName}</h3><Link className="button" to={`/cartelas/${eventCards[0].eventId}`}>Abrir todas as cartelas</Link></div><div className="active-cards-grid">{eventCards.map((card) => <article key={`${card.eventId}-${card.publicCode}`}><div className="card-purchase-code"><span>Cartela ativa</span><code>{card.publicCode}</code></div><Link className="button" to={`/cartela/${card.eventId}/${card.publicCode}`}>Abrir cartela</Link></article>)}</div></section>)}
 						</section>
 						<section className="panel" aria-labelledby="card-history-title">
 							<p className="eyebrow">Acompanhar</p>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { bingoApi, DrawSuspense, useLiveBingo, winningPatternLabel } from "../../features/bingo";
+import { bingoApi, bingoBallLabel, DrawSuspense, useLiveBingo, winningPatternLabel } from "../../features/bingo";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { ThemeToggle } from "../../shared/ui/ThemeToggle";
 import "./displayPage.css";
@@ -56,7 +56,7 @@ export function DisplayPage() {
 								{winner.tieBreakers.map((tieBreaker) => (
 									<li className={tieBreaker.isWinner ? "winner" : ""} key={tieBreaker.participantName}>
 										<span>{tieBreaker.participantName}</span>
-										<strong>{tieBreaker.number}</strong>
+										<strong>{bingoBallLabel(tieBreaker.number)}</strong>
 										{tieBreaker.isWinner && <em>Vencedor(a)</em>}
 									</li>
 								))}
@@ -70,7 +70,7 @@ export function DisplayPage() {
 					<p>{round?.tieBreakerRequired ? "⚖️ DESEMPATE" : "🎉 TEMOS UM VENCEDOR"}</p>
 					<h1>{round?.tieBreakerRequired ? "Confira as cartelas" : "Confira a cartela!"}</h1>
 					<p className="winning-stone-label">PEDRA VENCEDORA</p>
-					<strong className="winning-stone">{round?.drawnNumbers.at(-1) ?? "—"}</strong>
+					<strong className="winning-stone">{lastDrawnNumber === undefined ? "—" : bingoBallLabel(lastDrawnNumber)}</strong>
 					<p className="winnerprize">{round?.currentPrize}</p>
 					{prizeImage && <img className="display-prize-image" src={prizeImage} alt={`Prêmio: ${round?.currentPrize}`} />}
 					<p className="winnerpattern">
@@ -123,7 +123,7 @@ export function DisplayPage() {
 			)}
 			<div className="displayhistory">
 				{round?.drawnNumbers.map((number) => (
-					<span key={number}>{number}</span>
+					<span key={number}>{bingoBallLabel(number)}</span>
 				))}
 			</div>
 			<footer>

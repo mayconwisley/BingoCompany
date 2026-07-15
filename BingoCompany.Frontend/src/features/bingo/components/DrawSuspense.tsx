@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { bingoBallLabel } from "../model/bingoBallLabel";
 import "./drawSuspense.css";
 
 const suspenseNumbers = [7, 18, 29, 41, 52, 63, 74];
@@ -56,7 +57,7 @@ export function DrawSuspense({ number }: DrawSuspenseProps) {
 	return (
 		<section className={isSuspending ? "drawsuspense rolling" : "drawsuspense"} aria-live="polite">
 			<p>{isSuspending ? "A próxima pedra é..." : "ÚLTIMA PEDRA"}</p>
-			<strong>{displayedNumber ?? "?"}</strong>
+			<strong>{displayedNumber === undefined ? "?" : bingoBallLabel(displayedNumber)}</strong>
 			{isSuspending && <span>Preparando o sorteio</span>}
 		</section>
 	);

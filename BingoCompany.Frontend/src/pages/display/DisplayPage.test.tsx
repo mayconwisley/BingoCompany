@@ -57,7 +57,7 @@ describe("DisplayPage", () => {
 			await Promise.resolve();
 		});
 		expect(screen.getByText("ÚLTIMA PEDRA")).toBeInTheDocument();
-		expect(screen.getByText("10", { selector: "strong" })).toBeInTheDocument();
+		expect(screen.getByText("B-10", { selector: "strong" })).toBeInTheDocument();
 		expect(screen.queryByText(/TEMOS UM VENCEDOR/)).not.toBeInTheDocument();
 
 		act(() => vi.advanceTimersByTime(3000));
@@ -65,7 +65,7 @@ describe("DisplayPage", () => {
 		expect(screen.getByText(/TEMOS UM VENCEDOR/)).toBeInTheDocument();
 		expect(screen.getByText("Confira a cartela!")).toBeInTheDocument();
 		expect(screen.getByText("PEDRA VENCEDORA")).toBeInTheDocument();
-		expect(screen.getByText("10", { selector: "strong" })).toBeInTheDocument();
+		expect(screen.getByText("B-10", { selector: "strong" })).toBeInTheDocument();
 		expect(screen.queryByText(/Cartela ABC123/)).not.toBeInTheDocument();
 	});
 
@@ -112,8 +112,8 @@ describe("DisplayPage", () => {
 		expect(within(result).getByRole("heading", { name: "Resultado do desempate" })).toBeInTheDocument();
 		expect(within(result).getByText("Ana")).toBeInTheDocument();
 		expect(within(result).getByText("Bruno")).toBeInTheDocument();
-		expect(within(result).getByText("71")).toBeInTheDocument();
-		expect(within(result).getByText("24")).toBeInTheDocument();
+		expect(within(result).getByText("O-71")).toBeInTheDocument();
+		expect(within(result).getByText("I-24")).toBeInTheDocument();
 		expect(within(result).getByText("Vencedor(a)")).toBeInTheDocument();
 	});
 

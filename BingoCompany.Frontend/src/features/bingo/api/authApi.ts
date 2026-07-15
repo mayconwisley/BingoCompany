@@ -11,5 +11,6 @@ export const authApi = {
 		http<{ name: string }>("/api/participant-auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
 	participantRegister: (name: string, email: string, password: string) =>
 		http<{ name: string }>("/api/participant-auth/register", { method: "POST", body: JSON.stringify({ name, email, password }) }),
-	logout: () => http<void>("/api/auth/logout", { method: "POST" })
+	logout: () => http<void>("/api/auth/logout", { method: "POST" }),
+	getSession: () => http<AuthSession>("/api/auth/session")
 };
