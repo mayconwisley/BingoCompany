@@ -45,7 +45,9 @@ describe("ActiveCardsPage", () => {
 		);
 
 		expect(await screen.findByText("Evento encerrado")).toBeInTheDocument();
-		expect(screen.getByText("Este evento foi encerrado. Estas cartelas permanecem disponíveis apenas para consulta.")).toBeInTheDocument();
+		expect(
+			screen.getByText("Este evento foi encerrado. Estas cartelas permanecem disponíveis apenas para consulta.")
+		).toBeInTheDocument();
 		expect(screen.queryByText("Aguardando rodada")).not.toBeInTheDocument();
 		expect(screen.getByText("G-54")).toBeInTheDocument();
 	});

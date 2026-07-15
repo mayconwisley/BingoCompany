@@ -42,5 +42,9 @@ export function TieBreakerStone({ number, delay }: TieBreakerStoneProps) {
 		};
 	}, [delay, number]);
 
-	return <strong className={isRolling ? "tie-breaker-stone" : "tie-breaker-stone revealed"}>{isRevealed ? bingoBallLabel(number) : bingoBallLabel(displayedNumber)}</strong>;
+	return (
+		<strong className={isRolling ? "tie-breaker-stone" : "tie-breaker-stone revealed"}>
+			{isRevealed ? bingoBallLabel(number) : bingoBallLabel(displayedNumber)}
+		</strong>
+	);
 }

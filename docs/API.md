@@ -17,7 +17,9 @@ As respostas usam JSON com enums serializados como texto. A API retorna `204 No 
 }
 ```
 
-No login, envie apenas `email` e `password`. A resposta é `{ "name": "...", "companyName": "..." }` e a sessão é mantida em cookie `HttpOnly`; o token JWT não é retornado ao JavaScript. Para encerrar a sessão, use `POST /api/auth/logout`.
+No login, envie apenas `email` e `password`. A resposta é `{ "name": "...", "companyName": "..." }` e a sessão é mantida em cookie `HttpOnly`; o token JWT não é retornado ao JavaScript. Para encerrar a sessão, use `POST /api/auth/logout`. `GET /api/auth/session` retorna a sessão atual, inclusive o tipo de conta.
+
+Participantes que compram cartelas podem criar ou acessar a própria conta com `POST /api/participant-auth/register` e `POST /api/participant-auth/login`. Ambos usam `name` (somente no cadastro), `email` e `password`; a resposta contém `{ "name": "..." }` e usa o mesmo cookie protegido. Uma conta de participante não tem acesso às rotas administrativas.
 
 As rotas em `/api/events` exigem a sessão e são limitadas à empresa do usuário, exceto `GET /api/events/{eventId}/cards/{cardCode}/state`, que é a consulta pública da cartela digital pelo seu link. Para métodos que alteram estado autenticado, o navegador precisa enviar uma origem presente em `Cors:AllowedOrigins`; isso protege o cookie contra requisições entre sites.
 
@@ -30,6 +32,7 @@ As rotas em `/api/events` exigem a sessão e são limitadas à empresa do usuár
 | `GET /api/public/events/{code}` | Estado público do evento, rodada selecionada, pedras, etapas, estatísticas agregadas e vencedor já revelado. Em desempate revelado, inclui todos os participantes, suas pedras e a indicação do vencedor. |
 | `POST /api/public/events/{code}/join` | Inscreve um participante e gera cartela digital. Limite: 20 requisições/minuto por IP. |
 | `GET /api/public/events/{code}/audit` | Histórico público, cartelas, rodadas, resultados e auditoria. A sequência completa somente é exposta ao fim da rodada. |
+| `POST /api/public/events/{code}/cards/{cardCode}/activate` | Ativa uma cartela digital comprada pela conta de participante. |
 
 O corpo de inscrição pública é:
 
@@ -52,14 +55,19 @@ O corpo de inscrição pública é:
 | `POST /api/events` | Cria evento. |
 | `GET /api/events/{eventId}` | Detalhes administrativos de um evento. |
 | `POST /api/events/{eventId}/registration/open` | Abre inscrições de um evento em preparação. |
+| `POST /api/events/{eventId}/card-purchase/open` | Abre a venda de até `quantity` cartelas digitais para contas de participante. |
+| `PUT /api/events/{eventId}/card-purchase` | Atualiza o limite da venda enquanto permitido. |
+| `POST /api/events/{eventId}/card-purchase/cancel` | Cancela a venda e registra o motivo. |
 | `POST /api/events/{eventId}/participants` | Inscreve participante pelo painel administrativo. |
 | `POST /api/events/{eventId}/cards/printed` | Gera de 1 a 1.000 cartelas impressas. |
 | `GET /api/events/{eventId}/cards/printed` | Lista cartelas impressas e seu QR Code. |
 | `POST /api/events/{eventId}/cards/{cardCode}/assign` | Associa cartela impressa a um participante. |
+| `POST /api/events/{eventId}/cards/{cardCode}/register` | Cria e associa um participante à cartela impressa. |
 | `POST /api/events/{eventId}/cards/{cardCode}/activate` | Ativa cartela impressa associada. |
 | `GET /api/events/{eventId}/cards/{cardCode}/state` | Estado da cartela, marcações, pedras e possibilidade de renovação. |
 | `POST /api/events/{eventId}/cards/{cardCode}/marks` | Registra uma marcação manual válida. |
 | `POST /api/events/{eventId}/cards/{cardCode}/next` | Gera a próxima cartela digital quando a anterior puder ser renovada. |
+| `GET /api/participant/cards?page=1&pageSize=5` | Lista as cartelas ativas e o histórico da conta de participante autenticada. |
 | `POST /api/events/{eventId}/finish` | Finaliza o evento após todas as rodadas. |
 
 Criação de evento:
@@ -74,6 +82,8 @@ Criação de evento:
 
 `markingMode` aceita `Automatic`, `ManualRequired` ou `AssistedManual`. A criação de cartelas impressas recebe `{ "quantity": 10 }` e permite de 1 a 1.000 cartelas por requisição; novos lotes podem ser criados para o mesmo evento. A associação recebe `{ "participantId": "GUID" }`; a marcação recebe `{ "number": 42 }`.
 
+Para abrir a venda de cartelas, envie `{ "quantity": 50 }`. Para cancelá-la, envie `{ "reason": "Motivo visível para participantes" }`. O cadastro direto em cartela impressa usa o mesmo corpo de inscrição pública. A conta de participante pode comprar somente até o limite ainda disponível e precisa ativar cada cartela comprada antes de ela concorrer.
+
 ## Rodadas e prêmios
 
 | Método e rota | Descrição |
@@ -87,6 +97,7 @@ Criação de evento:
 | `POST /api/events/{eventId}/rounds/{roundId}/prize-delivered` | Registra a entrega, conclui a etapa e avança a rodada. |
 | `POST /api/events/{eventId}/rounds/{roundId}/prize-declined` | Registra que o vencedor não retirou o prêmio e retoma o sorteio na mesma etapa. |
 | `POST /api/events/{eventId}/rounds/{roundId}/winner-presentation/close` | Fecha a apresentação após a confirmação da entrega para liberar a próxima pedra ou etapa. |
+| `POST /api/events/{eventId}/rounds/{roundId}/printed-cards/{cardCode}/validate-winner` | Confere pelo operador uma cartela impressa candidata a vencer em modo manual. |
 
 Corpo para criar ou editar uma rodada:
 

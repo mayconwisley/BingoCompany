@@ -41,7 +41,7 @@ O Bingo Company organiza eventos de bingo corporativo com cartelas digitais e im
 
 | Item | Status | O que valida |
 | --- | --- | --- |
-| CI | [![CI](https://github.com/mayconwisley/BingoCompany/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/mayconwisley/BingoCompany/actions/workflows/ci.yml) | Testes, build, ESLint, tipos, formatação e auditoria de dependências. |
+| CI | [![CI](https://github.com/mayconwisley/BingoCompany/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/mayconwisley/BingoCompany/actions/workflows/ci.yml) | Testes, build, ESLint, tipos, formatação, auditoria de dependências e configuração das imagens Docker/Compose. |
 | Deploy | [![Deploy](https://github.com/mayconwisley/BingoCompany/actions/workflows/release.yml/badge.svg)](https://github.com/mayconwisley/BingoCompany/actions/workflows/release.yml) | Publicação versionada na VPS após aprovação do CI. |
 | Produção | [![Produção](https://img.shields.io/website?url=https%3A%2F%2Fmcnwly.com.br%2Fbingo%2F&label=online)](https://mcnwly.com.br/bingo/) | Disponibilidade da aplicação pública. |
 
@@ -97,7 +97,7 @@ Os badges são atualizados pelo GitHub Actions e pelo monitoramento do endereço
 
    ```powershell
    cd .\BingoCompany.Frontend
-   npm install
+   npm ci
    npm run dev
    ```
 
@@ -146,6 +146,8 @@ No frontend:
 cd .\BingoCompany.Frontend
 npm test
 npm run lint
+npm run typecheck
+npm run typeformat
 npm run build
 ```
 

@@ -17,6 +17,7 @@ describe("HelpPage", () => {
 		expect(screen.getByRole("heading", { name: "Telão e auditoria" })).toBeInTheDocument();
 		expect(screen.getByRole("heading", { name: "Conduza o sorteio ao vivo" })).toBeInTheDocument();
 		expect(screen.getByText(/Só uma cartela associada e ativa concorre/i)).toBeInTheDocument();
+		expect(screen.getByRole("heading", { name: "Compra de cartelas" })).toBeInTheDocument();
 		expect(screen.getByText(/O hash SHA-256 é publicado no começo da rodada/i)).toBeInTheDocument();
 	});
 });

@@ -2,15 +2,36 @@ name: Project CI
 
 on:
   pull_request:
+    paths:
+      - "BingoCompany.*/**"
+      - ".github/workflows/ci.yml"
+      - ".github/dependabot.yml"
+      - "BingoCompany.sln"
+      - "Dockerfile"
+      - "docker-compose.yaml"
+      - ".dockerignore"
   push:
+    paths:
+      - "BingoCompany.*/**"
+      - ".github/workflows/ci.yml"
+      - ".github/dependabot.yml"
+      - "BingoCompany.sln"
+      - "Dockerfile"
+      - "docker-compose.yaml"
+      - ".dockerignore"
 
 permissions:
   contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   backend:
     name: Backend quality
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,6 +56,7 @@ jobs:
   frontend:
     name: Frontend quality
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: BingoCompany.Frontend
@@ -69,3 +91,25 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  containers:
+    name: Container configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Compose configuration
+        env:
+          POSTGRES_DB: bingo
+          POSTGRES_USER: bingo
+          POSTGRES_PASSWORD: ci-validation-password
+          BINGO_JWT_KEY: ci-validation-key-with-at-least-thirty-two-characters
+        run: docker compose config --quiet
+
+      - name: Build API image
+        run: docker build --file Dockerfile --tag bingo-company-api:ci .
+
+      - name: Build frontend image
+        run: docker build --file BingoCompany.Frontend/Dockerfile --tag bingo-company-frontend:ci BingoCompany.Frontend

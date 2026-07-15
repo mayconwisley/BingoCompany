@@ -8,7 +8,17 @@ export default defineConfig(({ mode }) => {
 		base: environment.VITE_BASE_PATH ?? "/",
 		plugins: [react()],
 		build: {
-			cssCodeSplit: true
+			cssCodeSplit: true,
+			rollupOptions: {
+				output: {
+					manualChunks: {
+						"react-vendor": ["react", "react-dom", "react-router-dom"],
+						"mui-vendor": ["@emotion/react", "@emotion/styled", "@mui/material"],
+						"signalr-vendor": ["@microsoft/signalr"],
+						"qr-vendor": ["@zxing/browser", "qrcode"]
+					}
+				}
+			}
 		}
 	};
 });

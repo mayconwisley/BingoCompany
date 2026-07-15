@@ -30,3 +30,28 @@ Origin: {{origin}}
 ### Encerrar sessão
 POST {{apiUrl}}/api/auth/logout
 Origin: {{origin}}
+
+### Criar conta de participante para compra de cartelas
+POST {{apiUrl}}/api/participant-auth/register
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "name": "Ana Participante",
+  "email": "ana@example.test",
+  "password": "senha-segura-com-12-caracteres"
+}
+
+### Entrar como participante
+POST {{apiUrl}}/api/participant-auth/login
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "email": "ana@example.test",
+  "password": "senha-segura-com-12-caracteres"
+}
+
+### Consultar sessão atual
+GET {{apiUrl}}/api/auth/session
+Accept: application/json

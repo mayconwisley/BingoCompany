@@ -221,6 +221,13 @@ export function HelpPage() {
 						está completa conforme o modo de marcação. A cartela antiga é cancelada e a nova vale para a próxima rodada, desde
 						que ela ainda não tenha começado.
 					</p>
+					<h3>Compra de cartelas</h3>
+					<p>
+						Quando a organização habilitar a compra de cartelas, crie ou acesse uma conta de participante com nome, e-mail e
+						senha. A compra fica vinculada a essa conta e as cartelas podem ser reencontradas em “Minhas cartelas”. Ative cada
+						cartela que deseja usar; somente cartela ativa concorre na próxima rodada. A organização pode limitar ou encerrar a
+						venda sem fechar as inscrições comuns.
+					</p>
 					<p>
 						Se a página parecer parada, atualize-a. A cartela recarrega o estado oficial ao reconectar; não é necessário criar
 						outra inscrição.

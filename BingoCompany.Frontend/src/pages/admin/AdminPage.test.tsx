@@ -87,8 +87,6 @@ describe("AdminPage", () => {
 		fireEvent.change(screen.getByLabelText("Nome do evento"), { target: { value: "Festa" } });
 		fireEvent.click(screen.getByRole("button", { name: "Criar evento" }));
 
-		await waitFor(() =>
-			expect(bingoApi.createEvent).toHaveBeenCalledWith({ name: "Festa", markingMode: "Automatic" })
-		);
+		await waitFor(() => expect(bingoApi.createEvent).toHaveBeenCalledWith({ name: "Festa", markingMode: "Automatic" }));
 	});
 });

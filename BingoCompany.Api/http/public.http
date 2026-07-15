@@ -1,6 +1,7 @@
 @apiUrl = http://localhost:5138
 @origin = http://localhost:5173
 @publicCode = SUBSTITUA_PELO_CODIGO_PUBLICO
+@cardCode = SUBSTITUA_PELO_CODIGO_DA_CARTELA
 
 ### Saúde da API
 GET {{apiUrl}}/healthz
@@ -29,6 +30,10 @@ Origin: {{origin}}
   "type": "Guest",
   "responsibleEmployeeName": "Ana Participante"
 }
+
+### Ativar uma cartela digital comprada (sessão de participante exigida)
+POST {{apiUrl}}/api/public/events/{{publicCode}}/cards/{{cardCode}}/activate
+Origin: {{origin}}
 
 ### Consultar auditoria pública
 GET {{apiUrl}}/api/public/events/{{publicCode}}/audit

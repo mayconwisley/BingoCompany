@@ -28,6 +28,16 @@ Origin: {{origin}}
   "participantId": "{{participantId}}"
 }
 
+### Cadastrar participante e associar diretamente à cartela impressa
+POST {{apiUrl}}/api/events/{{eventId}}/cards/{{cardCode}}/register
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "name": "Carla Participante",
+  "type": "Employee"
+}
+
 ### Ativar cartela impressa associada
 POST {{apiUrl}}/api/events/{{eventId}}/cards/{{cardCode}}/activate
 Origin: {{origin}}
@@ -45,6 +55,14 @@ Origin: {{origin}}
   "number": 42
 }
 
+### Validar cartela impressa candidata a vencer (operador)
+POST {{apiUrl}}/api/events/{{eventId}}/rounds/{{roundId}}/printed-cards/{{cardCode}}/validate-winner
+Origin: {{origin}}
+
 ### Gerar próxima cartela digital quando a anterior estiver completa
 POST {{apiUrl}}/api/events/{{eventId}}/cards/{{cardCode}}/next
 Origin: {{origin}}
+
+### Listar cartelas da conta de participante autenticada
+GET {{apiUrl}}/api/participant/cards?page=1&pageSize=5
+Accept: application/json

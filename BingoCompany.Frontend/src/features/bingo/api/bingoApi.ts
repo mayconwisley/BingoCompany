@@ -54,8 +54,15 @@ export const bingoApi = {
 	getPrintedCards: (eventId: string) => http<PrintedCard[]>(`/api/events/${eventId}/cards/printed`),
 	assignPrintedCard: (eventId: string, cardCode: string, participantId: string) =>
 		http<void>(`/api/events/${eventId}/cards/${cardCode}/assign`, { method: "POST", body: JSON.stringify({ participantId }) }),
-	registerPrintedCard: (eventId: string, cardCode: string, request: { name: string; type: string; employeeRegistration?: string; responsibleEmployeeName?: string }) =>
-		http<{ cardCode: string; participantName: string }>(`/api/events/${eventId}/cards/${cardCode}/register`, { method: "POST", body: JSON.stringify(request) }),
+	registerPrintedCard: (
+		eventId: string,
+		cardCode: string,
+		request: { name: string; type: string; employeeRegistration?: string; responsibleEmployeeName?: string }
+	) =>
+		http<{ cardCode: string; participantName: string }>(`/api/events/${eventId}/cards/${cardCode}/register`, {
+			method: "POST",
+			body: JSON.stringify(request)
+		}),
 	activatePrintedCard: (eventId: string, cardCode: string) =>
 		http<void>(`/api/events/${eventId}/cards/${cardCode}/activate`, { method: "POST" }),
 	getCard: (eventId: string, cardCode: string) => http<CardState>(`/api/events/${eventId}/cards/${cardCode}/state`),
@@ -64,7 +71,10 @@ export const bingoApi = {
 	mark: (eventId: string, cardCode: string, number: number) =>
 		http<void>(`/api/events/${eventId}/cards/${cardCode}/marks`, { method: "POST", body: JSON.stringify({ number }) }),
 	validatePrintedWinner: (eventId: string, roundId: string, cardCode: string) =>
-		http<{ participantName: string; cardCode: string; tieBreakerRequired: boolean }>(`/api/events/${eventId}/rounds/${roundId}/printed-cards/${cardCode}/validate-winner`, { method: "POST" }),
+		http<{ participantName: string; cardCode: string; tieBreakerRequired: boolean }>(
+			`/api/events/${eventId}/rounds/${roundId}/printed-cards/${cardCode}/validate-winner`,
+			{ method: "POST" }
+		),
 	getPublicEvent: (code: string) => http<PublicEvent>(`/api/public/events/${code}`),
 	join: (code: string, request: JoinEventInput) =>
 		http<RegistrationResult>(`/api/public/events/${code}/join`, { method: "POST", body: JSON.stringify(request) }),

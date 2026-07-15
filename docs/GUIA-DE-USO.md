@@ -132,6 +132,10 @@ A página **Minha cartela** apresenta o prêmio e regra atuais, o modo de marca�
 - Quando a cartela vence, a própria tela mostra a confirmação. O participante deve aguardar o nome ser revelado e seguir a orientação da organização para retirada do prêmio.
 - Depois de uma rodada concluída, a opção **Gerar nova cartela** só aparece para cartela digital que participou dela e está completa conforme o modo de marcação. A cartela anterior é cancelada e a nova precisa ser criada antes da próxima rodada iniciar.
 
+### Quando houver compra de cartelas
+
+Se a organização habilitar a compra de cartelas digitais, o participante deve criar ou acessar uma **conta de participante** com nome, e-mail e senha. A compra usa essa conta para manter as cartelas disponíveis em **Minhas cartelas**. Depois de comprar, ative individualmente as cartelas que serão usadas; somente cartela ativa pode entrar na próxima rodada. A organização pode limitar a quantidade disponível ou cancelar a venda, sem afetar as inscrições comuns já abertas.
+
 Se a tela parecer desatualizada, atualize a página. Ela busca novamente o estado oficial quando a conexão em tempo real volta.
 
 ## 9. Usar o telão

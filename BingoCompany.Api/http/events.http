@@ -26,7 +26,39 @@ Accept: application/json
 
 ### Abrir inscrições
 POST {{apiUrl}}/api/events/{{eventId}}/registration/open
+Content-Type: application/json
 Origin: {{origin}}
+
+{
+  "cardsPerParticipant": 1
+}
+
+### Abrir venda de cartelas digitais para contas de participantes
+POST {{apiUrl}}/api/events/{{eventId}}/card-purchase/open
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "quantity": 50
+}
+
+### Atualizar o limite de venda de cartelas
+PUT {{apiUrl}}/api/events/{{eventId}}/card-purchase
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "quantity": 75
+}
+
+### Cancelar a venda de cartelas
+POST {{apiUrl}}/api/events/{{eventId}}/card-purchase/cancel
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+  "reason": "Vendas encerradas pela organização."
+}
 
 ### Inscrever pelo painel administrativo
 POST {{apiUrl}}/api/events/{{eventId}}/participants
