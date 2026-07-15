@@ -33,7 +33,7 @@ public sealed class EventsControllerNextCardTests
 		db.RoundWinners.Add(winner);
 		db.RoundEligibleCards.Add(new RoundEligibleCard(round.Id, card.Id, participant.Id));
 		await db.SaveChangesAsync();
-		var controller = new EventsController(db, null!, null!, null!, null!);
+		var controller = new EventsController(db, null!, null!, null!, null!, null!, null!);
 
 		var state = Assert.IsType<OkObjectResult>((await controller.CardState(bingoEvent.Id, card.PublicCode)).Result);
 		using var stateJson = JsonDocument.Parse(JsonSerializer.Serialize(state.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
@@ -60,7 +60,7 @@ public sealed class EventsControllerNextCardTests
 		db.Events.Add(bingoEvent);
 		db.Cards.Add(card);
 		await db.SaveChangesAsync();
-		var controller = new EventsController(db, null!, null!, null!, null!);
+		var controller = new EventsController(db, null!, null!, null!, null!, null!, null!);
 
 		var state = Assert.IsType<OkObjectResult>((await controller.CardState(bingoEvent.Id, card.PublicCode)).Result);
 		using var stateJson = JsonDocument.Parse(JsonSerializer.Serialize(state.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));

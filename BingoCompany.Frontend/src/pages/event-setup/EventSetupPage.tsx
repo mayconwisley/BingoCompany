@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { bingoApi, PrizeStageEditor, QrCardScanner, roundStatusLabel } from "../../features/bingo";
-import type { PrizeDraft } from "../../features/bingo";
+import type { ParticipantType, PrizeDraft } from "../../features/bingo";
 import { useAsyncAction } from "../../shared/hooks/useAsyncAction";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
@@ -42,7 +42,10 @@ export function EventSetupPage() {
 	const [registrationCardsQuantity, setRegistrationCardsQuantity] = useState(1);
 	const [cardPurchaseCancellationReason, setCardPurchaseCancellationReason] = useState("");
 	const [selectedCard, setSelectedCard] = useState("");
-	const [selectedParticipant, setSelectedParticipant] = useState("");
+	const [printedParticipantName, setPrintedParticipantName] = useState("");
+	const [printedParticipantType, setPrintedParticipantType] = useState<ParticipantType>("Employee");
+	const [printedParticipantRegistration, setPrintedParticipantRegistration] = useState("");
+	const [printedParticipantResponsible, setPrintedParticipantResponsible] = useState("");
 	const [copiedLink, setCopiedLink] = useState("");
 	const openRound = (roundId: string) => navigate(`/operacao/${eventId}/${roundId}?code=${code}`);
 	const onCardCodeRead = useCallback((cardCode: string) => setSelectedCard(cardCode), []);
@@ -445,7 +448,7 @@ export function EventSetupPage() {
 							</button>
 							{printedCards.length > 0 && (
 								<>
-									<h3>Associar e ativar cartela</h3>
+									<h3>Registrar e ativar cartela</h3>
 									<QrCardScanner onCardCodeRead={onCardCodeRead} disabled={isFinished} />
 									<label>
 										Cartela
@@ -463,53 +466,29 @@ export function EventSetupPage() {
 											))}
 										</select>
 									</label>
-									<label>
-										Participante
-										<select
-											aria-label="Participante"
-											disabled={isFinished}
-											value={selectedParticipant}
-											onChange={(input) => setSelectedParticipant(input.target.value)}
-										>
-											<option value="">Selecione</option>
-											{event.data.participantList.map((participant) => (
-												<option key={participant.id} value={participant.id}>
-													{participant.name} · {participant.type}
-												</option>
-											))}
-										</select>
-									</label>
+									<label>Nome do participante<input aria-label="Nome do participante da cartela impressa" disabled={isFinished} value={printedParticipantName} onChange={(input) => setPrintedParticipantName(input.target.value)} /></label>
+									<label>Tipo de participante<select aria-label="Tipo do participante da cartela impressa" disabled={isFinished} value={printedParticipantType} onChange={(input) => { const value = input.target.value; if (value === "Employee" || value === "FamilyMember" || value === "Guest") setPrintedParticipantType(value); }}><option value="Employee">Colaborador</option><option value="FamilyMember">Familiar</option><option value="Guest">Convidado</option></select></label>
+									{printedParticipantType === "Employee" ? <label>Matrícula <small>(opcional)</small><input aria-label="Matrícula do participante da cartela impressa" disabled={isFinished} value={printedParticipantRegistration} onChange={(input) => setPrintedParticipantRegistration(input.target.value)} /></label> : <label>Colaborador responsável<input aria-label="Colaborador responsável da cartela impressa" disabled={isFinished} value={printedParticipantResponsible} onChange={(input) => setPrintedParticipantResponsible(input.target.value)} /></label>}
 									<div className="actions">
 										<button
 											disabled={
 												isFinished ||
 												!selectedCard ||
-												!selectedParticipant ||
 												selectedCardState !== "Printed" ||
+												!printedParticipantName.trim() ||
+												(printedParticipantType !== "Employee" && !printedParticipantResponsible.trim()) ||
 												action.isPending
 											}
 											onClick={async () => {
 												await action.execute(
-													() => bingoApi.assignPrintedCard(eventId, selectedCard, selectedParticipant),
-													"Cartela associada. Ative-a para participar."
+													() => bingoApi.registerPrintedCard(eventId, selectedCard, { name: printedParticipantName, type: printedParticipantType, employeeRegistration: printedParticipantRegistration || undefined, responsibleEmployeeName: printedParticipantResponsible || undefined }),
+													"Participante registrado e cartela ativada para a rodada."
 												);
+												setPrintedParticipantName(""); setPrintedParticipantRegistration(""); setPrintedParticipantResponsible("");
 												await event.reload();
 											}}
 										>
-											Associar cartela
-										</button>
-										<button
-											className="reveal"
-											disabled={isFinished || !selectedCard || selectedCardState !== "Assigned" || action.isPending}
-											onClick={async () => {
-												await action.execute(
-													() => bingoApi.activatePrintedCard(eventId, selectedCard),
-													"Cartela ativada para a próxima rodada."
-												);
-												await event.reload();
-											}}
-										>
-											Ativar cartela
+											Registrar e ativar cartela
 										</button>
 									</div>
 								</>

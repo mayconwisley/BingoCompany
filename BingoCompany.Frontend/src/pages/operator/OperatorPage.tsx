@@ -33,6 +33,7 @@ export function OperatorPage() {
 	const hasCards = event.data.cards > 0;
 	const canStart = isCurrentRound && round.status === "Ready" && hasCards;
 	const canDraw = isCurrentRound && round.status === "Drawing" && !hasWinnerPresentation;
+	const needsPrintedValidation = event.data.markingMode !== "Automatic";
 	const canCancel = isCurrentRound && round.status === "Drawing" && !hasWinnerPresentation;
 	const actionLabel = canStart ? "INICIAR RODADA" : "SORTEAR PRÓXIMA PEDRA";
 	const isFinished = isCurrentRound && (round.status === "Finished" || round.status === "Cancelled");
@@ -124,6 +125,9 @@ export function OperatorPage() {
 						<p>{isCancelled ? "Rodada cancelada" : round.currentPrize || "Rodada finalizada"}</p>
 					</section>
 					<section className="panel controls">
+						{needsPrintedValidation && isCurrentRound && round.status !== "Ready" && round.status !== "Finished" && round.status !== "Cancelled" && (
+							<button onClick={() => navigate(`/operacao/${eventId}/${roundId}/conferir-cartelas`)}>CONFERIR CARTELA IMPRESSA</button>
+						)}
 						<button className="primary big" disabled={!canStart && !canDraw} onClick={performAction}>
 							{actionLabel}
 						</button>

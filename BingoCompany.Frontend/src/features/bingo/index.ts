@@ -10,6 +10,7 @@ export { DrawSuspense } from "./components/DrawSuspense";
 export { PrizeStageEditor } from "./components/PrizeStageEditor";
 export { QrCardScanner } from "./components/QrCardScanner";
 export { RegistrationQrCode } from "./components/RegistrationQrCode";
+export { TieBreakerStone } from "./components/TieBreakerStone";
 export { useLiveBingo } from "./hooks/useLiveBingo";
 export type { CardMarkingMode, ParticipantType, PrizeDraft } from "./model/types";
 export { bingoBallLabel } from "./model/bingoBallLabel";

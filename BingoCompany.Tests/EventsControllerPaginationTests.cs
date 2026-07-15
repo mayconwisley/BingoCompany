@@ -23,7 +23,7 @@ public sealed class EventsControllerPaginationTests
 		db.Events.AddRange(firstEvent, secondEvent, thirdEvent, new BingoEvent(Guid.CreateVersion7(), "Outro evento"));
 		await db.SaveChangesAsync();
 		var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim("company_id", companyId.ToString())])) };
-		var controller = new EventsController(db, null!, null!, null!, null!) { ControllerContext = new ControllerContext { HttpContext = httpContext } };
+		var controller = new EventsController(db, null!, null!, null!, null!, null!, null!) { ControllerContext = new ControllerContext { HttpContext = httpContext } };
 
 		var response = Assert.IsType<OkObjectResult>((await controller.List(1, 2)).Result);
 		using var result = JsonDocument.Parse(JsonSerializer.Serialize(response.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { bingoApi, bingoBallLabel, DrawSuspense, useLiveBingo, winningPatternLabel } from "../../features/bingo";
+import { bingoApi, bingoBallLabel, DrawSuspense, TieBreakerStone, useLiveBingo, winningPatternLabel } from "../../features/bingo";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { ThemeToggle } from "../../shared/ui/ThemeToggle";
 import "./displayPage.css";
@@ -53,10 +53,10 @@ export function DisplayPage() {
 							<h2>Resultado do desempate</h2>
 							<p>Pedras sorteadas para cada participante</p>
 							<ul>
-								{winner.tieBreakers.map((tieBreaker) => (
+								{winner.tieBreakers.map((tieBreaker, index) => (
 									<li className={tieBreaker.isWinner ? "winner" : ""} key={tieBreaker.participantName}>
 										<span>{tieBreaker.participantName}</span>
-										<strong>{bingoBallLabel(tieBreaker.number)}</strong>
+										<TieBreakerStone number={tieBreaker.number} delay={index * 1200} />
 										{tieBreaker.isWinner && <em>Vencedor(a)</em>}
 									</li>
 								))}

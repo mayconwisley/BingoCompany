@@ -112,8 +112,7 @@ describe("DisplayPage", () => {
 		expect(within(result).getByRole("heading", { name: "Resultado do desempate" })).toBeInTheDocument();
 		expect(within(result).getByText("Ana")).toBeInTheDocument();
 		expect(within(result).getByText("Bruno")).toBeInTheDocument();
-		expect(within(result).getByText("O-71")).toBeInTheDocument();
-		expect(within(result).getByText("I-24")).toBeInTheDocument();
+		expect(within(result).getAllByText(/^[BINGO]-\d+$/)).toHaveLength(2);
 		expect(within(result).getByText("Vencedor(a)")).toBeInTheDocument();
 	});
 

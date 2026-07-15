@@ -78,6 +78,19 @@ public sealed partial class EventsController
 		await db.SaveChangesAsync();
 		return NoContent();
 	}
+	[HttpPost("{eventId:guid}/cards/{cardCode}/register")]
+	public async Task<ActionResult<object>> RegisterPrintedCard(Guid eventId, string cardCode, RegisterPrintedCardParticipantRequest request)
+	{
+		try
+		{
+			var result = await printedCardRegistrationService.Register(eventId, cardCode, new PrintedCardParticipantRegistration(request.Name, request.Type, request.EmployeeRegistration, request.ResponsibleEmployeeName), HttpContext.RequestAborted);
+			return result is null ? NotFound() : Ok(result);
+		}
+		catch (InvalidOperationException exception)
+		{
+			return Conflict(exception.Message);
+		}
+	}
 	[HttpPost("{eventId:guid}/cards/{cardCode}/activate")]
 	public async Task<IActionResult> ActivatePrintedCard(Guid eventId, string cardCode)
 	{
@@ -96,6 +109,7 @@ public sealed partial class EventsController
 		var e = await db.Events.FindAsync(eventId); var card = await db.Cards.SingleOrDefaultAsync(x => x.EventId == eventId && x.PublicCode == cardCode);
 		var round = await db.Rounds.Include(x => x.Stages).Include(x => x.DrawnNumbers).Where(x => x.EventId == eventId && x.Status == RoundStatus.Drawing).OrderByDescending(x => x.Sequence).FirstOrDefaultAsync();
 		if (e is null || card is null || round is null) return NotFound();
+		if (card.Type == CardType.Printed) return Conflict("Cartelas impressas devem ser conferidas pelo QR Code do operador.");
 		if (e.MarkingMode == CardMarkingMode.Automatic) return Conflict("Este evento usa marcação automática.");
 		if (!card.IsEligible || !Enumerable.Range(0, 5).SelectMany(r => Enumerable.Range(0, 5).Select(c => card.Numbers[r, c])).Contains(request.Number)) return BadRequest("Número inválido para a cartela.");
 		var drawn = round.DrawnNumbers.SingleOrDefault(x => x.Number == request.Number); if (drawn is null) return BadRequest("O número ainda não foi sorteado.");
@@ -118,6 +132,23 @@ public sealed partial class EventsController
 		}
 
 		return NoContent();
+	}
+	[HttpPost("{eventId:guid}/rounds/{roundId:guid}/printed-cards/{cardCode}/validate-winner")]
+	public async Task<ActionResult<object>> ValidatePrintedWinner(Guid eventId, Guid roundId, string cardCode)
+	{
+		try
+		{
+			var result = await printedWinnerValidationService.Validate(eventId, roundId, cardCode, HttpContext.RequestAborted);
+			if (result is null) return NotFound();
+			var notice = new { roundId, count = result.CandidatesCount, tieBreakerRequired = result.TieBreakerRequired };
+		await hub.Clients.Group($"round:{roundId}").SendAsync("WinningCardDetected", notice);
+		await hub.Clients.Group($"event:{eventId}").SendAsync("WinningCardDetected", notice);
+			return Ok(new { result.ParticipantName, result.CardCode, result.TieBreakerRequired });
+		}
+		catch (InvalidOperationException exception)
+		{
+			return Conflict(exception.Message);
+		}
 	}
 	[HttpGet("{eventId:guid}/cards/{cardCode}/state"), AllowAnonymous]
 	public async Task<ActionResult<object>> CardState(Guid eventId, string cardCode)

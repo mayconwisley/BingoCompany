@@ -13,7 +13,7 @@ using System.Security.Claims;
 namespace BingoCompany.Api.Controllers;
 
 [ApiController, Route("api/events"), Authorize(Policy = "company-user"), ServiceFilter<CompanyEventOwnerFilter>]
-public sealed partial class EventsController(BingoDbContext db, IHubContext<BingoHub> hub, IBingoRoundGameplayService gameplayService, IEventParticipantRegistrationService participantRegistrationService, IEventCardPurchaseService cardPurchaseService) : ControllerBase
+public sealed partial class EventsController(BingoDbContext db, IHubContext<BingoHub> hub, IBingoRoundGameplayService gameplayService, IEventParticipantRegistrationService participantRegistrationService, IEventCardPurchaseService cardPurchaseService, IPrintedWinnerValidationService printedWinnerValidationService, IPrintedCardRegistrationService printedCardRegistrationService) : ControllerBase
 {
 	private const int MaximumPrizeImageLength = 2_800_000;
 	private const int DefaultEventsPageSize = 12;

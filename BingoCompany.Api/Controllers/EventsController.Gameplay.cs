@@ -25,12 +25,15 @@ public sealed partial class EventsController
 			.AsNoTracking()
 			.Join(db.RoundEligibleCards.Where(item => item.RoundId == roundId), card => card.Id, eligibleCard => eligibleCard.CardId, (card, _) => card)
 			.ToListAsync();
+		var cardsForWinnerDetection = e.MarkingMode == CardMarkingMode.Automatic
+			? eligibleCards.ToArray()
+			: eligibleCards.Where(card => card.Type == CardType.Digital).ToArray();
 		var marks = e.MarkingMode == CardMarkingMode.Automatic ? [] : await db.CardMarks.Where(item => item.RoundId == roundId).ToListAsync();
 		var excludedCardIds = await db.RoundWinners.Where(item => item.RoundId == roundId && item.StageId == round.ActiveStage.Id).Select(item => item.CardId).ToHashSetAsync();
 		RoundDrawResult drawResult;
 		try
 		{
-			drawResult = gameplayService.Draw(round, eligibleCards, marks, e.MarkingMode, excludedCardIds);
+			drawResult = gameplayService.Draw(round, cardsForWinnerDetection, marks, e.MarkingMode, excludedCardIds);
 		}
 		catch (InvalidOperationException exception)
 		{

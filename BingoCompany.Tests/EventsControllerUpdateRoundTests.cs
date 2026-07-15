@@ -26,7 +26,7 @@ public sealed class EventsControllerUpdateRoundTests
 		}
 
 		await using var db = new BingoDbContext(options);
-		var controller = new EventsController(db, null!, null!, null!, null!);
+		var controller = new EventsController(db, null!, null!, null!, null!, null!, null!);
 		var request = new CreateRoundRequest("Rodada atualizada", [
 			new CreatePrizeStageRequest(1, "Vale-presente", WinningPattern.HorizontalLine),
 			new CreatePrizeStageRequest(2, "Prêmio principal", WinningPattern.FullCard)

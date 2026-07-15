@@ -19,6 +19,7 @@ const JoinPage = lazy(() => import("../pages/join/JoinPage").then(({ JoinPage: p
 const MyCardsPage = lazy(() => import("../pages/my-cards/MyCardsPage").then(({ MyCardsPage: page }) => ({ default: page })));
 const OperatorPage = lazy(() => import("../pages/operator/OperatorPage").then(({ OperatorPage: page }) => ({ default: page })));
 const PrintCardsPage = lazy(() => import("../pages/print-cards/PrintCardsPage").then(({ PrintCardsPage: page }) => ({ default: page })));
+const PrintedWinnerValidationPage = lazy(() => import("../pages/printed-winner-validation/PrintedWinnerValidationPage").then(({ PrintedWinnerValidationPage: page }) => ({ default: page })));
 const RegistrationSharePage = lazy(() =>
 	import("../pages/registration-share/RegistrationSharePage").then(({ RegistrationSharePage: page }) => ({ default: page }))
 );
@@ -71,6 +72,7 @@ export function App() {
 						</ProtectedRoute>
 					}
 				/>
+				<Route path="/operacao/:eventId/:roundId/conferir-cartelas" element={<ProtectedRoute><PrintedWinnerValidationPage /></ProtectedRoute>} />
 				<Route path="/display/:publicCode" element={<DisplayPage />} />
 				<Route path="/auditoria/:publicCode" element={<AuditPage />} />
 				<Route path="*" element={<Navigate to="/" replace />} />

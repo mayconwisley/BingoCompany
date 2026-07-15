@@ -21,7 +21,7 @@ public sealed class EventsControllerStartRoundTests
 		db.Events.Add(bingoEvent);
 		db.Rounds.Add(round);
 		await db.SaveChangesAsync();
-		var controller = new EventsController(db, null!, null!, null!, null!);
+		var controller = new EventsController(db, null!, null!, null!, null!, null!, null!);
 
 		var response = await controller.StartRound(bingoEvent.Id, round.Id);
 
