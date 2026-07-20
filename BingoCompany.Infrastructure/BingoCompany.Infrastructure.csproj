@@ -4,7 +4,7 @@
     <ProjectReference Include="../BingoCompany.Domain/BingoCompany.Domain.csproj" />
     <ProjectReference Include="../BingoCompany.Application/BingoCompany.Application.csproj" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.9" />
