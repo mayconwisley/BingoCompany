@@ -141,8 +141,8 @@ public sealed partial class EventsController
 			var result = await printedWinnerValidationService.Validate(eventId, roundId, cardCode, HttpContext.RequestAborted);
 			if (result is null) return NotFound();
 			var notice = new { roundId, count = result.CandidatesCount, tieBreakerRequired = result.TieBreakerRequired };
-		await hub.Clients.Group($"round:{roundId}").SendAsync("WinningCardDetected", notice);
-		await hub.Clients.Group($"event:{eventId}").SendAsync("WinningCardDetected", notice);
+			await hub.Clients.Group($"round:{roundId}").SendAsync("WinningCardDetected", notice);
+			await hub.Clients.Group($"event:{eventId}").SendAsync("WinningCardDetected", notice);
 			return Ok(new { result.ParticipantName, result.CardCode, result.TieBreakerRequired });
 		}
 		catch (InvalidOperationException exception)
