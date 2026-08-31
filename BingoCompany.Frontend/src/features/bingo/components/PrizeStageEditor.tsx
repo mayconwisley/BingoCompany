@@ -45,29 +45,53 @@ export function PrizeStageEditor({ stages, onChange, disabled = false }: PrizeSt
 	};
 
 	return (
-		<div>
+		<div className="prize-stage-editor">
 			{stages.map((stage, index) => (
-				<div className="prize" key={`${stage.sequence}-${stage.pattern}`}>
-					<input
-						aria-label={`Prêmio ${index + 1}`}
-						disabled={disabled}
-						value={stage.prizeName}
-						onChange={(event) => update(index, { prizeName: event.target.value })}
-					/>
-					<select
-						aria-label={`Regra do prêmio ${index + 1}`}
-						disabled={disabled}
-						value={stage.pattern}
-						onChange={(event) => updatePattern(index, event.target.value)}
-					>
-						{patterns.map(([value, label]) => (
-							<option value={value} key={value} disabled={value !== stage.pattern && hasReachedPatternLimit(value)}>
-								{label}
-							</option>
-						))}
-					</select>
+				<section className="prize" key={`${stage.sequence}-${stage.pattern}`} aria-labelledby={`prize-stage-${index + 1}`}>
+					<header className="prize-header">
+						<div>
+							<span>Prêmio {index + 1}</span>
+							<strong id={`prize-stage-${index + 1}`}>{stage.prizeName || "Prêmio sem nome"}</strong>
+						</div>
+						{stages.length > 1 && (
+							<button
+								className="prize-remove-button"
+								type="button"
+								disabled={disabled}
+								onClick={() => onChange(orderPrizeStages(stages.filter((_, stageIndex) => stageIndex !== index)))}
+							>
+								Remover prêmio
+							</button>
+						)}
+					</header>
+					<div className="prize-fields">
+						<label>
+							<span>Nome do prêmio</span>
+							<input
+								aria-label={`Prêmio ${index + 1}`}
+								disabled={disabled}
+								value={stage.prizeName}
+								onChange={(event) => update(index, { prizeName: event.target.value })}
+							/>
+						</label>
+						<label>
+							<span>Regra para vencer</span>
+							<select
+								aria-label={`Regra do prêmio ${index + 1}`}
+								disabled={disabled}
+								value={stage.pattern}
+								onChange={(event) => updatePattern(index, event.target.value)}
+							>
+								{patterns.map(([value, label]) => (
+									<option value={value} key={value} disabled={value !== stage.pattern && hasReachedPatternLimit(value)}>
+										{label}
+									</option>
+								))}
+							</select>
+						</label>
+					</div>
 					<label className="prize-image-input">
-						Foto do prêmio
+						<span>Foto do prêmio</span>
 						<input
 							aria-label={`Foto do prêmio ${index + 1}`}
 							disabled={disabled}
@@ -84,18 +108,10 @@ export function PrizeStageEditor({ stages, onChange, disabled = false }: PrizeSt
 							</>
 						)}
 					</label>
-					{stages.length > 1 && (
-						<button
-							type="button"
-							disabled={disabled}
-							onClick={() => onChange(orderPrizeStages(stages.filter((_, stageIndex) => stageIndex !== index)))}
-						>
-							Remover prêmio
-						</button>
-					)}
-				</div>
+				</section>
 			))}
 			<button
+				className="prize-add-button"
 				type="button"
 				disabled={disabled || !nextPattern}
 				onClick={() =>

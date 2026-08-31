@@ -1,9 +1,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { bingoApi } from "../../features/bingo/api/bingoApi";
 import { AdminPage } from "./AdminPage";
 vi.mock("../../features/bingo/api/bingoApi", () => ({ bingoApi: { listEvents: vi.fn(), createEvent: vi.fn() } }));
+vi.mock("../../shared/ui/AppShell", () => ({ AppShell: ({ children }: { children: ReactNode }) => children }));
 describe("AdminPage", () => {
 	beforeEach(() =>
 		vi.mocked(bingoApi.listEvents).mockResolvedValue({
@@ -31,6 +33,7 @@ describe("AdminPage", () => {
 		);
 		expect(await screen.findByText("Festa 2026")).toBeInTheDocument();
 		expect(screen.getByText("ABC123")).toBeInTheDocument();
+		expect(screen.getByText("Automática")).toBeInTheDocument();
 		expect(screen.getByText(/Criado em/)).toBeInTheDocument();
 	});
 	it("solicita a próxima página de eventos", async () => {
@@ -69,7 +72,7 @@ describe("AdminPage", () => {
 		expect(displayLink).toHaveAttribute("target", "_blank");
 		expect(displayLink).toHaveAttribute("rel", "noopener noreferrer");
 	});
-	it("envia a quantidade configurada de cartelas digitais por participante", async () => {
+	it("envia o modo de marcação selecionado ao criar o evento", async () => {
 		vi.mocked(bingoApi.createEvent).mockResolvedValue({
 			id: "2",
 			name: "Festa 2026",
@@ -85,8 +88,9 @@ describe("AdminPage", () => {
 		);
 
 		fireEvent.change(screen.getByLabelText("Nome do evento"), { target: { value: "Festa" } });
+		fireEvent.change(screen.getByLabelText("Modo de marcação"), { target: { value: "AssistedManual" } });
 		fireEvent.click(screen.getByRole("button", { name: "Criar evento" }));
 
-		await waitFor(() => expect(bingoApi.createEvent).toHaveBeenCalledWith({ name: "Festa", markingMode: "Automatic" }));
+		await waitFor(() => expect(bingoApi.createEvent).toHaveBeenCalledWith({ name: "Festa", markingMode: "AssistedManual" }));
 	});
 });

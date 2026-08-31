@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { bingoApi, PrizeStageEditor, QrCardScanner, roundStatusLabel } from "../../features/bingo";
+import { bingoApi, eventStatusLabel, PrizeStageEditor, QrCardScanner, roundStatusLabel } from "../../features/bingo";
 import type { ParticipantType, PrizeDraft } from "../../features/bingo";
 import { useAsyncAction } from "../../shared/hooks/useAsyncAction";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
@@ -130,17 +130,41 @@ export function EventSetupPage() {
 		<AppShell>
 			<main className="event-setup">
 				<header className="pagehead event-setup-header">
-					<div>
-						<p className="eyebrow">Evento {code}</p>
-						<h1>{event.data?.name || "Preparação do bingo"}</h1>
-						<p className="subtitle">Gerencie a operação e compartilhe os acessos públicos do evento.</p>
+					<div className="event-setup-header-top">
+						<Link className="event-back-link" to="/admin">
+							<span aria-hidden="true">←</span> Todos os eventos
+						</Link>
+						{event.data && <span className="badge event-status-badge">{eventStatusLabel(event.data.status)}</span>}
+					</div>
+					<div className="event-setup-title">
+						<div>
+							<p className="eyebrow">Evento {code}</p>
+							<h1>{event.data?.name || "Preparação do bingo"}</h1>
+							<p className="subtitle">Prepare participantes, prêmios e cartelas antes de iniciar a operação.</p>
+						</div>
+						{event.data && (
+							<div className="event-setup-summary" aria-label="Resumo do evento">
+								<div>
+									<strong>{event.data.participants}</strong>
+									<span>participantes</span>
+								</div>
+								<div>
+									<strong>{event.data.cards}</strong>
+									<span>cartelas</span>
+								</div>
+								<div>
+									<strong>{event.data.rounds.length}</strong>
+									<span>rodadas</span>
+								</div>
+							</div>
+						)}
 					</div>
 				</header>
 				<PageState loading={event.loading} error={event.error} onRetry={event.reload} />
 				{event.data && (
 					<>
 						<section className="event-access panel" aria-labelledby="event-access-title">
-							<div>
+							<div className="event-section-intro">
 								<p className="eyebrow">Acessos do evento</p>
 								<h2 id="event-access-title">Canais públicos e operação</h2>
 								<p>Use estes atalhos para abrir ou compartilhar cada experiência do bingo.</p>
@@ -192,15 +216,15 @@ export function EventSetupPage() {
 								)}
 							</nav>
 						</section>
-						<div className="two">
+						<div className="two event-workspace">
 							<section className="panel participants-panel">
 								<div className="participants-panel-header">
 									<div>
 										<p className="eyebrow">Participantes</p>
 										<h2>Inscrições</h2>
 									</div>
-									<span className="participants-panel-icon" aria-hidden="true">
-										✦
+									<span className="setup-step" aria-hidden="true">
+										01
 									</span>
 								</div>
 								<p>
@@ -218,178 +242,206 @@ export function EventSetupPage() {
 										<strong>{event.data.cards}</strong>
 									</div>
 								</div>
-								<div className="actions participant-actions">
-									{!registrationsOpen ? (
-										<span className="button is-disabled" aria-disabled="true">
-											Abrir QR Code de inscrição
-										</span>
-									) : (
-										<>
-											<Link className="button" to={registrationSharePath} target="_blank" rel="noopener noreferrer">
-												Abrir QR Code de inscrição
-											</Link>
-											<button
-												type="button"
-												onClick={() => void copyPublicLink(registrationSharePath, "Link do QR Code")}
-											>
-												Copiar link do QR Code
-											</button>
-										</>
-									)}
-									{!registrationsOpen ? (
-										<span className="button is-disabled" aria-disabled="true">
-											Visualizar inscrição
-										</span>
-									) : (
-										<>
-											<Link className="button" to={registrationPath}>
-												Visualizar inscrição
-											</Link>
-											<button
-												type="button"
-												onClick={() => void copyPublicLink(registrationPath, "Link de inscrição")}
-											>
-												Copiar link de inscrição
-											</button>
-										</>
-									)}
-									{event.data.status === "Draft" && (
-										<>
-											<label>
-												Cartelas digitais por participante
-												<input
-													aria-label="Cartelas digitais por participante"
-													type="number"
-													min="1"
-													max="100"
-													value={registrationCardsQuantity}
-													onChange={(input) =>
-														setRegistrationCardsQuantity(
-															Math.min(100, Math.max(1, Number(input.target.value) || 1))
-														)
-													}
-												/>
-											</label>
-											<button
-												className="primary"
-												disabled={action.isPending}
-												onClick={async () => {
-													await action.execute(
-														() => bingoApi.openRegistration(eventId, registrationCardsQuantity),
-														"Inscrições públicas abertas."
-													);
-													await event.reload();
-												}}
-											>
-												Abrir inscrições públicas
-											</button>
-										</>
-									)}
-									{isPublicRegistrationOpen && (
-										<p role="status">
-											Inscrições públicas abertas. Cada participante receberá{" "}
-											{event.data.cardsPerParticipant ?? registrationCardsQuantity} cartela(s) ativa(s).
-										</p>
-									)}
-									{event.data.status === "Draft" && (
-										<>
-											<label>
-												Cartelas disponíveis para venda
-												<input
-													aria-label="Cartelas disponíveis para venda"
-													type="number"
-													min="1"
-													max="10000"
-													value={cardPurchaseQuantity}
-													onChange={(input) =>
-														setCardPurchaseQuantity(
-															Math.min(10000, Math.max(1, Number(input.target.value) || 1))
-														)
-													}
-												/>
-											</label>
-											<button
-												className="reveal"
-												disabled={
-													isFinished ||
-													isCardPurchaseOpen ||
-													(event.data.status !== "Draft" && event.data.status !== "RegistrationOpen") ||
-													action.isPending
-												}
-												onClick={async () => {
-													await action.execute(
-														() => bingoApi.openCardPurchase(eventId, cardPurchaseQuantity),
-														"Compra de cartelas aberta."
-													);
-													await event.reload();
-												}}
-											>
-												Abrir compra de cartelas
-											</button>
-										</>
-									)}
-									{isCardPurchaseOpen && (
-										<p role="status">{cardPurchaseRemaining ?? 0} cartela(s) ainda disponível(is) para venda.</p>
-									)}
-									{event.data.cardPurchaseCancellationReason && (
-										<p role="status">Venda cancelada: {event.data.cardPurchaseCancellationReason}</p>
-									)}
-									{isCardPurchaseOpen && (
-										<>
-											<label>
-												Limite de cartelas para venda
-												<input
-													aria-label="Limite de cartelas para venda"
-													type="number"
-													min="1"
-													max="10000"
-													value={cardPurchaseQuantity}
-													onChange={(input) =>
-														setCardPurchaseQuantity(
-															Math.min(10000, Math.max(1, Number(input.target.value) || 1))
-														)
-													}
-												/>
-											</label>
-											<button
-												disabled={isFinished || action.isPending || cardPurchaseQuantity === cardPurchaseLimit}
-												onClick={async () => {
-													await action.execute(
-														() => bingoApi.updateCardPurchase(eventId, cardPurchaseQuantity),
-														"Limite de venda atualizado."
-													);
-													await event.reload();
-												}}
-											>
-												Atualizar quantidade
-											</button>
-											<label>
-												Motivo do cancelamento
-												<input
-													aria-label="Motivo do cancelamento da venda"
-													value={cardPurchaseCancellationReason}
-													onChange={(input) => setCardPurchaseCancellationReason(input.target.value)}
-													placeholder="Ex.: alteração na programação do evento"
-												/>
-											</label>
-											<button
-												className="reveal"
-												disabled={
-													isFinished || action.isPending || cardPurchaseCancellationReason.trim().length < 3
-												}
-												onClick={async () => {
-													await action.execute(
-														() => bingoApi.cancelCardPurchase(eventId, cardPurchaseCancellationReason),
-														"Venda cancelada e cartelas invalidadas."
-													);
-													setCardPurchaseCancellationReason("");
-													await event.reload();
-												}}
-											>
-												Cancelar venda de cartelas
-											</button>
-										</>
-									)}
+								<div className="participant-actions">
+									<section className="participant-action-group" aria-labelledby="public-registration-title">
+										<div className="participant-action-heading">
+											<span aria-hidden="true">A</span>
+											<div>
+												<h3 id="public-registration-title">Inscrição pública</h3>
+												<p>Compartilhe o acesso e defina quantas cartelas cada pessoa receberá.</p>
+											</div>
+										</div>
+										<div className="participant-link-actions">
+											{!registrationsOpen ? (
+												<>
+													<span className="button is-disabled" aria-disabled="true">
+														Abrir QR Code de inscrição
+													</span>
+													<span className="button is-disabled" aria-disabled="true">
+														Visualizar inscrição
+													</span>
+												</>
+											) : (
+												<>
+													<Link
+														className="button"
+														to={registrationSharePath}
+														target="_blank"
+														rel="noopener noreferrer"
+													>
+														Abrir QR Code
+													</Link>
+													<button
+														type="button"
+														onClick={() => void copyPublicLink(registrationSharePath, "Link do QR Code")}
+													>
+														Copiar link do QR Code
+													</button>
+													<Link className="button" to={registrationPath}>
+														Visualizar inscrição
+													</Link>
+													<button
+														type="button"
+														onClick={() => void copyPublicLink(registrationPath, "Link de inscrição")}
+													>
+														Copiar link de inscrição
+													</button>
+												</>
+											)}
+										</div>
+										{event.data.status === "Draft" && (
+											<div className="participant-action-config">
+												<label>
+													<span>Cartelas por participante</span>
+													<input
+														aria-label="Cartelas digitais por participante"
+														type="number"
+														min="1"
+														max="100"
+														value={registrationCardsQuantity}
+														onChange={(input) =>
+															setRegistrationCardsQuantity(
+																Math.min(100, Math.max(1, Number(input.target.value) || 1))
+															)
+														}
+													/>
+												</label>
+												<button
+													className="primary"
+													disabled={action.isPending}
+													onClick={async () => {
+														await action.execute(
+															() => bingoApi.openRegistration(eventId, registrationCardsQuantity),
+															"Inscrições públicas abertas."
+														);
+														await event.reload();
+													}}
+												>
+													Abrir inscrições públicas
+												</button>
+											</div>
+										)}
+										{isPublicRegistrationOpen && (
+											<p className="participant-action-status" role="status">
+												Inscrições abertas · {event.data.cardsPerParticipant ?? registrationCardsQuantity}{" "}
+												cartela(s) por pessoa
+											</p>
+										)}
+									</section>
+
+									<section className="participant-action-group" aria-labelledby="card-purchase-title">
+										<div className="participant-action-heading">
+											<span aria-hidden="true">B</span>
+											<div>
+												<h3 id="card-purchase-title">Venda de cartelas</h3>
+												<p>Libere um lote digital com quantidade controlada para compra.</p>
+											</div>
+										</div>
+										{event.data.status === "Draft" && (
+											<div className="participant-action-config">
+												<label>
+													<span>Cartelas disponíveis</span>
+													<input
+														aria-label="Cartelas disponíveis para venda"
+														type="number"
+														min="1"
+														max="10000"
+														value={cardPurchaseQuantity}
+														onChange={(input) =>
+															setCardPurchaseQuantity(
+																Math.min(10000, Math.max(1, Number(input.target.value) || 1))
+															)
+														}
+													/>
+												</label>
+												<button
+													className="reveal"
+													disabled={isFinished || isCardPurchaseOpen || action.isPending}
+													onClick={async () => {
+														await action.execute(
+															() => bingoApi.openCardPurchase(eventId, cardPurchaseQuantity),
+															"Compra de cartelas aberta."
+														);
+														await event.reload();
+													}}
+												>
+													Abrir compra de cartelas
+												</button>
+											</div>
+										)}
+										{isCardPurchaseOpen && (
+											<>
+												<p className="participant-action-status" role="status">
+													{cardPurchaseRemaining ?? 0} cartela(s) disponível(is) para venda
+												</p>
+												<div className="participant-action-config">
+													<label>
+														<span>Novo limite</span>
+														<input
+															aria-label="Limite de cartelas para venda"
+															type="number"
+															min="1"
+															max="10000"
+															value={cardPurchaseQuantity}
+															onChange={(input) =>
+																setCardPurchaseQuantity(
+																	Math.min(10000, Math.max(1, Number(input.target.value) || 1))
+																)
+															}
+														/>
+													</label>
+													<button
+														disabled={
+															isFinished || action.isPending || cardPurchaseQuantity === cardPurchaseLimit
+														}
+														onClick={async () => {
+															await action.execute(
+																() => bingoApi.updateCardPurchase(eventId, cardPurchaseQuantity),
+																"Limite de venda atualizado."
+															);
+															await event.reload();
+														}}
+													>
+														Atualizar quantidade
+													</button>
+												</div>
+												<div className="participant-action-config participant-action-cancel">
+													<label>
+														<span>Motivo do cancelamento</span>
+														<input
+															aria-label="Motivo do cancelamento da venda"
+															value={cardPurchaseCancellationReason}
+															onChange={(input) => setCardPurchaseCancellationReason(input.target.value)}
+															placeholder="Ex.: alteração na programação"
+														/>
+													</label>
+													<button
+														className="reveal"
+														disabled={
+															isFinished ||
+															action.isPending ||
+															cardPurchaseCancellationReason.trim().length < 3
+														}
+														onClick={async () => {
+															await action.execute(
+																() => bingoApi.cancelCardPurchase(eventId, cardPurchaseCancellationReason),
+																"Venda cancelada e cartelas invalidadas."
+															);
+															setCardPurchaseCancellationReason("");
+															await event.reload();
+														}}
+													>
+														Cancelar venda de cartelas
+													</button>
+												</div>
+											</>
+										)}
+										{event.data.cardPurchaseCancellationReason && (
+											<p className="participant-action-status is-cancelled" role="status">
+												Venda cancelada: {event.data.cardPurchaseCancellationReason}
+											</p>
+										)}
+									</section>
 								</div>
 								{isFinished && (
 									<div className="awarded-cards" aria-labelledby="awarded-cards-title">
@@ -418,10 +470,21 @@ export function EventSetupPage() {
 								)}
 							</section>
 							<section className="panel round-setup-panel">
-								<p className="eyebrow">Configuração da rodada</p>
-								<h2>
-									{editingRoundId ? "Editar rodada" : hasFinishedRound ? "Preparar próximo sorteio" : "Prêmios e regras"}
-								</h2>
+								<div className="round-setup-header">
+									<div>
+										<p className="eyebrow">Configuração da rodada</p>
+										<h2>
+											{editingRoundId
+												? "Editar rodada"
+												: hasFinishedRound
+													? "Preparar próximo sorteio"
+													: "Prêmios e regras"}
+										</h2>
+									</div>
+									<span className="setup-step" aria-hidden="true">
+										02
+									</span>
+								</div>
 								{hasFinishedRound && !editingRoundId && (
 									<p>
 										As cartelas digitais e impressas ativas serão reaproveitadas automaticamente. Antes de iniciar,
@@ -429,8 +492,8 @@ export function EventSetupPage() {
 										necessário.
 									</p>
 								)}
-								<label>
-									Nome da rodada
+								<label className="round-name-field">
+									<span>Nome da rodada</span>
 									<input
 										aria-label="Nome da rodada"
 										disabled={isFinished}
@@ -439,7 +502,7 @@ export function EventSetupPage() {
 									/>
 								</label>
 								<PrizeStageEditor stages={stages} onChange={setStages} disabled={isFinished} />
-								<div className="actions">
+								<div className="actions round-form-actions">
 									<button className="primary" disabled={isFinished || action.isPending} onClick={saveRound}>
 										{action.isPending
 											? "Salvando..."
@@ -456,44 +519,51 @@ export function EventSetupPage() {
 							</section>
 						</div>
 						<section className="panel printed-cards-panel">
-							<p className="eyebrow">Cartelas físicas</p>
-							<h2>Cartelas impressas</h2>
-							<div className="actions">
-								{isFinished ? (
-									<span className="button is-disabled" aria-disabled="true">
-										Abrir para impressão
-									</span>
-								) : (
-									<Link className="button" to={printCardsPath}>
-										Abrir para impressão
-									</Link>
-								)}
+							<div className="panel-section-header">
+								<div>
+									<p className="eyebrow">Cartelas físicas</p>
+									<h2>Cartelas impressas</h2>
+									<p>Gere lotes para impressão e associe cada cartela ao participante responsável.</p>
+								</div>
+								<div className="actions">
+									{isFinished ? (
+										<span className="button is-disabled" aria-disabled="true">
+											Abrir para impressão
+										</span>
+									) : (
+										<Link className="button" to={printCardsPath}>
+											Abrir para impressão
+										</Link>
+									)}
+								</div>
 							</div>
-							<label>
-								Quantidade
-								<input
-									aria-label="Quantidade de cartelas impressas"
-									disabled={isFinished}
-									type="number"
-									min="1"
-									max="1000"
-									value={printedQuantity}
-									onChange={(input) => setPrintedQuantity(Number(input.target.value))}
-								/>
-							</label>
-							<button
-								className="primary"
-								disabled={isFinished || action.isPending}
-								onClick={async () => {
-									const cards = await action.execute(
-										() => bingoApi.generatePrintedCards(eventId, printedQuantity),
-										"Cartelas impressas geradas."
-									);
-									if (cards) await event.reload();
-								}}
-							>
-								Gerar lote para impressão
-							</button>
+							<div className="printed-card-generator">
+								<label>
+									<span>Quantidade</span>
+									<input
+										aria-label="Quantidade de cartelas impressas"
+										disabled={isFinished}
+										type="number"
+										min="1"
+										max="1000"
+										value={printedQuantity}
+										onChange={(input) => setPrintedQuantity(Number(input.target.value))}
+									/>
+								</label>
+								<button
+									className="primary"
+									disabled={isFinished || action.isPending}
+									onClick={async () => {
+										const cards = await action.execute(
+											() => bingoApi.generatePrintedCards(eventId, printedQuantity),
+											"Cartelas impressas geradas."
+										);
+										if (cards) await event.reload();
+									}}
+								>
+									Gerar lote para impressão
+								</button>
+							</div>
 							{printedCards.length > 0 && (
 								<>
 									<h3>Registrar e ativar cartela</h3>
@@ -596,8 +666,13 @@ export function EventSetupPage() {
 						</section>
 						{event.data.rounds.length > 0 && (
 							<section className="panel event-rounds-panel">
-								<p className="eyebrow">Operação</p>
-								<h2>Rodadas criadas</h2>
+								<div className="panel-section-header">
+									<div>
+										<p className="eyebrow">Operação</p>
+										<h2>Rodadas criadas</h2>
+										<p>Acompanhe o estado de cada rodada e retome a operação quando necessário.</p>
+									</div>
+								</div>
 								<div className="round-list">
 									{orderedRounds.map((round) => (
 										<article key={round.id}>

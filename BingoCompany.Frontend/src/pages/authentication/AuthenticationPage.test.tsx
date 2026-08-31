@@ -14,6 +14,18 @@ vi.mock("../../shared/auth/session", () => ({
 vi.mock("../../shared/ui/AppShell", () => ({ AppShell: ({ children }: { children: ReactNode }) => children }));
 
 describe("AuthenticationPage", () => {
+	it("renderiza os campos em um formulário com submissão semântica", () => {
+		const { container } = render(
+			<MemoryRouter>
+				<AuthenticationPage mode="login" />
+			</MemoryRouter>
+		);
+
+		expect(container.querySelector("form.authentication-form")).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "Entrar" })).toHaveAttribute("type", "submit");
+		expect(screen.getByRole("button", { name: "Mostrar senha" }).querySelector("svg")).toBeInTheDocument();
+	});
+
 	it("informa os requisitos de senha durante o cadastro", () => {
 		render(
 			<MemoryRouter>

@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { bingoApi } from "../../features/bingo/api/bingoApi";
@@ -6,6 +7,7 @@ import type { EventDetails } from "../../features/bingo/model/types";
 import { EventSetupPage } from "./EventSetupPage";
 
 vi.mock("../../features/bingo/api/bingoApi", () => ({ bingoApi: { getEvent: vi.fn() } }));
+vi.mock("../../shared/ui/AppShell", () => ({ AppShell: ({ children }: { children: ReactNode }) => children }));
 
 const finishedEvent: EventDetails = {
 	id: "event-1",
@@ -42,6 +44,7 @@ describe("EventSetupPage", () => {
 
 		const auditLink = await screen.findByRole("link", { name: /auditoria/i });
 
+		expect(screen.getByLabelText("Resumo do evento")).toBeInTheDocument();
 		expect(auditLink).toHaveAttribute("href", "/auditoria/EVENTO1");
 		expect(screen.getByText("Inscrição").closest("[aria-disabled]")).toHaveAttribute("aria-disabled", "true");
 		expect(screen.getByText("Telão").closest("[aria-disabled]")).toHaveAttribute("aria-disabled", "true");

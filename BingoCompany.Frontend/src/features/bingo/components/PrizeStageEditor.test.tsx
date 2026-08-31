@@ -40,6 +40,7 @@ describe("PrizeStageEditor", () => {
 	it("oferece um campo para selecionar a foto do prêmio", () => {
 		render(<PrizeStageEditor stages={[{ sequence: 1, prizeName: "TV", pattern: "FullCard" }]} onChange={vi.fn()} />);
 
+		expect(screen.getByRole("region", { name: "TV" })).toBeInTheDocument();
 		expect(screen.getByLabelText("Foto do prêmio 1")).toHaveAttribute("accept", "image/jpeg,image/png,image/webp");
 	});
 
