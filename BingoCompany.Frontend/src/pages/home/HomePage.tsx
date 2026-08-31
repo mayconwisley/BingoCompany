@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button, Paper, Stack, TextField } from "@mui/material";
 import { useSession } from "../../shared/auth/SessionContext";
 import { AppShell } from "../../shared/ui/AppShell";
 
@@ -33,55 +34,52 @@ export function HomePage() {
 				<p>Cartelas digitais, sorteio auditável e uma experiência de telão feita para criar suspense.</p>
 				<div className="actions">
 					{session ? (
-						<button
-							className="primary"
+						<Button
+							variant="contained"
+							size="large"
 							onClick={() => navigate(session.accountType === "participant" ? "/minhas-cartelas" : "/admin")}
 						>
 							{session.accountType === "participant" ? "Minhas cartelas" : "Acessar administração"}
-						</button>
+						</Button>
 					) : (
 						<>
-							<button className="primary" onClick={() => navigate("/cadastro")}>
+							<Button variant="contained" size="large" onClick={() => navigate("/cadastro")}>
 								Cadastrar empresa
-							</button>
-							<button onClick={() => navigate("/entrar")}>Entrar</button>
+							</Button>
+							<Button variant="outlined" size="large" onClick={() => navigate("/entrar")}>Entrar</Button>
 						</>
 					)}
-					<button onClick={() => setPublicAccessIntent("join")}>Participar</button>
-					<button onClick={() => setPublicAccessIntent("audit")}>Auditoria pública</button>
+					<Button variant="text" onClick={() => setPublicAccessIntent("join")}>Participar</Button>
+					<Button variant="text" onClick={() => setPublicAccessIntent("audit")}>Auditoria pública</Button>
 				</div>
 				{publicAccessIntent && (
-					<form className="panel" onSubmit={submitEventCode}>
+					<Paper component="form" className="panel" elevation={0} onSubmit={submitEventCode}>
 						<h2>{publicAccessIntent === "join" ? "Participar do bingo" : "Consultar auditoria pública"}</h2>
 						<p>
 							{publicAccessIntent === "join"
 								? "Informe o código compartilhado pela organização para abrir sua inscrição."
 								: "Informe o código do evento para conferir os resultados e registros públicos."}
 						</p>
-						<label>
-							Código do evento
-							<input
-								aria-label="Código do evento"
-								autoFocus
-								value={eventCode}
-								onChange={(event) => setEventCode(event.target.value)}
-								placeholder="Ex.: AB12CD"
-							/>
-						</label>
-						<div className="actions">
-							<button
-								className="primary"
+						<TextField
+							fullWidth
+							label="Código do evento"
+							autoFocus
+							value={eventCode}
+							onChange={(event) => setEventCode(event.target.value)}
+							placeholder="Ex.: AB12CD"
+						/>
+						<Stack className="actions" direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+							<Button
+								variant="contained"
 								type={publicAccessIntent === "join" ? "submit" : "button"}
 								disabled={!eventCode.trim()}
 								onClick={publicAccessIntent === "audit" ? openAudit : undefined}
 							>
 								{publicAccessIntent === "join" ? "Acessar bingo" : "Consultar auditoria"}
-							</button>
-							<button type="button" onClick={() => setPublicAccessIntent(undefined)}>
-								Cancelar
-							</button>
-						</div>
-					</form>
+							</Button>
+							<Button type="button" variant="outlined" onClick={() => setPublicAccessIntent(undefined)}>Cancelar</Button>
+						</Stack>
+					</Paper>
 				)}
 			</main>
 		</AppShell>

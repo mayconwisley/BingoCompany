@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 
 type Props = {
 	title: string;
@@ -26,19 +27,17 @@ export function ConfirmationDialog({ title, description, confirmLabel, isConfirm
 	}, [onCancel]);
 
 	return (
-		<div className="confirmation-backdrop" role="presentation">
-			<section className="confirmation-dialog" role="dialog" aria-modal="true" aria-labelledby="confirmation-dialog-title">
-				<h2 id="confirmation-dialog-title">{title}</h2>
-				<p>{description}</p>
-				<div className="actions">
-					<button type="button" onClick={onCancel} disabled={isConfirming}>
-						Voltar
-					</button>
-					<button ref={confirmButton} type="button" className="danger" onClick={onConfirm} disabled={isConfirming}>
-						{isConfirming ? "Confirmando..." : confirmLabel}
-					</button>
-				</div>
-			</section>
-		</div>
+		<Dialog open onClose={isConfirming ? undefined : onCancel} aria-labelledby="confirmation-dialog-title">
+			<DialogTitle id="confirmation-dialog-title">{title}</DialogTitle>
+			<DialogContent>
+				<DialogContentText>{description}</DialogContentText>
+			</DialogContent>
+			<DialogActions sx={{ px: 3, pb: 2.5 }}>
+				<Button onClick={onCancel} disabled={isConfirming}>Voltar</Button>
+				<Button ref={confirmButton} variant="contained" color="error" onClick={onConfirm} disabled={isConfirming}>
+					{isConfirming ? "Confirmando..." : confirmLabel}
+				</Button>
+			</DialogActions>
+		</Dialog>
 	);
 }

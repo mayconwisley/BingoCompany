@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Box, Button, IconButton, InputAdornment, TextField } from "@mui/material";
 import { authApi } from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
 import { saveSession } from "../../shared/auth/session";
@@ -52,44 +53,26 @@ export function AuthenticationPage({ mode }: Props) {
 				<section className="panel">
 					{isRegistering && (
 						<>
-							<label>
-								Empresa
-								<input aria-label="Empresa" value={companyName} onChange={(event) => setCompanyName(event.target.value)} />
-							</label>
-							<label>
-								Seu nome
-								<input aria-label="Seu nome" value={name} onChange={(event) => setName(event.target.value)} />
-							</label>
+							<TextField fullWidth label="Empresa" value={companyName} onChange={(event) => setCompanyName(event.target.value)} />
+							<TextField fullWidth label="Seu nome" value={name} onChange={(event) => setName(event.target.value)} />
 						</>
 					)}
-					<label>
-						E-mail
-						<input aria-label="E-mail" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-					</label>
-					<label>
-						Senha
-						<span className="password-field">
-							<input
-								aria-label="Senha"
-								type={isPasswordVisible ? "text" : "password"}
-								minLength={12}
-								maxLength={128}
-								value={password}
-								onChange={(event) => setPassword(event.target.value)}
-							/>
-							<button
-								aria-label={isPasswordVisible ? "Ocultar senha" : "Mostrar senha"}
-								className="password-visibility-toggle"
-								onClick={() => setIsPasswordVisible((isVisible) => !isVisible)}
-								type="button"
-							>
-								👁
-							</button>
-						</span>
-						{isRegistering && <small>A senha deve ter entre 12 e 128 caracteres.</small>}
-					</label>
-					<button
-						className="primary"
+					<TextField fullWidth label="E-mail" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+					<TextField
+						fullWidth
+						label="Senha"
+						type={isPasswordVisible ? "text" : "password"}
+						helperText={isRegistering ? "A senha deve ter entre 12 e 128 caracteres." : undefined}
+						slotProps={{
+							input: { endAdornment: <InputAdornment position="end"><IconButton aria-label={isPasswordVisible ? "Ocultar senha" : "Mostrar senha"} onClick={() => setIsPasswordVisible((isVisible) => !isVisible)} edge="end">{isPasswordVisible ? "◉" : "◌"}</IconButton></InputAdornment> },
+							htmlInput: { minLength: 12, maxLength: 128 }
+						}}
+						value={password}
+						onChange={(event) => setPassword(event.target.value)}
+					/>
+					<Button
+						variant="contained"
+						size="large"
 						disabled={
 							isSubmitting ||
 							!email.trim() ||
@@ -100,12 +83,12 @@ export function AuthenticationPage({ mode }: Props) {
 						onClick={submit}
 					>
 						{isSubmitting ? "Aguarde..." : isRegistering ? "Cadastrar empresa" : "Entrar"}
-					</button>
+					</Button>
 					<FeedbackMessage error={error} onClose={() => setError("")} />
-					<p>
+					<Box component="p" sx={{ mb: 0 }}>
 						{isRegistering ? "Já possui uma conta?" : "Ainda não possui uma empresa cadastrada?"}{" "}
 						<Link to={isRegistering ? "/entrar" : "/cadastro"}>{isRegistering ? "Entrar" : "Cadastre-se"}</Link>
-					</p>
+					</Box>
 				</section>
 			</main>
 		</AppShell>
