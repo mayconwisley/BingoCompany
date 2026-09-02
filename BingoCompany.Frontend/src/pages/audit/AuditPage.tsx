@@ -144,11 +144,14 @@ export function AuditPage() {
 							<h2 id="audit-timeline-title">Linha do tempo</h2>
 						</div>
 						<p>
-							{entries.totalItems} registros{selectedRound ? ` da Rodada ${selectedRound.sequence}` : ""} · exibindo {entries.items.length} nesta página
+							{entries.totalItems} registros{selectedRound ? ` da Rodada ${selectedRound.sequence}` : ""} · exibindo{" "}
+							{entries.items.length} nesta página
 						</p>
 					</div>
 					{entries.items.length === 0 ? (
-						<p className="audit-empty">Nenhuma ação foi registrada {selectedRound ? "para esta rodada" : "para este evento"}.</p>
+						<p className="audit-empty">
+							Nenhuma ação foi registrada {selectedRound ? "para esta rodada" : "para este evento"}.
+						</p>
 					) : (
 						<ol>
 							{entries.items.map((entry) => (
