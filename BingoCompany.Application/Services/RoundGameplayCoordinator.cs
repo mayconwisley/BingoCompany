@@ -17,11 +17,12 @@ public sealed class RoundGameplayCoordinator(IRoundGameplayRepository repository
 		var cards = bingoEvent.MarkingMode == CardMarkingMode.Automatic ? eligibleCards : eligibleCards.Where(card => card.Type == CardType.Digital).ToArray();
 		var marks = bingoEvent.MarkingMode == CardMarkingMode.Automatic ? [] : await repository.GetMarks(roundId, cancellationToken);
 		var drawResult = gameplayService.Draw(round, cards, marks, bingoEvent.MarkingMode, await repository.GetExcludedCardIds(roundId, round.ActiveStage.Id, cancellationToken));
+		var statistics = CalculateStatistics(round, eligibleCards, marks, bingoEvent.MarkingMode);
 		repository.AddDrawnNumber(drawResult.DrawnNumber); repository.AddWinners(drawResult.Winners);
 		repository.AddAuditEntry(new AuditEntry(eventId, "Pedra sorteada", $"Rodada {round.Name}: pedra {drawResult.DrawnNumber.Number} na posição {drawResult.DrawnNumber.Sequence}.", round.Id));
 		if (drawResult.HasWinners) repository.AddAuditEntry(new AuditEntry(eventId, "Prêmio detectado", $"{drawResult.Winners.Count} cartela(s) atingiram {round.ActiveStage.PrizeName}.", round.Id));
-		await repository.SaveChanges(cancellationToken);
-		return new RoundDrawOperationResult(roundId, drawResult.DrawnNumber.Number, drawResult.DrawnNumber.Sequence, drawResult.Winners.Count, drawResult.RequiresTieBreaker);
+		if (!await repository.TrySaveChanges(cancellationToken)) throw new RoundConcurrencyException();
+		return new RoundDrawOperationResult(roundId, drawResult.DrawnNumber.Number, drawResult.DrawnNumber.Sequence, drawResult.Winners.Count, drawResult.RequiresTieBreaker, statistics);
 	}
 
 	public async Task<WinnerRevealOperationResult> Reveal(Guid eventId, Guid roundId, CancellationToken cancellationToken)
@@ -66,4 +67,16 @@ public sealed class RoundGameplayCoordinator(IRoundGameplayRepository repository
 	}
 
 	private static PrizeStageOperationResult CreateStageResult(BingoRound round) => new(round.Id, round.Stages.SingleOrDefault(stage => stage.IsActive)?.PrizeName, round.Status);
+
+	private static BingoRoundStatistics CalculateStatistics(BingoRound round, IReadOnlyCollection<BingoCard> cards, IReadOnlyCollection<CardMark> marks, CardMarkingMode markingMode)
+	{
+		var marksByCard = marks
+			.GroupBy(mark => mark.CardId)
+			.ToDictionary(group => group.Key, group => (IReadOnlySet<int>)group.Select(mark => mark.Number).ToHashSet());
+		var drawnNumbers = round.DrawnNumbers.Select(drawn => drawn.Number).ToHashSet();
+		return BingoRoundStatisticsCalculator.Calculate(
+			cards,
+			card => markingMode == CardMarkingMode.Automatic ? drawnNumbers : marksByCard.GetValueOrDefault(card.Id, new HashSet<int>()),
+			round.ActiveStage.Pattern);
+	}
 }

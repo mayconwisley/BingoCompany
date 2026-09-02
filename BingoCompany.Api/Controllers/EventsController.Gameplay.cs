@@ -1,5 +1,6 @@
 using BingoCompany.Api.Hubs;
 using BingoCompany.Application.Interfaces;
+using BingoCompany.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
@@ -14,7 +15,21 @@ public sealed partial class EventsController
 		{
 			var result = await Gameplay.Draw(eventId, roundId, cancellationToken);
 			if (result is null) return NotFound();
-			var message = new { roundId, number = result.Number, sequence = result.Sequence, winnersDetected = result.WinnersDetected };
+			var message = new
+			{
+				roundId,
+				number = result.Number,
+				sequence = result.Sequence,
+				winnersDetected = result.WinnersDetected,
+				statistics = new
+				{
+					totalCards = result.Statistics.TotalCards,
+					oneNumberAway = result.Statistics.OneNumberAway,
+					twoNumbersAway = result.Statistics.TwoNumbersAway,
+					threeNumbersAway = result.Statistics.ThreeNumbersAway,
+					awardedCards = result.Statistics.AwardedCards
+				}
+			};
 			await Broadcast("NumberDrawn", roundId, eventId, message, cancellationToken);
 			if (result.WinnersDetected > 0)
 			{
@@ -26,6 +41,7 @@ public sealed partial class EventsController
 			return Ok(message);
 		}
 		catch (InvalidOperationException exception) { return Conflict($"{exception.Message} Cancele a rodada para encerrar o sorteio sem vencedor."); }
+		catch (RoundConcurrencyException exception) { return Conflict(exception.Message); }
 	}
 
 	[HttpPost("{eventId:guid}/rounds/{roundId:guid}/reveal")]

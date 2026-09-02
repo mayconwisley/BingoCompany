@@ -30,6 +30,7 @@ vi.mock("../../features/bingo/components/QrCardScanner", () => ({
 describe("OperatorPage", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.mocked(bingoApi.draw).mockResolvedValue({ roundId: "round-1", number: 10, sequence: 1, winnersDetected: 0 });
 		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
 			id: "event-1",
 			name: "Festa",
@@ -64,6 +65,24 @@ describe("OperatorPage", () => {
 
 		expect(bingoApi.draw).toHaveBeenCalledWith("event-1", "round-1");
 		expect(bingoApi.startRound).not.toHaveBeenCalled();
+	});
+
+	it("impede um segundo sorteio enquanto o primeiro aguarda confirmação", async () => {
+		vi.mocked(bingoApi.draw).mockImplementation(() => new Promise(() => {}));
+		render(
+			<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}>
+				<Routes>
+					<Route path="/operacao/:eventId/:roundId" element={<OperatorPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		const drawButton = await screen.findByRole("button", { name: "SORTEAR PRÓXIMA PEDRA" });
+		fireEvent.click(drawButton);
+		fireEvent.click(drawButton);
+
+		expect(bingoApi.draw).toHaveBeenCalledTimes(1);
+		expect(drawButton).toBeDisabled();
 	});
 
 	it("bloqueia o início e informa a pendência quando existem cartelas, mas nenhuma é elegível", async () => {

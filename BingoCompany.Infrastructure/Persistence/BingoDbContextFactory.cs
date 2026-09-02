@@ -15,7 +15,10 @@ public sealed class BingoDbContextFactory : IDesignTimeDbContextFactory<BingoDbC
 			.Build();
 		var options = new DbContextOptionsBuilder<BingoDbContext>();
 
-		PostgresDatabaseBootstrapper.EnsureDatabaseExists(configuration);
+		if (DatabaseBootstrapConfiguration.ShouldEnsureDatabaseExists(configuration))
+		{
+			PostgresDatabaseBootstrapper.EnsureDatabaseExists(configuration);
+		}
 		PostgresConfiguration.Configure(options, PostgresConfiguration.CreateConnectionString(configuration));
 
 		return new BingoDbContext(options.Options);

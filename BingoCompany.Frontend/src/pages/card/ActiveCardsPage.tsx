@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import {
 	BingoCardGrid,
@@ -14,6 +14,7 @@ import { AppShell } from "../../shared/ui/AppShell";
 import { ConnectionBadge } from "../../shared/ui/ConnectionBadge";
 import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";
 import { PageState } from "../../shared/ui/PageState";
+import { getErrorMessage } from "../../shared/api/getErrorMessage";
 
 export function ActiveCardsPage() {
 	const { eventId = "" } = useParams();
@@ -29,6 +30,8 @@ export function ActiveCardsPage() {
 	const cards = useAsyncResource(loader);
 	const primaryCard = cards.data?.[0];
 	const connection = useLiveBingo(eventId, primaryCard?.roundId, cards.reload);
+	const [markingCardCode, setMarkingCardCode] = useState("");
+	const [markError, setMarkError] = useState("");
 
 	if (!cards.data || !primaryCard)
 		return (
@@ -40,6 +43,20 @@ export function ActiveCardsPage() {
 	const manual = primaryCard.markingMode !== "Automatic";
 	const isMandatoryManual = primaryCard.markingMode === "ManualRequired";
 	const isEventFinished = primaryCard.eventStatus === "Finished";
+	const markNumber = async (cardCode: string, number: number) => {
+		if (markingCardCode) return;
+
+		setMarkingCardCode(cardCode);
+		setMarkError("");
+		try {
+			await bingoApi.mark(eventId, cardCode, number);
+			await cards.reload();
+		} catch (error) {
+			setMarkError(getErrorMessage(error, "Não foi possível confirmar a marcação. Tente novamente."));
+		} finally {
+			setMarkingCardCode("");
+		}
+	};
 	return (
 		<AppShell showAdministration={false}>
 			<main className="cardpage active-cardspage">
@@ -84,11 +101,14 @@ export function ActiveCardsPage() {
 									manual={manual}
 									markableNumbers={isMandatoryManual && currentNumber ? [currentNumber] : undefined}
 									isWinner={card.isWinner}
-									onMark={async (number) => {
-										await bingoApi.mark(eventId, card.publicCode, number);
-										await cards.reload();
-									}}
+									disabled={Boolean(markingCardCode)}
+									onMark={(number) => void markNumber(card.publicCode, number)}
 								/>
+								{markingCardCode === card.publicCode && (
+									<p className="action-hint" role="status">
+										Confirmando marcação...
+									</p>
+								)}
 								{card.isWinner && (
 									<p className="winner-card-message" role="status">
 										🎉 Parabéns! Esta é a cartela vencedora.
@@ -113,6 +133,7 @@ export function ActiveCardsPage() {
 						))}
 					</div>
 				</section>
+				<FeedbackMessage error={markError} onClose={() => setMarkError("")} />
 			</main>
 		</AppShell>
 	);

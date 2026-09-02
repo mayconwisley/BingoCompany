@@ -20,6 +20,13 @@ type PrintedCard = {
 	qrCodeValue: string;
 };
 
+export type DrawResult = {
+	roundId: string;
+	number: number;
+	sequence: number;
+	winnersDetected: number;
+};
+
 export const bingoApi = {
 	listEvents: (page = 1, pageSize = 12) => http<EventPage>(`/api/events?page=${page}&pageSize=${pageSize}`),
 	getEvent: (eventId: string) => http<EventDetails>(`/api/events/${eventId}`),
@@ -40,7 +47,7 @@ export const bingoApi = {
 		http<void>(`/api/events/${eventId}/rounds/${roundId}`, { method: "PUT", body: JSON.stringify({ name, stages }) }),
 	startRound: (eventId: string, roundId: string) => http<void>(`/api/events/${eventId}/rounds/${roundId}/start`, { method: "POST" }),
 	cancelRound: (eventId: string, roundId: string) => http<void>(`/api/events/${eventId}/rounds/${roundId}/cancel`, { method: "POST" }),
-	draw: (eventId: string, roundId: string) => http<void>(`/api/events/${eventId}/rounds/${roundId}/draw`, { method: "POST" }),
+	draw: (eventId: string, roundId: string) => http<DrawResult>(`/api/events/${eventId}/rounds/${roundId}/draw`, { method: "POST" }),
 	reveal: (eventId: string, roundId: string) => http<void>(`/api/events/${eventId}/rounds/${roundId}/reveal`, { method: "POST" }),
 	markPrizeDelivered: (eventId: string, roundId: string) =>
 		http<void>(`/api/events/${eventId}/rounds/${roundId}/prize-delivered`, { method: "POST" }),

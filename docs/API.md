@@ -27,7 +27,8 @@ As rotas em `/api/events` exigem a sessão e são limitadas à empresa do usuár
 
 | Método e rota | Descrição |
 | --- | --- |
-| `GET /healthz` | Saúde da aplicação. |
+| `GET /healthz` | Liveness da aplicação; não consulta dependências externas. |
+| `GET /readyz` | Readiness para tráfego; valida a conexão com o PostgreSQL. |
 | `GET /api/application/info` | Nome, descrição e versão da aplicação. |
 | `GET /api/public/events/{code}` | Estado público do evento, rodada selecionada, pedras, etapas, estatísticas agregadas e vencedor já revelado. Em desempate revelado, inclui todos os participantes, suas pedras e a indicação do vencedor. |
 | `POST /api/public/events/{code}/join` | Inscreve um participante e gera cartela digital. Limite: 20 requisições/minuto por IP. |
@@ -139,7 +140,7 @@ Conecte-se a `/hubs/bingo`. Depois de iniciar a conexão, invoque `JoinEvent(eve
 | Evento | Conteúdo principal |
 | --- | --- |
 | `RoundStarted` | `roundId`, `sequenceHash` |
-| `NumberDrawn` | `roundId`, `number`, `sequence`, `winnersDetected` |
+| `NumberDrawn` | `roundId`, `number`, `sequence`, `winnersDetected` e estatísticas agregadas da rodada (`totalCards`, cartelas a 1, 2 e 3 pedras e cartelas premiadas). |
 | `WinningCardDetected` | `roundId`, `count`, e `tieBreakerRequired` quando aplicável |
 | `WinnerRevealed` | Nome, código da cartela, prêmio e dados de desempate |
 | `WinnerPresentationClosed` | `roundId` |

@@ -23,6 +23,7 @@ public sealed class BingoRound
 	public DateTimeOffset CreatedAt { get; private set; }
 	public string? SequenceHash { get; private set; }
 	public int[]? DrawSequence { get; private set; }
+	public int Version { get; private set; }
 	public IReadOnlyCollection<PrizeStage> Stages => _stages;
 	public IReadOnlyCollection<DrawnNumber> DrawnNumbers => _drawnNumbers;
 	public IReadOnlyCollection<RoundEligibleCard> EligibleCards => _eligibleCards;
@@ -73,6 +74,7 @@ public sealed class BingoRound
 
 		var drawn = new DrawnNumber(Id, next, _drawnNumbers.Count + 1);
 		_drawnNumbers.Add(drawn);
+		Version++;
 		return drawn;
 	}
 	public PrizeStage ActiveStage => _stages.Single(x => x.IsActive);

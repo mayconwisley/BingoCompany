@@ -1,16 +1,46 @@
 import { HubConnectionBuilder } from "@microsoft/signalr";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { API_URL } from "../../../shared/api/httpClient";
 
-export function useLiveBingo(eventId?: string, roundId?: string, onChange?: () => void) {
+type NumberDrawnEvent = {
+	roundId: string;
+	number: number;
+	sequence: number;
+	winnersDetected: number;
+	statistics: {
+		totalCards: number;
+		oneNumberAway: number;
+		twoNumbersAway: number;
+		threeNumbersAway: number;
+		awardedCards: number;
+	};
+};
+
+type LiveBingoOptions = {
+	onNumberDrawn?: (event: NumberDrawnEvent) => void;
+};
+
+export function useLiveBingo(eventId?: string, _roundId?: string, onChange?: () => void, options?: LiveBingoOptions) {
 	const [state, setState] = useState("Conectando");
+	const optionsReference = useRef(options);
+
+	useEffect(() => {
+		optionsReference.current = options;
+	}, [options]);
 
 	useEffect(() => {
 		if (!eventId) return;
 
 		const connection = new HubConnectionBuilder().withUrl(`${API_URL}/hubs/bingo`).withAutomaticReconnect().build();
+		connection.on("NumberDrawn", (event: NumberDrawnEvent) => {
+			if (optionsReference.current?.onNumberDrawn) {
+				optionsReference.current.onNumberDrawn(event);
+				return;
+			}
+
+			onChange?.();
+		});
 		[
-			"NumberDrawn",
 			"WinnerDetected",
 			"WinningCardDetected",
 			"TieBreakerStarted",
@@ -30,7 +60,6 @@ export function useLiveBingo(eventId?: string, roundId?: string, onChange?: () =
 			.start()
 			.then(async () => {
 				await connection.invoke("JoinEvent", eventId);
-				if (roundId) await connection.invoke("JoinRound", roundId);
 				setState("Conectado");
 			})
 			.catch(() => setState("Sem conexão"));
@@ -38,7 +67,7 @@ export function useLiveBingo(eventId?: string, roundId?: string, onChange?: () =
 		return () => {
 			void connection.stop();
 		};
-	}, [eventId, roundId, onChange]);
+	}, [eventId, onChange]);
 
 	return state;
 }

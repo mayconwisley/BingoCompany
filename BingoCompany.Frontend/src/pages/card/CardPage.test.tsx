@@ -66,6 +66,35 @@ describe("CardPage", () => {
 		expect(bingoApi.mark).toHaveBeenCalledWith("event-1", "MANUAL", 16);
 	});
 
+	it("informa a falha e libera uma nova tentativa de marcação", async () => {
+		vi.mocked(bingoApi.getCard).mockResolvedValue({
+			id: "card-1",
+			publicCode: "MANUAL",
+			isWinner: false,
+			numbers: [[1, 16, 31, 46, 61]],
+			markingMode: "ManualRequired",
+			drawnNumbers: [16],
+			markedNumbers: [],
+			lastSequence: 1,
+			canGenerateNextCard: false
+		});
+		vi.mocked(bingoApi.mark).mockRejectedValue(new Error("A conexão foi interrompida."));
+
+		render(
+			<MemoryRouter initialEntries={["/cartela/event-1/MANUAL"]}>
+				<Routes>
+					<Route path="/cartela/:eventId/:cardCode" element={<CardPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		const currentNumber = await screen.findByRole("button", { name: "Número 16, sorteado" });
+		fireEvent.click(currentNumber);
+
+		expect(await screen.findByText("Não foi possível confirmar a marcação. Tente novamente.")).toBeInTheDocument();
+		expect(currentNumber).toBeEnabled();
+	});
+
 	it("mostra o progresso oficial para o prêmio da etapa atual", async () => {
 		vi.mocked(bingoApi.getCard).mockResolvedValue({
 			id: "card-1",

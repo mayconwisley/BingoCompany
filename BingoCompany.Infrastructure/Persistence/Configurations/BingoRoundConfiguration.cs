@@ -11,6 +11,7 @@ public sealed class BingoRoundConfiguration : IEntityTypeConfiguration<BingoRoun
 	public void Configure(EntityTypeBuilder<BingoRound> builder)
 	{
 		builder.HasKey(item => item.Id);
+		builder.Property(item => item.Version).IsConcurrencyToken();
 		var drawSequence = builder.Property(item => item.DrawSequence).HasConversion(
 			sequence => JsonSerializer.Serialize(sequence, JsonSerializerOptions.Default),
 			json => json == null ? null : JsonSerializer.Deserialize<int[]>(json, JsonSerializerOptions.Default));

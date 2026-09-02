@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { bingoApi, bingoBallLabel, DrawSuspense, TieBreakerStone, useLiveBingo, winningPatternLabel } from "../../features/bingo";
+import type { PublicEvent } from "../../features/bingo";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { ThemeToggle } from "../../shared/ui/ThemeToggle";
 import "./displayPage.css";
@@ -11,7 +12,23 @@ export function DisplayPage() {
 	const { publicCode = "" } = useParams();
 	const loader = useCallback(() => bingoApi.getPublicEvent(publicCode), [publicCode]);
 	const event = useAsyncResource(loader);
-	useLiveBingo(event.data?.id, event.data?.round?.id, event.reload);
+	useLiveBingo(event.data?.id, event.data?.round?.id, event.reload, {
+		onNumberDrawn: (draw) => {
+			event.setData((current: PublicEvent | undefined) => {
+				if (!current?.round || current.round.id !== draw.roundId || draw.sequence <= current.round.drawnNumbers.length)
+					return current;
+
+				return {
+					...current,
+					round: {
+						...current.round,
+						drawnNumbers: [...current.round.drawnNumbers, draw.number],
+						statistics: draw.statistics
+					}
+				};
+			});
+		}
+	});
 
 	const round = event.data?.round;
 	const winner = round?.winner;

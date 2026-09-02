@@ -19,5 +19,20 @@ public sealed class RoundGameplayRepository(BingoDbContext db) : IRoundGameplayR
 	public void AddWinners(IReadOnlyCollection<RoundWinner> winners) => db.RoundWinners.AddRange(winners);
 	public void AddAuditEntry(AuditEntry entry) => db.AuditEntries.Add(entry);
 	public Task SaveChanges(CancellationToken cancellationToken) => db.SaveChangesAsync(cancellationToken);
-	public async Task<bool> TrySaveChanges(CancellationToken cancellationToken) { try { await db.SaveChangesAsync(cancellationToken); return true; } catch (DbUpdateConcurrencyException) { return false; } }
+	public async Task<bool> TrySaveChanges(CancellationToken cancellationToken)
+	{
+		try
+		{
+			await db.SaveChangesAsync(cancellationToken);
+			return true;
+		}
+		catch (DbUpdateConcurrencyException)
+		{
+			return false;
+		}
+		catch (DbUpdateException)
+		{
+			return false;
+		}
+	}
 }

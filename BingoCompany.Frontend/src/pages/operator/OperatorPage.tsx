@@ -7,6 +7,7 @@ import { AppShell } from "../../shared/ui/AppShell";
 import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";
 import { PageState } from "../../shared/ui/PageState";
 import { ConfirmationDialog } from "../../shared/ui/ConfirmationDialog";
+import { ConnectionBadge } from "../../shared/ui/ConnectionBadge";
 
 type PendingConfirmation = "cancelRound" | "declinePrize";
 
@@ -18,13 +19,14 @@ export function OperatorPage() {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isValidatingPrintedCard, setIsValidatingPrintedCard] = useState(false);
 	const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation>();
+	const [lastConfirmedAction, setLastConfirmedAction] = useState("");
 	const [printedValidationError, setPrintedValidationError] = useState("");
 	const [printedValidationSuccess, setPrintedValidationSuccess] = useState("");
 	const code = query.get("code") ?? "";
 	const displayPath = `/display/${code}`;
 	const loader = useCallback(() => bingoApi.getPublicEvent(code), [code]);
 	const event = useAsyncResource(loader);
-	useLiveBingo(eventId, roundId, event.reload);
+	const connection = useLiveBingo(eventId, roundId, event.reload);
 
 	if (!event.data?.round)
 		return (
@@ -41,8 +43,9 @@ export function OperatorPage() {
 	const eligibleCards = round.eligibleCards ?? 0;
 	const openingStage = round.status === "Ready" ? round.stages.at(0) : undefined;
 	const hasEligibleCards = eligibleCards > 0;
-	const canStart = isCurrentRound && round.status === "Ready" && hasEligibleCards;
-	const canDraw = isCurrentRound && round.status === "Drawing" && !hasWinnerPresentation;
+	const isRealtimeUnavailable = connection !== undefined && connection !== "Conectado";
+	const canStart = isCurrentRound && round.status === "Ready" && hasEligibleCards && !isRealtimeUnavailable;
+	const canDraw = isCurrentRound && round.status === "Drawing" && !hasWinnerPresentation && !isRealtimeUnavailable;
 	const needsPrintedValidation = event.data.markingMode !== "Automatic";
 	const canValidatePrintedCards =
 		needsPrintedValidation && isCurrentRound && round.status !== "Ready" && round.status !== "Finished" && round.status !== "Cancelled";
@@ -52,20 +55,35 @@ export function OperatorPage() {
 	const isCancelled = isCurrentRound && round.status === "Cancelled";
 	const actionDisabledReason = !isCurrentRound
 		? "Abra a rodada atual para realizar ações."
-		: round.status === "Ready" && !hasEligibleCards
-			? "Ative ao menos uma cartela antes de iniciar a rodada."
-			: hasWinnerPresentation
-				? "O telão está apresentando o vencedor. Conclua essa apresentação antes de continuar o sorteio."
-				: undefined;
+		: isRealtimeUnavailable
+			? "Aguarde a reconexão com o telão antes de iniciar ou sortear uma pedra."
+			: round.status === "Ready" && !hasEligibleCards
+				? "Ative ao menos uma cartela antes de iniciar a rodada."
+				: hasWinnerPresentation
+					? "O telão está apresentando o vencedor. Conclua essa apresentação antes de continuar o sorteio."
+					: undefined;
 
 	const performAction = async () => {
+		if (isSubmitting) return;
+		setIsSubmitting(true);
 		try {
 			setError("");
-			if (canStart) await bingoApi.startRound(eventId, roundId);
-			else if (canDraw) await bingoApi.draw(eventId, roundId);
+			if (canStart) {
+				await bingoApi.startRound(eventId, roundId);
+				setLastConfirmedAction("Rodada iniciada e confirmada pelo servidor.");
+			} else if (canDraw) {
+				const result = await bingoApi.draw(eventId, roundId);
+				setLastConfirmedAction(
+					result
+						? `Pedra ${bingoBallLabel(result.number)} sorteada e confirmada pelo servidor.`
+						: "Pedra sorteada e confirmada pelo servidor."
+				);
+			}
 			await event.reload();
 		} catch (error) {
 			setError(getErrorMessage(error, "Não foi possível concluir a ação. Atualize o painel para conferir o estado atual da rodada."));
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -181,6 +199,7 @@ export function OperatorPage() {
 						<h1>{round.name}</h1>
 					</div>
 					<div className="actions operator-header-actions">
+						<ConnectionBadge status={connection} />
 						<a className="button" href={displayPath} target="_blank" rel="noopener noreferrer">
 							ABRIR TELÃO
 						</a>
@@ -241,11 +260,11 @@ export function OperatorPage() {
 						)}
 						<button
 							className="primary big"
-							disabled={!canStart && !canDraw}
+							disabled={isSubmitting || (!canStart && !canDraw)}
 							aria-describedby={actionDisabledReason ? "operator-action-hint" : undefined}
 							onClick={performAction}
 						>
-							{actionLabel}
+							{isSubmitting ? "PROCESSANDO..." : actionLabel}
 						</button>
 						{actionDisabledReason && (
 							<p id="operator-action-hint" className="action-hint" role="status">
@@ -310,6 +329,11 @@ export function OperatorPage() {
 							</>
 						)}
 						<p>{round.drawnNumbers.length} pedras sorteadas</p>
+						{lastConfirmedAction && (
+							<p className="action-hint" role="status" aria-live="polite">
+								{lastConfirmedAction}
+							</p>
+						)}
 						{round.status === "Ready" && !hasEligibleCards && (
 							<FeedbackMessage warning="Gere e ative ao menos uma cartela antes de iniciar a rodada." />
 						)}

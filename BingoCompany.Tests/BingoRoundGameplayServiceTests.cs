@@ -23,6 +23,7 @@ public sealed class BingoRoundGameplayServiceTests
 		}
 
 		Assert.Equal(5, result.DrawnNumber.Number);
+		Assert.Equal(5, round.Version);
 		Assert.True(result.HasWinners);
 		Assert.True(result.RequiresTieBreaker);
 		Assert.Equal(2, result.Winners.Count);

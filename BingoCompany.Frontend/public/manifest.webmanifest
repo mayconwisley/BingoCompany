@@ -1,0 +1,16 @@
+{
+	"name": "Bingo Company",
+	"short_name": "Bingo Company",
+	"description": "Cartelas e operação em tempo real para eventos de bingo.",
+	"display": "standalone",
+	"background_color": "#f7f8fc",
+	"theme_color": "#635bff",
+	"icons": [
+		{
+			"src": "assets/bingo-company-icon.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any maskable"
+		}
+	]
+}

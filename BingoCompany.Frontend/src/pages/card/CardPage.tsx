@@ -23,6 +23,8 @@ export function CardPage() {
 	const connection = useLiveBingo(eventId, card.data?.roundId, card.reload);
 	const [isGeneratingNextCard, setIsGeneratingNextCard] = useState(false);
 	const [nextCardError, setNextCardError] = useState("");
+	const [isMarking, setIsMarking] = useState(false);
+	const [markError, setMarkError] = useState("");
 
 	if (!card.data)
 		return (
@@ -46,6 +48,20 @@ export function CardPage() {
 			setNextCardError(getErrorMessage(error, "Não foi possível gerar a nova cartela. Atualize a página e tente novamente."));
 		} finally {
 			setIsGeneratingNextCard(false);
+		}
+	};
+	const markNumber = async (number: number) => {
+		if (isMarking) return;
+
+		setIsMarking(true);
+		setMarkError("");
+		try {
+			await bingoApi.mark(eventId, cardCode, number);
+			await card.reload();
+		} catch (error) {
+			setMarkError(getErrorMessage(error, "Não foi possível confirmar a marcação. Tente novamente."));
+		} finally {
+			setIsMarking(false);
 		}
 	};
 
@@ -98,11 +114,15 @@ export function CardPage() {
 					manual={manual}
 					markableNumbers={isMandatoryManual && currentNumber ? [currentNumber] : undefined}
 					isWinner={card.data.isWinner}
-					onMark={async (number) => {
-						await bingoApi.mark(eventId, cardCode, number);
-						await card.reload();
-					}}
+					disabled={isMarking}
+					onMark={(number) => void markNumber(number)}
 				/>
+				{isMarking && (
+					<p className="action-hint" role="status">
+						Confirmando marcação...
+					</p>
+				)}
+				<FeedbackMessage error={markError} onClose={() => setMarkError("")} />
 				{card.data.isWinner && (
 					<p className="winner-card-message" role="status">
 						🎉 Parabéns! Esta é a cartela vencedora.

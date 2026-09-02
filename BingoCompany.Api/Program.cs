@@ -10,14 +10,19 @@ using System.Net;
 using System.Threading.RateLimiting;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using BingoCompany.Api.Health;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
+builder.Logging.AddJsonConsole();
 builder.Services.AddControllers().AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
+builder.Services.AddHealthChecks().AddCheck<PostgresReadinessHealthCheck>("postgres", tags: ["ready"]);
 builder.Services.AddScoped<CompanyEventOwnerFilter>();
 var authenticationConfiguration = builder.Configuration.GetSection(AuthenticationConfiguration.SectionName).Get<AuthenticationConfiguration>() ?? new AuthenticationConfiguration();
 var corsConfiguration = builder.Configuration.GetSection(CorsConfiguration.SectionName).Get<CorsConfiguration>() ?? new CorsConfiguration();
@@ -105,8 +110,26 @@ if (app.Environment.IsDevelopment())
 	app.UseSwagger();
 	app.UseSwaggerUI();
 }
+app.UseExceptionHandler();
 app.UseForwardedHeaders();
 app.UseCors();
+app.Use(async (context, next) =>
+{
+	var startedAt = Stopwatch.GetTimestamp();
+	using var scope = app.Logger.BeginScope(new Dictionary<string, object?>
+	{
+		["TraceId"] = context.TraceIdentifier,
+		["RequestPath"] = context.Request.Path.Value
+	});
+
+	await next();
+	app.Logger.LogInformation(
+		"HTTP {Method} {Path} respondeu {StatusCode} em {ElapsedMilliseconds} ms.",
+		context.Request.Method,
+		context.Request.Path,
+		context.Response.StatusCode,
+		Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds);
+});
 if (!app.Environment.IsDevelopment()) app.UseHttpsRedirection();
 app.UseAuthentication();
 app.Use(async (context, next) =>
@@ -129,7 +152,8 @@ app.Use(async (context, next) =>
 });
 app.UseAuthorization();
 app.UseRateLimiter();
-app.MapGet("/healthz", () => Results.Ok()).AllowAnonymous();
+app.MapHealthChecks("/healthz", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
+app.MapHealthChecks("/readyz", new HealthCheckOptions { Predicate = healthCheck => healthCheck.Tags.Contains("ready") }).AllowAnonymous();
 app.MapControllers();
 app.MapHub<BingoCompany.Api.Hubs.BingoHub>("/hubs/bingo");
 app.Run();
