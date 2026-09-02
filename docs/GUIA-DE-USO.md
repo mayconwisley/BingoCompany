@@ -10,6 +10,20 @@ O Bingo Company realiza bingos ao vivo com cartelas digitais e impressas. A orga
 
 O sistema é a fonte oficial do jogo. Ele controla as pedras sorteadas, marcações que valem, cartelas que concorrem, empates e vencedores. Portanto, uma cartela não precisa ser conferida manualmente para validar o prêmio.
 
+## Antes de começar: combinação entre organização e operação
+
+Defina, antes de abrir inscrições, quem executará cada papel e como o prêmio será entregue. O organizador configura o evento; o operador conduz as ações irreversíveis da rodada; o telão é somente uma apresentação pública; e o participante acompanha ou registra as marcas permitidas. Uma mesma pessoa pode acumular os papéis, mas é recomendável manter o operador em um dispositivo exclusivo durante o sorteio.
+
+Faça um teste completo em um evento de ensaio ou antes de chamar os participantes:
+
+1. Abra a inscrição em um celular que não esteja logado como organizador e gere uma cartela digital.
+2. Se houver papel, imprima uma cartela de teste, leia o QR Code, registre ou associe a pessoa e ative-a.
+3. Abra o telão no projetor e a operação em outro dispositivo; os dois devem mostrar o mesmo evento.
+4. Confirme que a operação exibe o estado de conexão **Conectado** antes de iniciar a rodada.
+5. Revise os nomes dos prêmios, as imagens e as regras. Depois de iniciada, uma rodada não pode ser editada.
+
+> Não use atualização de página, cache do navegador ou uma anotação em papel como fonte do resultado. Sempre que houver dúvida, recarregue a tela para consultar o estado salvo pelo sistema.
+
 ## Visão rápida dos papéis
 
 | Pessoa | O que faz |
@@ -69,9 +83,8 @@ Cartelas físicas não entram automaticamente no jogo. Na configuração do even
 1. Informe uma quantidade entre 1 e 1.000 e clique em **Gerar lote para impressão**. Podem ser criados vários lotes.
 2. Escolha **Abrir para impressão** e, na nova tela, use **Imprimir / salvar PDF**.
 3. Cada cartela possui código, QR Code e fingerprint para identificação.
-4. Volte à configuração. Selecione a cartela, ou leia seu QR Code, e selecione o participante.
-5. Clique em **Associar cartela**.
-6. Clique em **Ativar cartela**.
+4. Volte à configuração. Selecione a cartela, ou leia seu QR Code. Escolha um participante já cadastrado e use **Associar cartela**, ou use **Registrar e ativar cartela** para cadastrar a pessoa diretamente a partir daquela cartela.
+5. Se a cartela foi apenas associada, clique em **Ativar cartela**. O cadastro direto já conclui o registro e a ativação conforme a tela informar.
 
 Somente cartela associada a uma pessoa e ativa concorre.
 
@@ -111,11 +124,24 @@ Ao clicar em **INICIAR RODADA**, o sistema tira uma fotografia da lista de carte
 
 1. Em **Rodadas criadas**, clique em **Abrir operação** na rodada correta.
 2. Clique em **INICIAR RODADA**. O sistema prepara 75 pedras sem repetição e publica um hash de auditoria antes do primeiro sorteio.
-3. Clique em **SORTEAR PRÓXIMA PEDRA** uma vez por vez.
+3. Confira o indicador de conexão. Somente avance quando ele estiver **Conectado**. Clique em **SORTEAR PRÓXIMA PEDRA** uma única vez e aguarde a confirmação mostrada na própria operação antes de realizar outra ação.
 4. A última pedra, a lista de pedras, as cartelas conectadas e o telão são atualizados ao vivo.
 5. Ao detectar vencedor, o sorteio pausa. Clique em **REVELAR VENCEDOR**. Em empate, o botão passa a ser **REALIZAR DESEMPATE**.
 6. Depois da revelação, clique em **PRÊMIO ENTREGUE** ou **VENCEDOR NÃO RETIROU O PRÊMIO**.
 7. Se o prêmio foi entregue, clique em **CONTINUAR SORTEIO NO TELÃO**. A apresentação é fechada e a próxima etapa é liberada. Ao terminar a última etapa, a rodada é finalizada.
+
+### Conexão, confirmação e recuperação durante o sorteio
+
+O botão da ação em andamento fica como **PROCESSANDO** para impedir um segundo clique. Enquanto a conexão SignalR estiver reconectando ou indisponível, iniciar e sortear ficam bloqueados. Esse bloqueio é intencional: ele evita que o operador tome uma decisão a partir de uma tela que talvez não tenha recebido a última atualização.
+
+Se aparecer falha de rede, timeout ou conflito:
+
+1. Não clique novamente em **SORTEAR PRÓXIMA PEDRA** e não abra a mesma operação em outro dispositivo para tentar repetir o comando.
+2. Aguarde o indicador retornar a **Conectado** ou atualize a página.
+3. Confira a última pedra e o histórico que vieram do servidor. Se a pedra já apareceu, a ação foi concluída e não deve ser repetida.
+4. Só então execute a próxima ação permitida pelo estado atual da rodada.
+
+O backend protege o sorteio contra comandos concorrentes e contra pedra/posição repetida. Por isso, uma resposta de conflito significa “recarregue o estado oficial”, não “tente a mesma ação automaticamente”.
 
 ### Empate, não retirada e cancelamento
 
@@ -128,7 +154,7 @@ Ao clicar em **INICIAR RODADA**, o sistema tira uma fotografia da lista de carte
 A página **Minha cartela** apresenta o prêmio e regra atuais, o modo de marcação, a cartela e todas as pedras já sorteadas.
 
 - Em marcação automática, o participante não precisa tocar em nada.
-- Em marcação manual, deve tocar apenas nos números habilitados. Na manual obrigatória, deve marcar a pedra atual antes da próxima.
+- Em marcação manual, deve tocar apenas nos números habilitados e aguardar a confirmação visual de que a marca foi salva. Enquanto a marcação estiver sendo enviada, a cartela fica temporariamente bloqueada para evitar toque duplicado. Na manual obrigatória, deve marcar a pedra atual antes da próxima.
 - Quando a cartela vence, a própria tela mostra a confirmação. O participante deve aguardar o nome ser revelado e seguir a orientação da organização para retirada do prêmio.
 - Depois de uma rodada concluída, a opção **Gerar nova cartela** só aparece para cartela digital que participou dela e está completa conforme o modo de marcação. A cartela anterior é cancelada e a nova precisa ser criada antes da próxima rodada iniciar.
 
@@ -136,7 +162,7 @@ A página **Minha cartela** apresenta o prêmio e regra atuais, o modo de marca�
 
 Se a organização habilitar a compra de cartelas digitais, o participante deve criar ou acessar uma **conta de participante** com nome, e-mail e senha. A compra usa essa conta para manter as cartelas disponíveis em **Minhas cartelas**. Depois de comprar, ative individualmente as cartelas que serão usadas; somente cartela ativa pode entrar na próxima rodada. A organização pode limitar a quantidade disponível ou cancelar a venda, sem afetar as inscrições comuns já abertas.
 
-Se a tela parecer desatualizada, atualize a página. Ela busca novamente o estado oficial quando a conexão em tempo real volta.
+Se a tela parecer desatualizada, atualize a página. Ela busca novamente o estado oficial quando a conexão em tempo real volta. A versão instalável do aplicativo pode manter a interface disponível após uma visita, mas não permite marcar, comprar, operar ou consultar estado de jogo sem conexão com o servidor.
 
 ## 9. Usar o telão
 
@@ -152,6 +178,8 @@ O telão mostra:
 - vencedor e, quando aplicável, resultado do desempate.
 
 Antes da ação do operador, o telão não mostra o nome do vencedor: somente a pedra vencedora, o prêmio e a quantidade de cartelas empatadas. Há também um botão de tema para adaptar a visualização ao ambiente.
+
+O telão recebe a última pedra e as estatísticas agregadas em tempo real. Se perder a conexão, ele tenta reconectar e recarrega o estado oficial; se ainda assim permanecer desatualizado, atualize a página. Nunca anuncie um vencedor pelo telão antes de o operador executar a revelação.
 
 ## 10. Conferir a auditoria pública
 
@@ -171,6 +199,8 @@ Depois que todas as rodadas estiverem finalizadas ou canceladas, use **Encerrar 
 | Minha cartela não concorre | Confirme que ela estava ativa antes do início da rodada. Cartela impressa também precisa estar associada. |
 | Não consigo marcar | Em automático, o sistema marca. Nos modos manuais, o número precisa estar na cartela, já ter sido sorteado e ainda não estar marcado. |
 | O sorteio está parado | Revele o vencedor, registre a entrega ou não retirada e, após entrega, feche a apresentação no telão. A rodada pode também estar cancelada. |
+| A operação mostra reconectando ou falhou ao sortear | Aguarde voltar a **Conectado** e recarregue a operação. Verifique a última pedra no histórico antes de tocar novamente em qualquer ação. |
+| Toquei para marcar e apareceu erro | Aguarde a mensagem terminar, atualize a cartela se necessário e confira se a marca foi registrada. Só tente de novo se o número continuar habilitado. |
 | Posso editar a rodada? | Sim, somente enquanto estiver pronta para iniciar. Não há exclusão; uma rodada em sorteio pode ser cancelada antes da detecção de vencedor. |
 | A tela está atrasada | Atualize a página e verifique a conexão. O estado oficial será recarregado. |
 

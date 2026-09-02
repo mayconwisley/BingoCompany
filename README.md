@@ -37,6 +37,32 @@ O Bingo Company organiza eventos de bingo corporativo com cartelas digitais e im
 - Auditoria de sequência, rodadas, cartelas e vencedores.
 - Fluxo de sorteio validado no núcleo da aplicação com 1.000 cartelas elegíveis e 1.000 empates simultâneos.
 
+## Garantias do produto
+
+O Bingo Company foi desenhado para que o resultado não dependa do navegador, da rapidez de uma pessoa ao clicar ou da ordem em que as telas recebem atualizações. Estas são as garantias que devem orientar a operação e qualquer integração:
+
+| Garantia | Como é aplicada | Impacto prático |
+| --- | --- | --- |
+| Backend como fonte de verdade | Cartelas, pedras, marcações, elegibilidade, vencedores e auditoria são decididos e persistidos no backend. | Nunca use uma tela local ou uma conferência manual como resultado oficial. |
+| Sequência auditável | Cada rodada gera as 75 pedras sem repetição com fonte criptograficamente segura e publica o hash antes da primeira pedra. | A auditoria permite verificar, ao término, que a sequência já estava definida. |
+| Elegibilidade congelada | Ao iniciar a rodada, a lista de cartelas ativas e associadas é capturada em um snapshot. | Ativar ou associar uma cartela depois do início não a inclui na rodada corrente. |
+| Marcação conforme o modo | Em `Automatic`, a pedra sorteada vale automaticamente. Nos modos manuais, somente a marca persistida pela API vale. | Uma marca feita apenas no papel ou em uma interface desatualizada não cria vencedor. |
+| Sorteio serializado | O estado da rodada possui controle de concorrência e a persistência impede a repetição de número ou posição na sequência. | Dois comandos simultâneos não devem revelar duas pedras válidas; em conflito, recarregue a operação. |
+| Privacidade no telão | Antes da revelação, o telão recebe somente contagens agregadas. | O nome do vencedor e o desempate só aparecem após a ação explícita do operador. |
+
+## Antes do evento: checklist operacional
+
+Faça esta preparação antes de abrir o local ao público. Ela reduz os problemas que não podem ser corrigidos quando a rodada já começou.
+
+1. Confirme que o ambiente de produção responde ao health check de prontidão e que o banco está acessível.
+2. Abra o evento, defina o modo de marcação e teste o link/QR Code de inscrição em um celular fora da conta administrativa.
+3. Para cartelas impressas, gere um lote de teste, imprima uma unidade, confira QR Code e código, registre/associe o participante e ative a cartela.
+4. Crie as rodadas e todos os prêmios. Revise nomes, ordem efetiva das regras e imagens antes de iniciar; rodadas não podem ser editadas após o início.
+5. Em uma rede e dispositivo semelhantes aos do evento, abra o telão e a operação. Verifique que ambos mostram o mesmo estado e que o indicador da operação está como **Conectado**.
+6. Defina quem será o organizador, quem poderá operar o sorteio e como será confirmada a retirada de cada prêmio. Mantenha um segundo dispositivo apenas para monitorar o telão/auditoria.
+
+Durante a rodada, clique uma única vez em cada ação. Se a interface perder conexão, estiver processando ou retornar conflito, não tente “compensar” sorteando novamente: espere a reconexão e recarregue o estado oficial.
+
 ## Status de qualidade e publicação
 
 | Item | Status | O que valida |
@@ -103,6 +129,15 @@ Os badges são atualizados pelo GitHub Actions e pelo monitoramento do endereço
 
 O frontend fica disponível em `http://localhost:5173`; a API em `http://localhost:5138`; o Swagger, apenas em desenvolvimento, em `http://localhost:5138/swagger`.
 
+Para verificar a aplicação localmente sem depender do frontend:
+
+```powershell
+Invoke-WebRequest http://localhost:5138/healthz
+Invoke-WebRequest http://localhost:5138/readyz
+```
+
+`/healthz` verifica apenas se o processo está vivo. `/readyz` também verifica se o PostgreSQL aceita conexão; use este último antes de liberar tráfego para uma instância.
+
 ### Demonstração com Docker Compose
 
 ```powershell
@@ -126,7 +161,7 @@ docker compose down
 1. Cadastre a empresa e entre na administração.
 2. Crie o evento e escolha o modo de marcação.
 3. Abra as inscrições e compartilhe o link público ou QR Code.
-4. Gere, associe e ative cartelas impressas quando necessário.
+4. Gere, imprima, registre ou associe e ative cartelas impressas quando necessário.
 5. Configure a rodada e as etapas de prêmio.
 6. Inicie o sorteio, revele os vencedores, confirme a entrega dos prêmios e acompanhe o telão em tempo real.
 7. Finalize o evento e disponibilize a auditoria pública.
@@ -151,6 +186,15 @@ npm run typeformat
 npm run build
 ```
 
+Antes de uma publicação, execute as validações acima em um checkout limpo e confira também a migration pendente:
+
+```powershell
+$env:Database__EnsureDatabaseExists = "false"
+dotnet ef migrations has-pending-model-changes --no-build --project .\BingoCompany.Infrastructure --startup-project .\BingoCompany.Api
+```
+
+O comando deve informar que não há mudanças pendentes. Ele não substitui o backup do banco nem a revisão da migration que será aplicada no ambiente de produção.
+
 ### Capacidade de rodada
 
 O núcleo do sorteio possui teste de regressão para 1.000 cartelas elegíveis na mesma rodada, incluindo a detecção de 1.000 vencedores simultâneos e o respectivo desempate. O desempate atribui posições únicas por embaralhamento criptograficamente seguro e não é limitado às 75 pedras.
@@ -164,6 +208,8 @@ O lote de cartelas impressas aceita até 1.000 unidades por requisição; novos 
 - [Exemplos HTTP](BingoCompany.Api/http)
 - [Publicação na VPS](deploy/vps/README.md)
 
+O [guia de uso](docs/GUIA-DE-USO.md) é a referência para organizadores, operadores e participantes. A tela **Ajuda** no sistema resume o mesmo fluxo e inclui os cuidados de conexão durante o sorteio.
+
 ## Segurança e auditoria
 
 - A sequência é gerada no backend com fonte criptograficamente segura e publicada com hash antes da revelação.
@@ -171,6 +217,7 @@ O lote de cartelas impressas aceita até 1.000 unidades por requisição; novos 
 - Dados sensíveis de colaboradores não são expostos pelas rotas públicas.
 - Todas as ações relevantes são registradas para auditoria.
 - Uma etapa só é concluída quando o operador confirma a entrega do prêmio; se não houver retirada, a rodada segue com a mesma regra e sem a cartela já recusada.
+- O aplicativo instalável (PWA) pode manter a interface estática disponível após uma visita, mas não armazena respostas de API, conexão SignalR ou ações de jogo. Para jogar, marcar ou operar é necessária conexão com o backend.
 
 ## Licença
 

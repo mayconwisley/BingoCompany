@@ -19,5 +19,7 @@ describe("HelpPage", () => {
 		expect(screen.getByText(/Só uma cartela associada e ativa concorre/i)).toBeInTheDocument();
 		expect(screen.getByRole("heading", { name: "Compra de cartelas" })).toBeInTheDocument();
 		expect(screen.getByText(/O hash SHA-256 é publicado no começo da rodada/i)).toBeInTheDocument();
+		expect(screen.getByRole("heading", { name: "Conexão, confirmação e recuperação" })).toBeInTheDocument();
+		expect(screen.getByText(/não repita imediatamente o sorteio/i)).toBeInTheDocument();
 	});
 });

@@ -20,6 +20,7 @@ export function HelpPage() {
 					<a href="#organizadores">Organizar</a>
 					<a href="#participantes">Participar</a>
 					<a href="#operacao">Operar</a>
+					<a href="#conexao">Conexão</a>
 					<a href="#consulta-publica">Telão e auditoria</a>
 					<a href="#duvidas">Dúvidas</a>
 				</nav>
@@ -50,6 +51,16 @@ export function HelpPage() {
 							<strong>Público:</strong> acompanha o telão ou consulta a auditoria; essas duas páginas não exigem login.
 						</li>
 					</ul>
+					<h3>Antes de abrir o evento</h3>
+					<p>
+						Faça um ensaio com uma cartela digital, uma cartela impressa se houver, um computador para a operação e outro para o
+						telão. Confirme que todos mostram o mesmo evento e que a operação está <strong>Conectada</strong>. Revise prêmios,
+						regras e imagens antes de iniciar uma rodada: depois do início, suas regras não podem ser editadas.
+					</p>
+					<p>
+						O resultado oficial sempre vem do sistema. Se uma tela parecer atrasada, atualize-a e confira o estado recarregado;
+						não declare vencedor a partir de anotação em papel, cache do navegador ou de uma tela desconectada.
+					</p>
 				</section>
 
 				<section className="panel" id="organizadores">
@@ -98,7 +109,7 @@ export function HelpPage() {
 					</p>
 				</section>
 
-				<section className="panel">
+				<section className="panel" id="cartelas">
 					<h2>Cartelas e inscrições</h2>
 					<h3>Cartela digital</h3>
 					<p>
@@ -115,8 +126,14 @@ export function HelpPage() {
 							Abra “Imprimir / salvar PDF” para usar a impressora ou gravar as cartelas em PDF. Cada cartela tem código, QR
 							Code e fingerprint de conferência.
 						</li>
-						<li>De volta à configuração, selecione ou leia pelo QR Code a cartela impressa e escolha o participante.</li>
-						<li>Use “Associar cartela” e depois “Ativar cartela”. Só uma cartela associada e ativa concorre.</li>
+						<li>
+							De volta à configuração, selecione ou leia pelo QR Code a cartela impressa. Escolha um participante para
+							associá-la ou use “Registrar e ativar cartela” para cadastrar a pessoa diretamente nessa cartela.
+						</li>
+						<li>
+							Quando a cartela foi apenas associada, use “Ativar cartela”. O cadastro direto já registra e ativa conforme a
+							confirmação exibida. Só uma cartela associada e ativa concorre.
+						</li>
 					</ol>
 					<p>
 						Uma cartela ativa que já estava no evento quando a rodada começa entra no conjunto daquela rodada. Cartelas
@@ -140,6 +157,11 @@ export function HelpPage() {
 					<p>
 						A estrela no centro é a casa livre e já conta como marcada. Não é possível marcar número que não esteja na cartela,
 						que não tenha sido sorteado ou que já esteja marcado.
+					</p>
+					<p>
+						Em modo manual, aguarde a confirmação visual depois de tocar no número. A cartela fica bloqueada por instantes
+						enquanto a marca é salva para evitar toque duplicado. Se aparecer erro, atualize a página e só tente novamente se o
+						número continuar habilitado.
 					</p>
 				</section>
 
@@ -244,8 +266,9 @@ export function HelpPage() {
 							concorrer, prepara as 75 pedras sem repetição e publica o hash de auditoria antes da primeira pedra.
 						</li>
 						<li>
-							Use “SORTEAR PRÓXIMA PEDRA” uma vez por vez. A última pedra, a quantidade sorteada, cartelas e telão são
-							atualizados em tempo real.
+							Confira o indicador de conexão e use “SORTEAR PRÓXIMA PEDRA” apenas quando estiver <strong>Conectado</strong>.
+							Clique uma vez, aguarde a confirmação e só então faça outra ação. A última pedra, a quantidade sorteada, cartelas e
+							telão são atualizados em tempo real.
 						</li>
 						<li>
 							Ao detectar uma ou mais cartelas vencedoras, o sorteio pausa. Use “REVELAR VENCEDOR”; se houver empate, o botão
@@ -272,6 +295,26 @@ export function HelpPage() {
 					</p>
 				</section>
 
+				<section className="panel" id="conexao">
+					<p className="eyebrow">Confiabilidade da operação</p>
+					<h2>Conexão, confirmação e recuperação</h2>
+					<p>
+						Enquanto uma ação está sendo enviada, o botão fica como <strong>PROCESSANDO</strong>; isso impede dois cliques no mesmo
+						comando. Se a conexão estiver reconectando ou indisponível, iniciar a rodada e sortear ficam bloqueados. Esse cuidado
+						evita que a operação avance a partir de uma tela sem a última atualização.
+					</p>
+					<ol>
+						<li>Se houver timeout, falha ou reconexão, não repita imediatamente o sorteio e não abra outra operação para tentar de novo.</li>
+						<li>Aguarde o estado voltar a “Conectado” ou atualize a página.</li>
+						<li>Confira a última pedra e o histórico fornecidos pelo sistema. Se a pedra apareceu, o comando já foi concluído.</li>
+						<li>Somente depois execute a próxima ação permitida pela rodada. Em caso de conflito, recarregar é a recuperação correta.</li>
+					</ol>
+					<p>
+						A versão instalável do aplicativo pode manter a interface disponível depois de uma visita, mas não guarda estado de jogo,
+						pedras, marcações ou comandos. Para participar, marcar ou operar, a conexão com o sistema continua obrigatória.
+					</p>
+				</section>
+
 				<section className="panel" id="consulta-publica">
 					<p className="eyebrow">Páginas públicas</p>
 					<h2>Telão e auditoria</h2>
@@ -284,6 +327,11 @@ export function HelpPage() {
 					<p>
 						Quando há vencedor, o telão faz suspense e mostra apenas a pedra vencedora, o prêmio e a quantidade de cartelas
 						empatadas, quando houver. Nome e resultado do desempate aparecem somente depois da ação do operador.
+					</p>
+					<p>
+						O telão recebe a última pedra e as estatísticas agregadas sem precisar expor nomes antes da revelação. Após uma
+						reconexão, ele busca de novo o estado oficial. Se permanecer atrasado, atualize a página antes de anunciar qualquer
+						resultado.
 					</p>
 					<h3>Auditoria pública</h3>
 					<p>
@@ -320,6 +368,16 @@ export function HelpPage() {
 						<dd>
 							Verifique se há vencedor aguardando revelação, entrega do prêmio ou fechamento da apresentação. Sem vencedores,
 							a rodada pode ter sido cancelada ou não haver mais pedras compatíveis com a regra ativa.
+						</dd>
+						<dt>A operação mostra reconectando ou falhou ao sortear.</dt>
+						<dd>
+							Aguarde o indicador voltar a Conectado e atualize a operação. Confira a última pedra no histórico antes de tocar em
+							qualquer botão novamente; não repita um sorteio apenas porque houve demora na resposta.
+						</dd>
+						<dt>Toquei para marcar e apareceu um erro.</dt>
+						<dd>
+							Aguarde a mensagem, atualize a cartela e confirme se a marca foi salva. Tente de novo somente se aquele número ainda
+							estiver habilitado pela cartela.
 						</dd>
 						<dt>Posso editar ou excluir uma rodada?</dt>
 						<dd>
