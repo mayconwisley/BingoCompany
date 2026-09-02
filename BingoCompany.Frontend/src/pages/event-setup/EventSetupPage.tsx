@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { bingoApi, eventStatusLabel, PrizeStageEditor, QrCardScanner, roundStatusLabel } from "../../features/bingo";
 import type { ParticipantType, PrizeDraft } from "../../features/bingo";
@@ -18,6 +18,8 @@ const roundOperationPriority: Record<string, number> = {
 	Cancelled: 2
 };
 
+const nextRoundName = (rounds: readonly unknown[]) => `Rodada ${rounds.length + 1}`;
+
 export function EventSetupPage() {
 	const { eventId = "" } = useParams();
 	const [query] = useSearchParams();
@@ -31,6 +33,7 @@ export function EventSetupPage() {
 	const loader = useCallback(() => bingoApi.getEvent(eventId), [eventId]);
 	const event = useAsyncResource(loader);
 	const action = useAsyncAction();
+	const hasInitializedRoundName = useRef(false);
 	const [roundName, setRoundName] = useState("Rodada 1");
 	const [stages, setStages] = useState<PrizeDraft[]>([
 		{ sequence: 1, prizeName: "Vale-presente", pattern: "HorizontalLine" },
@@ -79,10 +82,15 @@ export function EventSetupPage() {
 		const operationPriority = (roundOperationPriority[left.status] ?? 1) - (roundOperationPriority[right.status] ?? 1);
 		return operationPriority || new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime();
 	});
+	useEffect(() => {
+		if (hasInitializedRoundName.current || !event.data || editingRoundId) return;
+		setRoundName(nextRoundName(event.data.rounds));
+		hasInitializedRoundName.current = true;
+	}, [editingRoundId, event.data]);
 
 	const resetRoundForm = () => {
 		setEditingRoundId(undefined);
-		setRoundName("Rodada 1");
+		setRoundName(nextRoundName(event.data?.rounds ?? []));
 		setStages([
 			{ sequence: 1, prizeName: "Vale-presente", pattern: "HorizontalLine" },
 			{ sequence: 2, prizeName: "Prêmio principal", pattern: "FullCard" }

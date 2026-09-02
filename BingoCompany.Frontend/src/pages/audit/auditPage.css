@@ -92,6 +92,28 @@
 	grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
 	gap: 1rem;
 }
+.audit-round-filter {
+	display: grid;
+	gap: 0.4rem;
+	max-width: 25rem;
+	margin-bottom: 1.25rem;
+	color: var(--muted);
+	font-size: 0.78rem;
+	font-weight: 800;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+.audit-round-filter select {
+	min-height: 2.8rem;
+	border: 1px solid var(--line);
+	border-radius: 10px;
+	padding: 0 0.75rem;
+	background: var(--surface-alt);
+	color: var(--text);
+	font: inherit;
+	letter-spacing: 0;
+	text-transform: none;
+}
 .audit-round-card {
 	display: grid;
 	gap: 1rem;

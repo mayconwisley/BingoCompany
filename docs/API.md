@@ -31,7 +31,7 @@ As rotas em `/api/events` exigem a sessão e são limitadas à empresa do usuár
 | `GET /api/application/info` | Nome, descrição e versão da aplicação. |
 | `GET /api/public/events/{code}` | Estado público do evento, rodada selecionada, pedras, etapas, estatísticas agregadas e vencedor já revelado. Em desempate revelado, inclui todos os participantes, suas pedras e a indicação do vencedor. |
 | `POST /api/public/events/{code}/join` | Inscreve um participante e gera cartela digital. Limite: 20 requisições/minuto por IP. |
-| `GET /api/public/events/{code}/audit?page=1&pageSize=25` | Histórico público, cartelas, rodadas, resultados e auditoria. A linha do tempo é paginada no backend; a sequência completa somente é exposta ao fim da rodada. |
+| `GET /api/public/events/{code}/audit?page=1&pageSize=25&roundSequence=2` | Histórico público, cartelas, rodadas, resultados e auditoria. A linha do tempo é paginada e filtrada por rodada no backend quando `roundSequence` é informado; a sequência completa somente é exposta ao fim da rodada. |
 | `POST /api/public/events/{code}/cards/{cardCode}/activate` | Ativa uma cartela digital comprada pela conta de participante. |
 
 O corpo de inscrição pública é:

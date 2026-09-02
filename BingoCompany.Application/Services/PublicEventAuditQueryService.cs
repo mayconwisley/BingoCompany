@@ -8,10 +8,11 @@ public sealed class PublicEventAuditQueryService(IPublicEventAuditReadRepository
 {
 	private const int MaximumPageSize = 100;
 
-	public Task<PublicEventAuditResult?> Get(string publicCode, int page, int pageSize, CancellationToken cancellationToken)
+	public Task<PublicEventAuditResult?> Get(string publicCode, int page, int pageSize, int? roundSequence, CancellationToken cancellationToken)
 	{
 		var normalizedPage = Math.Max(page, 1);
 		var normalizedPageSize = Math.Clamp(pageSize, 1, MaximumPageSize);
-		return repository.Get(publicCode, normalizedPage, normalizedPageSize, cancellationToken);
+		var normalizedRoundSequence = roundSequence is > 0 ? roundSequence : null;
+		return repository.Get(publicCode, normalizedPage, normalizedPageSize, normalizedRoundSequence, cancellationToken);
 	}
 }

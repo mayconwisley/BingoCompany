@@ -62,12 +62,38 @@ describe("AuditPage", () => {
 
 		expect(await screen.findByText("Pedra sorteada")).toBeInTheDocument();
 		expect(screen.getByText("Cartela CARTELA-1")).toBeInTheDocument();
-		expect(bingoApi.getAudit).toHaveBeenCalledWith("ABC", 1, 25);
+		expect(bingoApi.getAudit).toHaveBeenCalledWith("ABC", 1, 25, undefined);
 
 		fireEvent.click(screen.getByRole("button", { name: "Mais antigos" }));
 
 		expect(await screen.findByText("Inscrição aberta")).toBeInTheDocument();
-		expect(bingoApi.getAudit).toHaveBeenLastCalledWith("ABC", 2, 25);
+		expect(bingoApi.getAudit).toHaveBeenLastCalledWith("ABC", 2, 25, undefined);
 		expect(screen.getByText("Página 2 de 2")).toBeInTheDocument();
+	});
+
+	it("filtra os registros da linha do tempo pela rodada selecionada no backend", async () => {
+		const audit = createAudit(1, "Pedra sorteada");
+		audit.rounds.push({
+			...audit.rounds[0],
+			name: "Rodada 2",
+			sequence: 2,
+			winners: []
+		});
+		vi.mocked(bingoApi.getAudit).mockResolvedValue(audit);
+
+		render(
+			<MemoryRouter initialEntries={["/auditoria/ABC"]}>
+				<Routes>
+					<Route path="/auditoria/:publicCode" element={<AuditPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		await screen.findByRole("option", { name: "Rodada 2 — Rodada 2" });
+		fireEvent.change(screen.getByLabelText("Exibir auditoria da rodada"), { target: { value: "2" } });
+
+		expect(await screen.findByText(/26 registros da Rodada 2/)).toBeInTheDocument();
+		expect(bingoApi.getAudit).toHaveBeenLastCalledWith("ABC", 1, 25, 2);
+		expect(screen.queryByText("Rodada 1")).not.toBeInTheDocument();
 	});
 });

@@ -21,7 +21,7 @@ public sealed class EventRoundManagementService(IEventRoundManagementRepository 
 		var stages = CreateStages(round.Id, request.Stages);
 		foreach (var stage in stages) round.AddStage(stage);
 		repository.AddRound(round);
-		repository.AddAuditEntry(new AuditEntry(eventId, "Rodada criada", $"Rodada {round.Name} criada com {stages.Length} etapas."));
+		repository.AddAuditEntry(new AuditEntry(eventId, "Rodada criada", $"Rodada {round.Name} criada com {stages.Length} etapas.", round.Id));
 		await repository.SaveChanges(cancellationToken);
 		return new RoundConfigurationResult(round.Id, round.Name);
 	}
@@ -36,7 +36,7 @@ public sealed class EventRoundManagementService(IEventRoundManagementRepository 
 		var stages = CreateStages(round.Id, request.Stages);
 		round.Update(request.Name, stages);
 		repository.AddPrizeStages(stages);
-		repository.AddAuditEntry(new AuditEntry(eventId, "Rodada editada", $"Rodada {round.Name} atualizada com {stages.Length} etapas."));
+		repository.AddAuditEntry(new AuditEntry(eventId, "Rodada editada", $"Rodada {round.Name} atualizada com {stages.Length} etapas.", round.Id));
 		if (!await repository.TrySaveChanges(cancellationToken)) throw new RoundConcurrencyException();
 		return true;
 	}
@@ -53,7 +53,7 @@ public sealed class EventRoundManagementService(IEventRoundManagementRepository 
 		repository.AddEligibleCards(round.EligibleCards);
 		var sequence = SecureDrawSequence.Generate();
 		round.Start(sequence, SecureDrawSequence.Hash(sequence));
-		repository.AddAuditEntry(new AuditEntry(eventId, "Rodada iniciada", $"Rodada {round.Name} iniciada. Hash {round.SequenceHash}."));
+		repository.AddAuditEntry(new AuditEntry(eventId, "Rodada iniciada", $"Rodada {round.Name} iniciada. Hash {round.SequenceHash}.", round.Id));
 		await repository.SaveChanges(cancellationToken);
 		return new StartedRoundResult(round.Id, round.SequenceHash);
 	}
@@ -65,7 +65,7 @@ public sealed class EventRoundManagementService(IEventRoundManagementRepository 
 		if (bingoEvent is null || round is null) return null;
 		EnsureEventIsMutable(bingoEvent);
 		round.Cancel();
-		repository.AddAuditEntry(new AuditEntry(eventId, "Rodada cancelada", $"Rodada {round.Name} cancelada após {round.DrawnNumbers.Count} pedras sorteadas."));
+		repository.AddAuditEntry(new AuditEntry(eventId, "Rodada cancelada", $"Rodada {round.Name} cancelada após {round.DrawnNumbers.Count} pedras sorteadas.", round.Id));
 		await repository.SaveChanges(cancellationToken);
 		return new CancelledRoundResult(round.Id);
 	}

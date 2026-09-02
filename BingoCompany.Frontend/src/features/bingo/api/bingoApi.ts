@@ -80,8 +80,10 @@ export const bingoApi = {
 		http<RegistrationResult>(`/api/public/events/${code}/join`, { method: "POST", body: JSON.stringify(request) }),
 	activateDigitalCard: (eventCode: string, cardCode: string) =>
 		http<void>(`/api/public/events/${eventCode}/cards/${cardCode}/activate`, { method: "POST" }),
-	getAudit: (code: string, page = 1, pageSize = 25) =>
-		http<PublicAudit>(`/api/public/events/${code}/audit?page=${page}&pageSize=${pageSize}`),
+	getAudit: (code: string, page = 1, pageSize = 25, roundSequence?: number) => {
+		const filter = roundSequence ? `&roundSequence=${roundSequence}` : "";
+		return http<PublicAudit>(`/api/public/events/${code}/audit?page=${page}&pageSize=${pageSize}${filter}`);
+	},
 	getMyCards: (page = 1, pageSize = 5) => http<ParticipantCardsPage>(`/api/participant/cards?page=${page}&pageSize=${pageSize}`)
 };
 

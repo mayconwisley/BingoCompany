@@ -22,7 +22,7 @@ public sealed class PrintedWinnerValidationService(IPrintedWinnerValidationRepos
 		if (round.Status == RoundStatus.Drawing) round.DetectWinner();
 		if (candidatesCount > 1 && round.Status == RoundStatus.WinnerDetected) round.StartTieBreaker();
 		repository.AddWinner(new RoundWinner(round.Id, round.ActiveStage.Id, card.Id, card.ParticipantId!.Value, round.DrawnNumbers.Count));
-		repository.AddAuditEntry(new AuditEntry(eventId, "Cartela impressa conferida", $"Cartela {card.PublicCode} validada para {round.ActiveStage.PrizeName}."));
+		repository.AddAuditEntry(new AuditEntry(eventId, "Cartela impressa conferida", $"Cartela {card.PublicCode} validada para {round.ActiveStage.PrizeName}.", round.Id));
 		await repository.SaveChanges(cancellationToken);
 		return new PrintedWinnerValidationResult(await repository.GetParticipantName(card.ParticipantId.Value, cancellationToken), card.PublicCode, candidatesCount, round.Status == RoundStatus.TieBreaker);
 	}

@@ -69,7 +69,11 @@ export function ApplicationThemeProvider({ children }: PropsWithChildren) {
 }
 
 export function useApplicationTheme() {
-	const context = useContext(ApplicationThemeContext);
+	const context = useOptionalApplicationTheme();
 	if (!context) throw new Error("useApplicationTheme deve ser utilizado dentro de ApplicationThemeProvider.");
 	return context;
+}
+
+export function useOptionalApplicationTheme() {
+	return useContext(ApplicationThemeContext);
 }

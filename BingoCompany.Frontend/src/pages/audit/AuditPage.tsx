@@ -12,7 +12,11 @@ const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium"
 export function AuditPage() {
 	const { publicCode = "" } = useParams();
 	const [page, setPage] = useState(1);
-	const loader = useCallback(() => bingoApi.getAudit(publicCode, page, auditEntriesPageSize), [page, publicCode]);
+	const [selectedRoundSequence, setSelectedRoundSequence] = useState<number>();
+	const loader = useCallback(
+		() => bingoApi.getAudit(publicCode, page, auditEntriesPageSize, selectedRoundSequence),
+		[page, publicCode, selectedRoundSequence]
+	);
 	const audit = useAsyncResource(loader);
 
 	if (!audit.data)
@@ -24,6 +28,12 @@ export function AuditPage() {
 
 	const { eventInfo, participants, cards, rounds, entries } = audit.data;
 	const drawnNumbers = rounds.reduce((total, round) => total + round.drawnNumbers.length, 0);
+	const displayedRounds = selectedRoundSequence ? rounds.filter((round) => round.sequence === selectedRoundSequence) : rounds;
+	const selectedRound = rounds.find((round) => round.sequence === selectedRoundSequence);
+	const selectRound = (value: string) => {
+		setSelectedRoundSequence(value ? Number(value) : undefined);
+		setPage(1);
+	};
 
 	return (
 		<AppShell>
@@ -71,8 +81,19 @@ export function AuditPage() {
 						</div>
 						<p>O hash é publicado antes da primeira pedra; a sequência é revelada após o encerramento.</p>
 					</div>
+					<label className="audit-round-filter">
+						<span>Exibir auditoria da rodada</span>
+						<select value={selectedRoundSequence ?? ""} onChange={(event) => selectRound(event.target.value)}>
+							<option value="">Todas as rodadas</option>
+							{rounds.map((round) => (
+								<option key={round.sequence} value={round.sequence}>
+									Rodada {round.sequence} — {round.name}
+								</option>
+							))}
+						</select>
+					</label>
 					<div className="audit-round-grid">
-						{rounds.map((round) => (
+						{displayedRounds.map((round) => (
 							<article className="audit-round-card" key={round.sequence}>
 								<div className="audit-round-card-header">
 									<div>
@@ -123,11 +144,11 @@ export function AuditPage() {
 							<h2 id="audit-timeline-title">Linha do tempo</h2>
 						</div>
 						<p>
-							{entries.totalItems} registros · exibindo {entries.items.length} nesta página
+							{entries.totalItems} registros{selectedRound ? ` da Rodada ${selectedRound.sequence}` : ""} · exibindo {entries.items.length} nesta página
 						</p>
 					</div>
 					{entries.items.length === 0 ? (
-						<p className="audit-empty">Nenhuma ação foi registrada para este evento.</p>
+						<p className="audit-empty">Nenhuma ação foi registrada {selectedRound ? "para esta rodada" : "para este evento"}.</p>
 					) : (
 						<ol>
 							{entries.items.map((entry) => (

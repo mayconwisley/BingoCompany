@@ -26,8 +26,8 @@ public sealed class ManualCardMarkingService(IManualCardMarkingRepository reposi
 		var isCardExcluded = await repository.IsExcludedFromActiveStage(round.Id, round.ActiveStage.Id, card.Id, cancellationToken);
 		var winnerDetection = gameplayService.DetectManualWinner(round, card, markedNumbers, drawn.Sequence, isCardExcluded);
 		if (winnerDetection.HasWinner) repository.AddWinner(winnerDetection.Winner!);
-		repository.AddAuditEntry(new AuditEntry(eventId, "Número marcado", $"Cartela {card.PublicCode} marcou a pedra {number} na rodada {round.Name}."));
-		if (winnerDetection.HasWinner) repository.AddAuditEntry(new AuditEntry(eventId, "Prêmio detectado", "Uma cartela manual atingiu a regra ativa."));
+		repository.AddAuditEntry(new AuditEntry(eventId, "Número marcado", $"Cartela {card.PublicCode} marcou a pedra {number} na rodada {round.Name}.", round.Id));
+		if (winnerDetection.HasWinner) repository.AddAuditEntry(new AuditEntry(eventId, "Prêmio detectado", "Uma cartela manual atingiu a regra ativa.", round.Id));
 		await repository.SaveChanges(cancellationToken);
 		return new ManualCardMarkingResult(true, winnerDetection.HasWinner, round.Id);
 	}

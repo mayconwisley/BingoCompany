@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
@@ -31,6 +31,27 @@ const finishedEvent: EventDetails = {
 };
 
 describe("EventSetupPage", () => {
+	it("sugere o próximo número ao preparar uma nova rodada", async () => {
+		vi.mocked(bingoApi.getEvent).mockResolvedValue({
+			...finishedEvent,
+			status: "Running",
+			rounds: [
+				finishedEvent.rounds[0],
+				{ id: "round-2", name: "Rodada especial", status: "Finished", createdAt: "2026-07-14T11:30:00Z", stages: [] }
+			]
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/admin/eventos/event-1?code=EVENTO1"]}>
+				<Routes>
+					<Route path="/admin/eventos/:eventId" element={<EventSetupPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		await waitFor(() => expect(screen.getByLabelText("Nome da rodada")).toHaveValue("Rodada 3"));
+	});
+
 	it("mantém somente a auditoria acessível quando o evento está finalizado", async () => {
 		vi.mocked(bingoApi.getEvent).mockResolvedValue(finishedEvent);
 

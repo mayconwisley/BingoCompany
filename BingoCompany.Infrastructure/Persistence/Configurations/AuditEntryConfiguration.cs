@@ -10,6 +10,7 @@ public sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEntr
 	{
 		builder.HasKey(item => item.Id);
 		builder.HasIndex(item => new { item.EventId, item.OccurredAt });
+		builder.HasIndex(item => new { item.EventId, item.RoundId, item.OccurredAt });
 		builder.Property(item => item.Action).HasMaxLength(120);
 	}
 }

@@ -61,6 +61,30 @@ public sealed class PublicControllerAuditPaginationTests
 		Assert.Equal(card.PublicCode, auditWinner.GetProperty("cardCode").GetString());
 	}
 
+	[Fact]
+	public async Task Audit_Filters_entries_by_the_requested_round_sequence()
+	{
+		var options = new DbContextOptionsBuilder<BingoDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+		await using var db = new BingoDbContext(options);
+		var bingoEvent = new BingoEvent(Guid.CreateVersion7(), "Festa");
+		var firstRound = new BingoRound(bingoEvent.Id, 1, "Rodada 1");
+		var secondRound = new BingoRound(bingoEvent.Id, 2, "Rodada 2");
+		db.AddRange(bingoEvent, firstRound, secondRound);
+		db.AuditEntries.AddRange(
+			new AuditEntry(bingoEvent.Id, "Ação da rodada 1", "Detalhes 1", firstRound.Id),
+			new AuditEntry(bingoEvent.Id, "Ação da rodada 2", "Detalhes 2", secondRound.Id),
+			new AuditEntry(bingoEvent.Id, "Ação do evento", "Detalhes sem rodada"));
+		await db.SaveChangesAsync();
+		var controller = CreateController(db);
+
+		var response = Assert.IsType<OkObjectResult>((await controller.Audit(bingoEvent.PublicCode, roundSequence: 2)).Result);
+		using var document = JsonDocument.Parse(JsonSerializer.Serialize(response.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+		var entries = document.RootElement.GetProperty("entries");
+
+		Assert.Equal(1, entries.GetProperty("totalItems").GetInt32());
+		Assert.Equal("Ação da rodada 2", entries.GetProperty("items")[0].GetProperty("action").GetString());
+	}
+
 	private static int[,] CreateCard() => new[,]
 	{
 		{ 1, 16, 31, 46, 61 },

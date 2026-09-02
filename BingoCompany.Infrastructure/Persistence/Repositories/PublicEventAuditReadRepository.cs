@@ -7,7 +7,7 @@ namespace BingoCompany.Infrastructure.Persistence.Repositories;
 
 public sealed class PublicEventAuditReadRepository(BingoDbContext db) : IPublicEventAuditReadRepository
 {
-	public async Task<PublicEventAuditResult?> Get(string publicCode, int page, int pageSize, CancellationToken cancellationToken)
+	public async Task<PublicEventAuditResult?> Get(string publicCode, int page, int pageSize, int? roundSequence, CancellationToken cancellationToken)
 	{
 		var bingoEvent = await db.Events.AsNoTracking().SingleOrDefaultAsync(item => item.PublicCode == publicCode, cancellationToken);
 		if (bingoEvent is null) return null;
@@ -15,7 +15,14 @@ public sealed class PublicEventAuditReadRepository(BingoDbContext db) : IPublicE
 		var participants = await db.Participants.AsNoTracking().Where(item => item.EventId == bingoEvent.Id).OrderBy(item => item.JoinedAt).Select(item => new PublicAuditParticipant(item.Id, item.Name, item.JoinedAt)).ToListAsync(cancellationToken);
 		var cards = await db.Cards.AsNoTracking().Where(item => item.EventId == bingoEvent.Id).OrderBy(item => item.CreatedAt).Select(item => new PublicAuditCard(item.Id, item.PublicCode, item.Type, item.Status, item.ParticipantId, item.CreatedAt)).ToListAsync(cancellationToken);
 		var winners = await db.RoundWinners.AsNoTracking().Where(item => rounds.Select(round => round.Id).Contains(item.RoundId)).ToListAsync(cancellationToken);
+		var selectedRoundId = roundSequence.HasValue
+			? rounds.SingleOrDefault(round => round.Sequence == roundSequence.Value)?.Id
+			: null;
 		var auditEntries = db.AuditEntries.AsNoTracking().Where(item => item.EventId == bingoEvent.Id);
+		if (roundSequence.HasValue)
+			auditEntries = selectedRoundId.HasValue
+				? auditEntries.Where(item => item.RoundId == selectedRoundId)
+				: auditEntries.Where(_ => false);
 		var totalEntries = await auditEntries.CountAsync(cancellationToken);
 		var entries = await auditEntries
 			.OrderByDescending(item => item.OccurredAt)
