@@ -21,7 +21,7 @@ public sealed class EventsControllerStartRoundTests
 		db.Events.Add(bingoEvent);
 		db.Rounds.Add(round);
 		await db.SaveChangesAsync();
-		var controller = new EventsController(db, null!, null!, null!, null!, null!, null!);
+		var controller = new EventsController(null!, null!, null!, null!, null!, new BingoCompany.Application.Services.CardStateQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.CardStateReadRepository(db)), new BingoCompany.Application.Services.CompanyEventsQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.CompanyEventsReadRepository(db)), new BingoCompany.Application.Services.EventConfigurationService(new BingoCompany.Infrastructure.Persistence.Repositories.EventConfigurationRepository(db)), new BingoCompany.Application.Services.CardLifecycleService(new BingoCompany.Infrastructure.Persistence.Repositories.CardLifecycleRepository(db)), new BingoCompany.Application.Services.EventRoundManagementService(new BingoCompany.Infrastructure.Persistence.Repositories.EventRoundManagementRepository(db)));
 
 		var response = await controller.StartRound(bingoEvent.Id, round.Id);
 

@@ -20,7 +20,7 @@ public sealed class CompanyEventOwnerFilterTests
 		var actionDescriptor = new ActionDescriptor { EndpointMetadata = [new AllowAnonymousAttribute()] };
 		var actionContext = new ActionContext(new DefaultHttpContext(), new RouteData(new RouteValueDictionary { ["eventId"] = Guid.CreateVersion7() }), actionDescriptor);
 		var actionExecutingContext = new ActionExecutingContext(actionContext, [], new Dictionary<string, object?>(), new object());
-		var filter = new CompanyEventOwnerFilter(db);
+		var filter = new CompanyEventOwnerFilter(new BingoCompany.Application.Services.CompanyEventAuthorizationService(new BingoCompany.Infrastructure.Persistence.Repositories.CompanyEventAuthorizationRepository(db)));
 		var executed = false;
 
 		await filter.OnActionExecutionAsync(actionExecutingContext, () =>

@@ -23,7 +23,7 @@ public sealed class EventsControllerPaginationTests
 		db.Events.AddRange(firstEvent, secondEvent, thirdEvent, new BingoEvent(Guid.CreateVersion7(), "Outro evento"));
 		await db.SaveChangesAsync();
 		var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim("company_id", companyId.ToString())])) };
-		var controller = new EventsController(db, null!, null!, null!, null!, null!, null!) { ControllerContext = new ControllerContext { HttpContext = httpContext } };
+		var controller = new EventsController(null!, null!, null!, null!, null!, new BingoCompany.Application.Services.CardStateQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.CardStateReadRepository(db)), new BingoCompany.Application.Services.CompanyEventsQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.CompanyEventsReadRepository(db)), new BingoCompany.Application.Services.EventConfigurationService(new BingoCompany.Infrastructure.Persistence.Repositories.EventConfigurationRepository(db)), new BingoCompany.Application.Services.CardLifecycleService(new BingoCompany.Infrastructure.Persistence.Repositories.CardLifecycleRepository(db)), new BingoCompany.Application.Services.EventRoundManagementService(new BingoCompany.Infrastructure.Persistence.Repositories.EventRoundManagementRepository(db))) { ControllerContext = new ControllerContext { HttpContext = httpContext } };
 
 		var response = Assert.IsType<OkObjectResult>((await controller.List(1, 2)).Result);
 		using var result = JsonDocument.Parse(JsonSerializer.Serialize(response.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));

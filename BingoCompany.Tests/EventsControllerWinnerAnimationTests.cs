@@ -36,7 +36,7 @@ public sealed class EventsControllerWinnerAnimationTests
 		db.Rounds.AddRange(awardedRound, nextRound);
 		db.RoundWinners.Add(winner);
 		await db.SaveChangesAsync();
-		var controller = new EventsController(db, null!, null!, null!, null!, null!, null!);
+		var controller = new EventsController(null!, null!, null!, null!, null!, new BingoCompany.Application.Services.CardStateQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.CardStateReadRepository(db)), new BingoCompany.Application.Services.CompanyEventsQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.CompanyEventsReadRepository(db)), new BingoCompany.Application.Services.EventConfigurationService(new BingoCompany.Infrastructure.Persistence.Repositories.EventConfigurationRepository(db)), new BingoCompany.Application.Services.CardLifecycleService(new BingoCompany.Infrastructure.Persistence.Repositories.CardLifecycleRepository(db)), new BingoCompany.Application.Services.EventRoundManagementService(new BingoCompany.Infrastructure.Persistence.Repositories.EventRoundManagementRepository(db)));
 
 		var response = Assert.IsType<OkObjectResult>((await controller.CardState(bingoEvent.Id, card.PublicCode)).Result);
 		using var stateJson = JsonDocument.Parse(JsonSerializer.Serialize(response.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
@@ -69,7 +69,7 @@ public sealed class EventsControllerWinnerAnimationTests
 		db.Rounds.Add(round);
 		db.RoundWinners.Add(winner);
 		await db.SaveChangesAsync();
-		var controller = new EventsController(db, null!, null!, null!, null!, null!, null!);
+		var controller = new EventsController(null!, null!, null!, null!, null!, new BingoCompany.Application.Services.CardStateQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.CardStateReadRepository(db)), new BingoCompany.Application.Services.CompanyEventsQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.CompanyEventsReadRepository(db)), new BingoCompany.Application.Services.EventConfigurationService(new BingoCompany.Infrastructure.Persistence.Repositories.EventConfigurationRepository(db)), new BingoCompany.Application.Services.CardLifecycleService(new BingoCompany.Infrastructure.Persistence.Repositories.CardLifecycleRepository(db)), new BingoCompany.Application.Services.EventRoundManagementService(new BingoCompany.Infrastructure.Persistence.Repositories.EventRoundManagementRepository(db)));
 
 		var response = Assert.IsType<OkObjectResult>((await controller.CardState(bingoEvent.Id, card.PublicCode)).Result);
 		using var stateJson = JsonDocument.Parse(JsonSerializer.Serialize(response.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));

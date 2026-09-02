@@ -34,7 +34,7 @@ public sealed class PublicControllerTieBreakerTests
 
 		db.AddRange(bingoEvent, round, ana, bruno, anaWinner, brunoWinner);
 		await db.SaveChangesAsync();
-		var controller = new PublicController(db, null!);
+		var controller = PublicControllerFactory.Create(db);
 
 		var response = Assert.IsType<OkObjectResult>((await controller.Get(bingoEvent.PublicCode)).Result);
 		using var document = JsonDocument.Parse(JsonSerializer.Serialize(response.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
@@ -71,7 +71,7 @@ public sealed class PublicControllerTieBreakerTests
 
 		db.AddRange(bingoEvent, round, ana, bruno, anaWinner, brunoWinner);
 		await db.SaveChangesAsync();
-		var controller = new PublicController(db, null!);
+		var controller = PublicControllerFactory.Create(db);
 
 		var response = Assert.IsType<OkObjectResult>((await controller.Get(bingoEvent.PublicCode)).Result);
 		using var document = JsonDocument.Parse(JsonSerializer.Serialize(response.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
@@ -85,4 +85,13 @@ public sealed class PublicControllerTieBreakerTests
 		Assert.Equal(24, tieBreakers[1].GetProperty("number").GetInt32());
 		Assert.False(tieBreakers[1].GetProperty("isWinner").GetBoolean());
 	}
+}
+
+file static class PublicControllerFactory
+{
+	public static PublicController Create(BingoDbContext db) => new(
+		new BingoCompany.Application.Services.EventParticipantRegistrationService(new BingoCompany.Infrastructure.Persistence.Repositories.EventParticipantRegistrationRepository(db)),
+		new BingoCompany.Application.Services.PublicEventQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.PublicEventReadRepository(db)),
+		new BingoCompany.Application.Services.PublicCardActivationService(new BingoCompany.Infrastructure.Persistence.Repositories.PublicCardActivationRepository(db)),
+		new BingoCompany.Application.Services.PublicEventAuditQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.PublicEventAuditReadRepository(db)));
 }

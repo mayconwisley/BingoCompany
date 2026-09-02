@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { bingoApi, bingoBallLabel, useLiveBingo } from "../../features/bingo";
+import { bingoApi, bingoBallLabel, markingModeLabel, useLiveBingo, winningPatternLabel } from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
@@ -34,17 +34,19 @@ export function OperatorPage() {
 	const isCurrentRound = round.id === roundId;
 	const hasWinnerPresentation = Boolean(round.winner);
 	const isPrizeDeliveryPending = isCurrentRound && (round.winner?.isPrizeDeliveryPending ?? round.hasPrizeDeliveryPending ?? false);
-	const hasCards = event.data.cards > 0;
-	const canStart = isCurrentRound && round.status === "Ready" && hasCards;
+	const eligibleCards = round.eligibleCards ?? 0;
+	const openingStage = round.status === "Ready" ? round.stages.at(0) : undefined;
+	const hasEligibleCards = eligibleCards > 0;
+	const canStart = isCurrentRound && round.status === "Ready" && hasEligibleCards;
 	const canDraw = isCurrentRound && round.status === "Drawing" && !hasWinnerPresentation;
 	const needsPrintedValidation = event.data.markingMode !== "Automatic";
 	const canCancel = isCurrentRound && round.status === "Drawing" && !hasWinnerPresentation;
-	const actionLabel = canStart ? "INICIAR RODADA" : "SORTEAR PRÓXIMA PEDRA";
+	const actionLabel = round.status === "Ready" ? "INICIAR RODADA" : "SORTEAR PRÓXIMA PEDRA";
 	const isFinished = isCurrentRound && (round.status === "Finished" || round.status === "Cancelled");
 	const isCancelled = isCurrentRound && round.status === "Cancelled";
 	const actionDisabledReason = !isCurrentRound
 		? "Abra a rodada atual para realizar ações."
-		: round.status === "Ready" && !hasCards
+		: round.status === "Ready" && !hasEligibleCards
 			? "Ative ao menos uma cartela antes de iniciar a rodada."
 			: hasWinnerPresentation
 				? "O telão está apresentando o vencedor. Conclua essa apresentação antes de continuar o sorteio."
@@ -148,6 +150,26 @@ export function OperatorPage() {
 						<p>{isCancelled ? "Rodada cancelada" : round.currentPrize || "Rodada finalizada"}</p>
 					</section>
 					<section className="panel controls">
+						{round.status === "Ready" && isCurrentRound && (
+							<section className="round-readiness" aria-labelledby="round-readiness-title">
+								<div>
+									<p className="eyebrow">Checklist de abertura</p>
+									<h2 id="round-readiness-title">{hasEligibleCards ? "Tudo pronto para iniciar" : "Há pendências para iniciar"}</h2>
+								</div>
+								<ul>
+									<li className={hasEligibleCards ? "is-ready" : "is-pending"}>
+										{eligibleCards} {eligibleCards === 1 ? "cartela elegível" : "cartelas elegíveis"}
+									</li>
+									<li className={round.stages.length > 0 ? "is-ready" : "is-pending"}>
+										{round.stages.length} {round.stages.length === 1 ? "etapa configurada" : "etapas configuradas"}
+									</li>
+									<li className={openingStage ? "is-ready" : "is-pending"}>
+										{openingStage ? `${openingStage.prizeName} · ${winningPatternLabel(openingStage.pattern)}` : "Defina o prêmio inicial"}
+									</li>
+									<li className="is-ready">Marcação {markingModeLabel(event.data.markingMode)}</li>
+								</ul>
+							</section>
+						)}
 						{needsPrintedValidation &&
 							isCurrentRound &&
 							round.status !== "Ready" &&
@@ -228,7 +250,7 @@ export function OperatorPage() {
 							</>
 						)}
 						<p>{round.drawnNumbers.length} pedras sorteadas</p>
-						{round.status === "Ready" && !hasCards && (
+						{round.status === "Ready" && !hasEligibleCards && (
 							<FeedbackMessage warning="Gere e ative ao menos uma cartela antes de iniciar a rodada." />
 						)}
 						{!isCurrentRound && (

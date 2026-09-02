@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { BingoCardGrid, bingoApi, bingoBallLabel, markingModeLabel, useLiveBingo, winningPatternLabel } from "../../features/bingo";
+import { BingoCardGrid, bingoApi, bingoBallLabel, CardProgress, markingModeLabel, useLiveBingo, winningPatternLabel } from "../../features/bingo";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
 import { ConnectionBadge } from "../../shared/ui/ConnectionBadge";
@@ -64,6 +64,11 @@ export function ActiveCardsPage() {
 						return (
 							<article key={card.publicCode}>
 								<p className="active-card-code">Cartela {card.publicCode}</p>
+								<CardProgress
+									prizeName={card.currentPrize}
+									pattern={card.currentPattern}
+									remainingNumbersToWin={card.remainingNumbersToWin}
+								/>
 								<BingoCardGrid
 									numbers={card.numbers}
 									drawnNumbers={card.drawnNumbers}

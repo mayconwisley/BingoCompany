@@ -17,6 +17,7 @@ vi.mock("../../features/bingo/api/bingoApi", () => ({
 	}
 }));
 vi.mock("../../features/bingo/hooks/useLiveBingo", () => ({ useLiveBingo: vi.fn() }));
+vi.mock("../../shared/ui/ThemeToggle", () => ({ ThemeToggle: () => null }));
 
 describe("OperatorPage", () => {
 	beforeEach(() => {
@@ -55,6 +56,41 @@ describe("OperatorPage", () => {
 
 		expect(bingoApi.draw).toHaveBeenCalledWith("event-1", "round-1");
 		expect(bingoApi.startRound).not.toHaveBeenCalled();
+	});
+
+	it("bloqueia o início e informa a pendência quando existem cartelas, mas nenhuma é elegível", async () => {
+		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
+			id: "event-1",
+			name: "Festa",
+			publicCode: "ABC",
+			status: "RegistrationOpen",
+			markingMode: "ManualRequired",
+			participants: 1,
+			cards: 2,
+			round: {
+				id: "round-1",
+				name: "Rodada 1",
+				sequence: 1,
+				status: "Ready",
+				eligibleCards: 0,
+				stages: [{ prizeName: "Vale-presente", pattern: "HorizontalLine", isActive: true, isCompleted: false }],
+				drawnNumbers: [],
+				winnerDetectedCount: 0,
+				tieBreakerRequired: false
+			}
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}>
+				<Routes>
+					<Route path="/operacao/:eventId/:roundId" element={<OperatorPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByRole("heading", { name: "Há pendências para iniciar" })).toBeInTheDocument();
+		expect(screen.getByText("0 cartelas elegíveis")).toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "INICIAR RODADA" })).toBeDisabled();
 	});
 
 	it("exibe a última pedra com a letra da coluna da cartela", async () => {

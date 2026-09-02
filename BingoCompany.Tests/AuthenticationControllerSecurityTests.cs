@@ -21,7 +21,7 @@ public sealed class AuthenticationControllerSecurityTests
 			.Build();
 		var authenticationConfiguration = new AuthenticationConfiguration { CookieName = "__Secure-bingo-company-auth", CookiePath = "/bingo" };
 		var controller = new AuthenticationController(
-			db,
+			new BingoCompany.Infrastructure.Services.AuthenticationService(db),
 			new JwtKeyProvider(configuration, new TestHostEnvironment()),
 			authenticationConfiguration,
 			new TestHostEnvironment())
@@ -46,7 +46,7 @@ public sealed class AuthenticationControllerSecurityTests
 			.Build();
 		var authenticationConfiguration = new AuthenticationConfiguration { CookieName = "__Secure-bingo-company-auth", CookiePath = "/bingo" };
 		var controller = new AuthenticationController(
-			db,
+			new BingoCompany.Infrastructure.Services.AuthenticationService(db),
 			new JwtKeyProvider(configuration, new TestHostEnvironment()),
 			authenticationConfiguration,
 			new TestHostEnvironment())

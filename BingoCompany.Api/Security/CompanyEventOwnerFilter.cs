@@ -1,13 +1,12 @@
 using System.Security.Claims;
-using BingoCompany.Infrastructure.Persistence;
+using BingoCompany.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.EntityFrameworkCore;
 
 namespace BingoCompany.Api.Security;
 
-public sealed class CompanyEventOwnerFilter(BingoDbContext db) : IAsyncActionFilter
+public sealed class CompanyEventOwnerFilter(ICompanyEventAuthorizationService authorizationService) : IAsyncActionFilter
 {
 	public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
 	{
@@ -30,7 +29,7 @@ public sealed class CompanyEventOwnerFilter(BingoDbContext db) : IAsyncActionFil
 			return;
 		}
 
-		var ownsEvent = await db.Events.AnyAsync(item => item.Id == eventId && item.CompanyId == parsedCompanyId, context.HttpContext.RequestAborted);
+		var ownsEvent = await authorizationService.OwnsEvent(eventId, parsedCompanyId, context.HttpContext.RequestAborted);
 		if (!ownsEvent)
 		{
 			context.Result = new NotFoundResult();

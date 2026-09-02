@@ -1798,6 +1798,37 @@ main > h1 {
 	margin: 0;
 	color: var(--text);
 }
+.card-progress {
+	display: grid;
+	gap: 0.25rem;
+	margin: 0 0 1rem;
+	padding: 1rem 1.15rem;
+	border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--line));
+	border-radius: 16px;
+	background: color-mix(in srgb, var(--surface) 90%, var(--primary));
+}
+.card-progress > span {
+	color: var(--muted);
+	font-size: 0.75rem;
+	font-weight: 800;
+	letter-spacing: 0.1em;
+}
+.card-progress > strong {
+	color: var(--primary);
+	font-size: 1.25rem;
+}
+.card-progress > p {
+	margin: 0;
+	color: var(--text);
+}
+.active-bingo-cards-grid .card-progress {
+	margin-bottom: 0.75rem;
+	padding: 0.7rem;
+	text-align: center;
+}
+.active-bingo-cards-grid .card-progress > strong {
+	font-size: 1rem;
+}
 .history {
 	margin-top: 32px;
 }
@@ -1837,6 +1868,41 @@ main > h1 {
 	font:
 		700 clamp(7rem, 18vw, 15rem)/1 Fraunces,
 		serif;
+}
+.round-readiness {
+	display: grid;
+	gap: 0.8rem;
+	margin-bottom: 1.25rem;
+	padding-bottom: 1.25rem;
+	border-bottom: 1px solid var(--line);
+}
+.round-readiness h2,
+.round-readiness p {
+	margin: 0;
+}
+.round-readiness ul {
+	display: grid;
+	gap: 0.55rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.round-readiness li {
+	padding: 0.65rem 0.75rem;
+	border-radius: 10px;
+	font-weight: 700;
+}
+.round-readiness .is-ready {
+	background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+}
+.round-readiness .is-ready::before {
+	content: "✓ ";
+}
+.round-readiness .is-pending {
+	background: color-mix(in srgb, var(--warm) 16%, var(--surface));
+}
+.round-readiness .is-pending::before {
+	content: "! ";
 }
 .drawball p {
 	font-weight: 800;

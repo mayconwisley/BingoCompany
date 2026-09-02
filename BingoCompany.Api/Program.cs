@@ -1,6 +1,4 @@
 using BingoCompany.Api.Security;
-using BingoCompany.Api.Interfaces;
-using BingoCompany.Api.Services;
 using BingoCompany.Application;
 using BingoCompany.Infrastructure;
 using BingoCompany.Infrastructure.Persistence;
@@ -78,7 +76,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddAuthorization(options => options.AddPolicy("company-user", policy => policy.RequireClaim("company_id")));
 builder.Services.AddBingoApplication();
 builder.Services.AddBingoInfrastructure(builder.Configuration);
-builder.Services.AddScoped<IEventParticipantRegistrationService, EventParticipantRegistrationService>();
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 builder.Services.AddRateLimiter(options =>
 {

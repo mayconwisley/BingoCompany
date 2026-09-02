@@ -29,7 +29,7 @@ public sealed class EventsControllerManualMarkingTests
 		db.Cards.Add(card);
 		db.Rounds.Add(round);
 		await db.SaveChangesAsync();
-		var controller = new EventsController(db, null!, null!, null!, null!, null!, null!);
+		var controller = new EventsController(null!, null!, null!, null!, null!, new BingoCompany.Application.Services.CardStateQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.CardStateReadRepository(db)), new BingoCompany.Application.Services.CompanyEventsQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.CompanyEventsReadRepository(db)), new BingoCompany.Application.Services.EventConfigurationService(new BingoCompany.Infrastructure.Persistence.Repositories.EventConfigurationRepository(db)), new BingoCompany.Application.Services.CardLifecycleService(new BingoCompany.Infrastructure.Persistence.Repositories.CardLifecycleRepository(db)), new BingoCompany.Application.Services.EventRoundManagementService(new BingoCompany.Infrastructure.Persistence.Repositories.EventRoundManagementRepository(db)), new BingoCompany.Application.Services.ManualCardMarkingService(new BingoCompany.Infrastructure.Persistence.Repositories.ManualCardMarkingRepository(db), new BingoCompany.Application.Services.BingoRoundGameplayService()));
 
 		var response = await controller.Mark(bingoEvent.Id, card.PublicCode, new MarkNumberRequest(1));
 

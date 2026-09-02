@@ -1,8 +1,8 @@
-using BingoCompany.Api.Contracts;
-using BingoCompany.Api.Services;
+using BingoCompany.Application.Services;
 using BingoCompany.Domain;
 using BingoCompany.Domain.Entities;
 using BingoCompany.Infrastructure.Persistence;
+using BingoCompany.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace BingoCompany.Tests;
@@ -18,9 +18,9 @@ public sealed class EventParticipantRegistrationServiceTests
 		bingoEvent.OpenRegistration(3);
 		db.Events.Add(bingoEvent);
 		await db.SaveChangesAsync();
-		var service = new EventParticipantRegistrationService(db);
+		var service = new EventParticipantRegistrationService(new EventParticipantRegistrationRepository(db));
 
-		var registration = await service.Register(bingoEvent.Id, new JoinEventRequest("Ana"), null, CancellationToken.None);
+		var registration = await service.Register(bingoEvent.Id, new EventParticipantRegistrationRequest("Ana", null, null, null, null), null, CancellationToken.None);
 
 		Assert.NotNull(registration);
 		Assert.Equal(3, registration.Cards.Count);
@@ -37,9 +37,9 @@ public sealed class EventParticipantRegistrationServiceTests
 		bingoEvent.OpenRegistration();
 		db.Events.Add(bingoEvent);
 		await db.SaveChangesAsync();
-		var service = new EventParticipantRegistrationService(db);
+		var service = new EventParticipantRegistrationService(new EventParticipantRegistrationRepository(db));
 
-		var registration = await service.Register(bingoEvent.Id, new JoinEventRequest("Ana"), null, CancellationToken.None);
+		var registration = await service.Register(bingoEvent.Id, new EventParticipantRegistrationRequest("Ana", null, null, null, null), null, CancellationToken.None);
 
 		var card = Assert.Single(registration!.Cards);
 		Assert.Equal(CardStatus.Active, card.Status);
@@ -54,12 +54,12 @@ public sealed class EventParticipantRegistrationServiceTests
 		bingoEvent.OpenCardPurchase(10);
 		db.Events.Add(bingoEvent);
 		await db.SaveChangesAsync();
-		var service = new EventParticipantRegistrationService(db);
+		var service = new EventParticipantRegistrationService(new EventParticipantRegistrationRepository(db));
 
 		var account = new ParticipantAccount("Ana", "ana@example.com", "hash");
 		db.ParticipantAccounts.Add(account);
 		await db.SaveChangesAsync();
-		var registration = await service.Register(bingoEvent.Id, new JoinEventRequest(CardsQuantity: 4), account.Id, CancellationToken.None);
+		var registration = await service.Register(bingoEvent.Id, new EventParticipantRegistrationRequest(null, null, null, null, 4), account.Id, CancellationToken.None);
 
 		Assert.Equal(4, registration!.Cards.Count);
 		Assert.All(registration.Cards, card => Assert.Equal(CardStatus.Assigned, card.Status));
@@ -76,11 +76,11 @@ public sealed class EventParticipantRegistrationServiceTests
 		db.Events.Add(bingoEvent);
 		db.ParticipantAccounts.Add(account);
 		await db.SaveChangesAsync();
-		var service = new EventParticipantRegistrationService(db);
+		var service = new EventParticipantRegistrationService(new EventParticipantRegistrationRepository(db));
 
 		await service.Register(
 			bingoEvent.Id,
-			new JoinEventRequest("Outro nome", ParticipantType.Guest, "123", "Responsável", CardsQuantity: 1),
+			new EventParticipantRegistrationRequest("Outro nome", ParticipantType.Guest, "123", "Responsável", 1),
 			account.Id,
 			CancellationToken.None);
 
@@ -102,9 +102,9 @@ public sealed class EventParticipantRegistrationServiceTests
 		db.Events.Add(bingoEvent);
 		db.ParticipantAccounts.Add(account);
 		await db.SaveChangesAsync();
-		var service = new EventParticipantRegistrationService(db);
+		var service = new EventParticipantRegistrationService(new EventParticipantRegistrationRepository(db));
 
-		var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => service.Register(bingoEvent.Id, new JoinEventRequest("Ana", CardsQuantity: 4), account.Id, CancellationToken.None));
+		var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => service.Register(bingoEvent.Id, new EventParticipantRegistrationRequest("Ana", null, null, null, 4), account.Id, CancellationToken.None));
 
 		Assert.Equal("Não há cartelas suficientes disponíveis para esta compra.", exception.Message);
 	}

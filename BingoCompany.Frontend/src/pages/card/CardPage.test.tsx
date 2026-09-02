@@ -6,6 +6,7 @@ import { CardPage } from "./CardPage";
 
 vi.mock("../../features/bingo/api/bingoApi", () => ({ bingoApi: { generateNextCard: vi.fn(), getCard: vi.fn(), mark: vi.fn() } }));
 vi.mock("../../features/bingo/hooks/useLiveBingo", () => ({ useLiveBingo: vi.fn() }));
+vi.mock("../../shared/ui/ThemeToggle", () => ({ ThemeToggle: () => null }));
 
 describe("CardPage", () => {
 	it("destaca a cartela somente após a revelação da vitória", async () => {
@@ -63,6 +64,34 @@ describe("CardPage", () => {
 		expect(currentNumber).toBeEnabled();
 		fireEvent.click(currentNumber);
 		expect(bingoApi.mark).toHaveBeenCalledWith("event-1", "MANUAL", 16);
+	});
+
+	it("mostra o progresso oficial para o prêmio da etapa atual", async () => {
+		vi.mocked(bingoApi.getCard).mockResolvedValue({
+			id: "card-1",
+			publicCode: "PROGRESSO",
+			isWinner: false,
+			numbers: [[1, 16, 31, 46, 61]],
+			markingMode: "Automatic",
+			currentPrize: "Vale-presente",
+			currentPattern: "HorizontalLine",
+			remainingNumbersToWin: 2,
+			drawnNumbers: [1, 16, 31],
+			markedNumbers: [],
+			lastSequence: 3,
+			canGenerateNextCard: false
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/cartela/event-1/PROGRESSO"]}>
+				<Routes>
+					<Route path="/cartela/:eventId/:cardCode" element={<CardPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByLabelText("Seu progresso na rodada")).toHaveTextContent("Faltam 2 números");
+		expect(screen.getByLabelText("Seu progresso na rodada")).toHaveTextContent("Vale-presente · Uma linha");
 	});
 
 	it("identifica o familiar e o colaborador responsável na cartela digital", async () => {

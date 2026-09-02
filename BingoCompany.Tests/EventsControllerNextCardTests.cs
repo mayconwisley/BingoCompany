@@ -33,7 +33,7 @@ public sealed class EventsControllerNextCardTests
 		db.RoundWinners.Add(winner);
 		db.RoundEligibleCards.Add(new RoundEligibleCard(round.Id, card.Id, participant.Id));
 		await db.SaveChangesAsync();
-		var controller = new EventsController(db, null!, null!, null!, null!, null!, null!);
+		var controller = EventsControllerTestFactory.Create(db);
 
 		var state = Assert.IsType<OkObjectResult>((await controller.CardState(bingoEvent.Id, card.PublicCode)).Result);
 		using var stateJson = JsonDocument.Parse(JsonSerializer.Serialize(state.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
@@ -60,12 +60,39 @@ public sealed class EventsControllerNextCardTests
 		db.Events.Add(bingoEvent);
 		db.Cards.Add(card);
 		await db.SaveChangesAsync();
-		var controller = new EventsController(db, null!, null!, null!, null!, null!, null!);
+		var controller = EventsControllerTestFactory.Create(db);
 
 		var state = Assert.IsType<OkObjectResult>((await controller.CardState(bingoEvent.Id, card.PublicCode)).Result);
 		using var stateJson = JsonDocument.Parse(JsonSerializer.Serialize(state.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
 
 		Assert.Equal("Finished", stateJson.RootElement.GetProperty("eventStatus").GetString());
+	}
+
+	[Fact]
+	public async Task Includes_the_official_remaining_numbers_for_the_current_prize()
+	{
+		var options = new DbContextOptionsBuilder<BingoDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+		await using var db = new BingoDbContext(options);
+		var bingoEvent = new BingoEvent(Guid.CreateVersion7(), "Festa");
+		bingoEvent.OpenRegistration();
+		bingoEvent.Start();
+		var participant = new Participant(bingoEvent.Id, "Ana");
+		var card = new BingoCard(bingoEvent.Id, participant.Id, CardType.Digital, CreateCard());
+		var round = new BingoRound(bingoEvent.Id, 1, "Rodada 1");
+		round.AddStage(new PrizeStage(round.Id, 1, "Linha", WinningPattern.HorizontalLine));
+		round.Start(Enumerable.Range(1, 75).ToArray(), "hash");
+		round.DrawNext();
+		db.Events.Add(bingoEvent);
+		db.Participants.Add(participant);
+		db.Cards.Add(card);
+		db.Rounds.Add(round);
+		await db.SaveChangesAsync();
+		var controller = EventsControllerTestFactory.Create(db);
+
+		var state = Assert.IsType<OkObjectResult>((await controller.CardState(bingoEvent.Id, card.PublicCode)).Result);
+		using var stateJson = JsonDocument.Parse(JsonSerializer.Serialize(state.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+
+		Assert.Equal(4, stateJson.RootElement.GetProperty("remainingNumbersToWin").GetInt32());
 	}
 
 	private static int[,] CreateCard() => new[,]
@@ -76,4 +103,15 @@ public sealed class EventsControllerNextCardTests
 		{ 4, 19, 34, 49, 64 },
 		{ 5, 20, 35, 50, 65 }
 	};
+}
+
+file static class EventsControllerTestFactory
+{
+	public static EventsController Create(BingoDbContext db) => new(
+		null!, null!, null!, null!, null!,
+		new BingoCompany.Application.Services.CardStateQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.CardStateReadRepository(db)),
+		new BingoCompany.Application.Services.CompanyEventsQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.CompanyEventsReadRepository(db)),
+		new BingoCompany.Application.Services.EventConfigurationService(new BingoCompany.Infrastructure.Persistence.Repositories.EventConfigurationRepository(db)),
+		new BingoCompany.Application.Services.CardLifecycleService(new BingoCompany.Infrastructure.Persistence.Repositories.CardLifecycleRepository(db)),
+		new BingoCompany.Application.Services.EventRoundManagementService(new BingoCompany.Infrastructure.Persistence.Repositories.EventRoundManagementRepository(db)));
 }

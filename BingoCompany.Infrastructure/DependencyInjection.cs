@@ -1,6 +1,8 @@
 using BingoCompany.Infrastructure.Persistence;
 using BingoCompany.Infrastructure.Persistence.Repositories;
+using BingoCompany.Infrastructure.Services;
 using BingoCompany.Domain.Repositories;
+using BingoCompany.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,6 +23,19 @@ public static class DependencyInjection
 
 		services.AddDbContextPool<BingoDbContext>(options => PostgresConfiguration.Configure(options, connectionString), poolSize);
 		services.AddScoped<IEventCardPurchaseRepository, EventCardPurchaseRepository>();
+		services.AddScoped<IEventParticipantRegistrationRepository, EventParticipantRegistrationRepository>();
+		services.AddScoped<ICompanyEventAuthorizationRepository, CompanyEventAuthorizationRepository>();
+		services.AddScoped<ICompanyEventsReadRepository, CompanyEventsReadRepository>();
+		services.AddScoped<IEventConfigurationRepository, EventConfigurationRepository>();
+		services.AddScoped<ICardLifecycleRepository, CardLifecycleRepository>();
+		services.AddScoped<IEventRoundManagementRepository, EventRoundManagementRepository>();
+		services.AddScoped<IManualCardMarkingRepository, ManualCardMarkingRepository>();
+		services.AddScoped<IRoundGameplayRepository, RoundGameplayRepository>();
+		services.AddScoped<ICardStateReadRepository, CardStateReadRepository>();
+		services.AddScoped<IPublicEventReadRepository, PublicEventReadRepository>();
+		services.AddScoped<IPublicCardActivationRepository, PublicCardActivationRepository>();
+		services.AddScoped<IPublicEventAuditReadRepository, PublicEventAuditReadRepository>();
+		services.AddScoped<IAuthenticationService, AuthenticationService>();
 		services.AddScoped<IParticipantCardsRepository, ParticipantCardsRepository>();
 		services.AddScoped<IPrintedWinnerValidationRepository, PrintedWinnerValidationRepository>();
 		services.AddScoped<IPrintedCardRegistrationRepository, PrintedCardRegistrationRepository>();

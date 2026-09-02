@@ -89,6 +89,7 @@ export type PublicEvent = {
 		currentPrize?: string;
 		currentPrizeImageDataUrl?: string;
 		presentationPrizeImageDataUrl?: string;
+		eligibleCards?: number;
 		stages: PrizeStage[];
 		drawnNumbers: number[];
 		winnerDetectedCount: number;
@@ -118,6 +119,7 @@ export type CardState = {
 	roundStatus?: string;
 	currentPrize?: string;
 	currentPattern?: string;
+	remainingNumbersToWin?: number;
 	drawnNumbers: number[];
 	markedNumbers: number[];
 	lastSequence: number;

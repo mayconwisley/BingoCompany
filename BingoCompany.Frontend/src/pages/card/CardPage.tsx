@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { BingoCardGrid, bingoApi, bingoBallLabel, markingModeLabel, useLiveBingo, winningPatternLabel } from "../../features/bingo";
+import { BingoCardGrid, bingoApi, bingoBallLabel, CardProgress, markingModeLabel, useLiveBingo, winningPatternLabel } from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
@@ -78,6 +78,11 @@ export function CardPage() {
 						</p>
 					</section>
 				)}
+				<CardProgress
+					prizeName={card.data.currentPrize}
+					pattern={card.data.currentPattern}
+					remainingNumbersToWin={card.data.remainingNumbersToWin}
+				/>
 				<BingoCardGrid
 					numbers={card.data.numbers}
 					drawnNumbers={card.data.drawnNumbers}

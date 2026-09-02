@@ -26,7 +26,7 @@ public sealed class EventsControllerUpdateRoundTests
 		}
 
 		await using var db = new BingoDbContext(options);
-		var controller = new EventsController(db, null!, null!, null!, null!, null!, null!);
+		var controller = new EventsController(null!, null!, null!, null!, null!, new BingoCompany.Application.Services.CardStateQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.CardStateReadRepository(db)), new BingoCompany.Application.Services.CompanyEventsQueryService(new BingoCompany.Infrastructure.Persistence.Repositories.CompanyEventsReadRepository(db)), new BingoCompany.Application.Services.EventConfigurationService(new BingoCompany.Infrastructure.Persistence.Repositories.EventConfigurationRepository(db)), new BingoCompany.Application.Services.CardLifecycleService(new BingoCompany.Infrastructure.Persistence.Repositories.CardLifecycleRepository(db)), new BingoCompany.Application.Services.EventRoundManagementService(new BingoCompany.Infrastructure.Persistence.Repositories.EventRoundManagementRepository(db)));
 		var request = new CreateRoundRequest("Rodada atualizada", [
 			new CreatePrizeStageRequest(1, "Vale-presente", WinningPattern.HorizontalLine),
 			new CreatePrizeStageRequest(2, "Prêmio principal", WinningPattern.FullCard)

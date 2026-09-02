@@ -1,11 +1,8 @@
 using BingoCompany.Api.Contracts;
 using BingoCompany.Api.Security;
-using BingoCompany.Domain.Entities;
-using BingoCompany.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Identity;
+using BingoCompany.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -15,40 +12,36 @@ namespace BingoCompany.Api.Controllers;
 
 [ApiController, Route("api/participant-auth")]
 [EnableRateLimiting("auth")]
-public sealed class ParticipantAuthenticationController(BingoDbContext db, JwtKeyProvider jwtKeyProvider, AuthenticationConfiguration configuration, IHostEnvironment environment) : ControllerBase
+public sealed class ParticipantAuthenticationController(IAuthenticationService authenticationService, JwtKeyProvider jwtKeyProvider, AuthenticationConfiguration configuration, IHostEnvironment environment) : ControllerBase
 {
-	private readonly PasswordHasher<ParticipantAccount> _passwordHasher = new();
-
 	[HttpPost("register")]
 	public async Task<ActionResult<ParticipantAuthResponse>> Register(RegisterParticipantAccountRequest request, CancellationToken cancellationToken)
 	{
-		var email = request.Email.Trim().ToLowerInvariant();
-		if (await db.ParticipantAccounts.AnyAsync(item => item.Email == email, cancellationToken)) return BadRequest("Já existe uma conta de participante com este e-mail.");
-
-		var account = new ParticipantAccount(request.Name, email, string.Empty);
-		account = new ParticipantAccount(request.Name, email, _passwordHasher.HashPassword(account, request.Password));
-		db.ParticipantAccounts.Add(account);
-		await db.SaveChangesAsync(cancellationToken);
-		return Ok(CreateResponse(account));
+		try
+		{
+			var account = await authenticationService.RegisterParticipant(request.Name, request.Email, request.Password, cancellationToken);
+			return Ok(CreateResponse(account));
+		}
+		catch (InvalidOperationException exception)
+		{
+			return BadRequest(exception.Message);
+		}
 	}
 
 	[HttpPost("login")]
 	public async Task<ActionResult<ParticipantAuthResponse>> Login(LoginRequest request, CancellationToken cancellationToken)
 	{
-		var email = request.Email.Trim().ToLowerInvariant();
-		var account = await db.ParticipantAccounts.SingleOrDefaultAsync(item => item.Email == email, cancellationToken);
-		if (account is null || _passwordHasher.VerifyHashedPassword(account, account.PasswordHash, request.Password) == PasswordVerificationResult.Failed) return Unauthorized("E-mail ou senha inválidos.");
-
-		return Ok(CreateResponse(account));
+		var account = await authenticationService.LoginParticipant(request.Email, request.Password, cancellationToken);
+		return account is null ? Unauthorized("E-mail ou senha inválidos.") : Ok(CreateResponse(account));
 	}
 
-	private ParticipantAuthResponse CreateResponse(ParticipantAccount account)
+	private ParticipantAuthResponse CreateResponse(ParticipantAuthenticationResult account)
 	{
 		var expiresAt = DateTime.UtcNow.AddMinutes(configuration.TokenLifetimeMinutes);
 		var claims = new[]
 		{
-			new Claim(JwtRegisteredClaimNames.Sub, account.Id.ToString()),
-			new Claim("participant_account_id", account.Id.ToString()),
+			new Claim(JwtRegisteredClaimNames.Sub, account.AccountId.ToString()),
+			new Claim("participant_account_id", account.AccountId.ToString()),
 			new Claim("account_type", "participant"),
 			new Claim(ClaimTypes.Name, account.Name),
 			new Claim(ClaimTypes.Email, account.Email)

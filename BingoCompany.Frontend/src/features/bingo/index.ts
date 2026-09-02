@@ -6,6 +6,7 @@ export { bingoApi } from "./api/bingoApi";
 export type { RegistrationResult } from "./api/bingoApi";
 export type { ParticipantCard, ParticipantCardsPage } from "./api/bingoApi";
 export { BingoCardGrid } from "./components/BingoCardGrid";
+export { CardProgress } from "./components/CardProgress";
 export { DrawSuspense } from "./components/DrawSuspense";
 export { PrizeStageEditor } from "./components/PrizeStageEditor";
 export { QrCardScanner } from "./components/QrCardScanner";
