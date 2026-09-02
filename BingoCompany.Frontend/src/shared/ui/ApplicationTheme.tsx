@@ -38,8 +38,7 @@ export function ApplicationThemeProvider({ children }: PropsWithChildren) {
 				typography: { fontFamily: '"DM Sans", sans-serif', button: { fontWeight: 700, textTransform: "none" } },
 				components: {
 					MuiButton: { defaultProps: { disableElevation: true } },
-					MuiPaper: { styleOverrides: { root: { backgroundImage: "none" } }
-					}
+					MuiPaper: { styleOverrides: { root: { backgroundImage: "none" } } }
 				}
 			}),
 		[mode]

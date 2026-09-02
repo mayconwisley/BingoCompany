@@ -1,6 +1,14 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { BingoCardGrid, bingoApi, bingoBallLabel, CardProgress, markingModeLabel, useLiveBingo, winningPatternLabel } from "../../features/bingo";
+import {
+	BingoCardGrid,
+	bingoApi,
+	bingoBallLabel,
+	CardProgress,
+	markingModeLabel,
+	useLiveBingo,
+	winningPatternLabel
+} from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";

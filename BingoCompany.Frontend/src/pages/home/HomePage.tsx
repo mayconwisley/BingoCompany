@@ -46,11 +46,17 @@ export function HomePage() {
 							<Button variant="contained" size="large" onClick={() => navigate("/cadastro")}>
 								Cadastrar empresa
 							</Button>
-							<Button variant="outlined" size="large" onClick={() => navigate("/entrar")}>Entrar</Button>
+							<Button variant="outlined" size="large" onClick={() => navigate("/entrar")}>
+								Entrar
+							</Button>
 						</>
 					)}
-					<Button variant="text" onClick={() => setPublicAccessIntent("join")}>Participar</Button>
-					<Button variant="text" onClick={() => setPublicAccessIntent("audit")}>Auditoria pública</Button>
+					<Button variant="text" onClick={() => setPublicAccessIntent("join")}>
+						Participar
+					</Button>
+					<Button variant="text" onClick={() => setPublicAccessIntent("audit")}>
+						Auditoria pública
+					</Button>
 				</div>
 				{publicAccessIntent && (
 					<Paper component="form" className="panel" elevation={0} onSubmit={submitEventCode}>
@@ -77,7 +83,9 @@ export function HomePage() {
 							>
 								{publicAccessIntent === "join" ? "Acessar bingo" : "Consultar auditoria"}
 							</Button>
-							<Button type="button" variant="outlined" onClick={() => setPublicAccessIntent(undefined)}>Cancelar</Button>
+							<Button type="button" variant="outlined" onClick={() => setPublicAccessIntent(undefined)}>
+								Cancelar
+							</Button>
 						</Stack>
 					</Paper>
 				)}

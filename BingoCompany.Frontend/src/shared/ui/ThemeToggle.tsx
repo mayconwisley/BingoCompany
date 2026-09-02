@@ -9,10 +9,10 @@ export function ThemeToggle({ className = "" }: Props) {
 	return (
 		<Tooltip title={`Ativar tema ${nextTheme === "dark" ? "escuro" : "claro"}`}>
 			<IconButton
-			className={`theme-toggle ${className}`.trim()}
-			onClick={toggleMode}
-			aria-label={`Ativar tema ${nextTheme === "dark" ? "escuro" : "claro"}`}
-		>
+				className={`theme-toggle ${className}`.trim()}
+				onClick={toggleMode}
+				aria-label={`Ativar tema ${nextTheme === "dark" ? "escuro" : "claro"}`}
+			>
 				<span aria-hidden="true">{mode === "dark" ? "☀" : "☾"}</span>
 			</IconButton>
 		</Tooltip>

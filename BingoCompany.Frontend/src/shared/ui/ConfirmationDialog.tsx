@@ -33,7 +33,9 @@ export function ConfirmationDialog({ title, description, confirmLabel, isConfirm
 				<DialogContentText>{description}</DialogContentText>
 			</DialogContent>
 			<DialogActions sx={{ px: 3, pb: 2.5 }}>
-				<Button onClick={onCancel} disabled={isConfirming}>Voltar</Button>
+				<Button onClick={onCancel} disabled={isConfirming}>
+					Voltar
+				</Button>
 				<Button ref={confirmButton} variant="contained" color="error" onClick={onConfirm} disabled={isConfirming}>
 					{isConfirming ? "Confirmando..." : confirmLabel}
 				</Button>
