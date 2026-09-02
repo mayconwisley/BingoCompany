@@ -102,7 +102,7 @@ export type PublicEvent = {
 			pattern: string;
 			prizeImageDataUrl?: string;
 			isPrizeDeliveryPending: boolean;
-			tieBreakers?: { participantName: string; number: number; isWinner: boolean }[];
+			tieBreakers?: { participantName: string; cardCode: string; number: number; isWinner: boolean }[];
 		};
 	};
 };
@@ -148,6 +148,7 @@ export type PublicAudit = {
 		stages: { prizeName: string; pattern: string; isCompleted: boolean }[];
 		winners: {
 			participantName: string;
+			cardCode: string;
 			prizeName: string;
 			isWinner: boolean;
 			tieBreakerNumber?: number;
@@ -155,5 +156,11 @@ export type PublicAudit = {
 			revealedAt?: string;
 		}[];
 	}[];
-	entries: { action: string; details: string; occurredAt: string }[];
+	entries: {
+		items: { action: string; details: string; occurredAt: string }[];
+		page: number;
+		pageSize: number;
+		totalItems: number;
+		totalPages: number;
+	};
 };

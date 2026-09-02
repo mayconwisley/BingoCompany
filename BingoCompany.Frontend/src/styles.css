@@ -298,6 +298,9 @@ main > h1 {
 	letter-spacing: -0.035em;
 	margin: 0.1em 0 0.35em;
 }
+.operator-header-actions {
+	margin-top: 0;
+}
 .card-owner {
 	display: grid;
 	gap: 2px;
@@ -591,8 +594,9 @@ main > h1 {
 	margin: 0.45rem 0 0;
 }
 .event-setup .printed-card-generator button {
+	align-self: start;
+	margin-top: 1.65rem;
 	min-height: 3rem;
-	margin: 0;
 }
 .event-rounds-panel {
 	margin-top: 1.25rem;
@@ -1821,6 +1825,9 @@ main > h1 {
 	margin: 0;
 	color: var(--text);
 }
+.card-progress > small {
+	color: var(--muted);
+}
 .active-bingo-cards-grid .card-progress {
 	margin-bottom: 0.75rem;
 	padding: 0.7rem;
@@ -1912,6 +1919,31 @@ main > h1 {
 	flex-direction: column;
 	justify-content: center;
 	gap: 14px;
+}
+.printed-card-validation {
+	display: grid;
+	gap: 0.85rem;
+	padding: 1rem;
+	border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+	border-radius: 14px;
+	background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+.printed-card-validation h2,
+.printed-card-validation p {
+	margin: 0;
+}
+.printed-card-validation > div > p:last-child {
+	margin-top: 0.3rem;
+	color: var(--muted);
+}
+.printed-card-validation .qrscanner {
+	display: grid;
+	gap: 0.75rem;
+}
+.printed-card-validation .qrscanner video {
+	width: 100%;
+	border-radius: 10px;
+	background: #000;
 }
 .display {
 	width: 100%;
@@ -2132,6 +2164,9 @@ main > h1 {
 	.participant-action-cancel,
 	.printed-card-generator {
 		grid-template-columns: 1fr;
+	}
+	.event-setup .printed-card-generator button {
+		margin-top: 0;
 	}
 	.prize-header {
 		align-items: flex-start;

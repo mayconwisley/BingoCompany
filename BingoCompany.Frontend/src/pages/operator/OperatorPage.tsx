@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { bingoApi, bingoBallLabel, markingModeLabel, useLiveBingo, winningPatternLabel } from "../../features/bingo";
+import { bingoApi, bingoBallLabel, markingModeLabel, QrCardScanner, useLiveBingo, winningPatternLabel } from "../../features/bingo";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
@@ -16,8 +16,12 @@ export function OperatorPage() {
 	const navigate = useNavigate();
 	const [error, setError] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isValidatingPrintedCard, setIsValidatingPrintedCard] = useState(false);
 	const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation>();
+	const [printedValidationError, setPrintedValidationError] = useState("");
+	const [printedValidationSuccess, setPrintedValidationSuccess] = useState("");
 	const code = query.get("code") ?? "";
+	const displayPath = `/display/${code}`;
 	const loader = useCallback(() => bingoApi.getPublicEvent(code), [code]);
 	const event = useAsyncResource(loader);
 	useLiveBingo(eventId, roundId, event.reload);
@@ -40,6 +44,8 @@ export function OperatorPage() {
 	const canStart = isCurrentRound && round.status === "Ready" && hasEligibleCards;
 	const canDraw = isCurrentRound && round.status === "Drawing" && !hasWinnerPresentation;
 	const needsPrintedValidation = event.data.markingMode !== "Automatic";
+	const canValidatePrintedCards =
+		needsPrintedValidation && isCurrentRound && round.status !== "Ready" && round.status !== "Finished" && round.status !== "Cancelled";
 	const canCancel = isCurrentRound && round.status === "Drawing" && !hasWinnerPresentation;
 	const actionLabel = round.status === "Ready" ? "INICIAR RODADA" : "SORTEAR PRÓXIMA PEDRA";
 	const isFinished = isCurrentRound && (round.status === "Finished" || round.status === "Cancelled");
@@ -120,6 +126,39 @@ export function OperatorPage() {
 			setError(getErrorMessage(error, "Não foi possível cancelar a rodada."));
 		}
 	};
+	const validatePrintedCard = async (cardCode: string) => {
+		if (isValidatingPrintedCard) return;
+		setIsValidatingPrintedCard(true);
+		try {
+			setPrintedValidationError("");
+			setPrintedValidationSuccess("");
+			const result = await bingoApi.validatePrintedWinner(eventId, roundId, cardCode);
+			setPrintedValidationSuccess(
+				result.tieBreakerRequired
+					? `${result.participantName} entrou no desempate com a cartela ${result.cardCode}.`
+					: `${result.participantName} foi confirmado(a) com a cartela ${result.cardCode}.`
+			);
+			await event.reload();
+		} catch (validationError) {
+			setPrintedValidationError(getErrorMessage(validationError, "Não foi possível validar esta cartela impressa."));
+		} finally {
+			setIsValidatingPrintedCard(false);
+		}
+	};
+	const prepareNextRound = async () => {
+		if (isSubmitting) return;
+		setIsSubmitting(true);
+		try {
+			setError("");
+			if (hasWinnerPresentation) await bingoApi.closeWinnerPresentation(eventId, roundId);
+			await event.reload();
+			navigate(`/admin/eventos/${eventId}?code=${code}`);
+		} catch (error) {
+			setError(getErrorMessage(error, "Não foi possível encerrar a apresentação do resultado anterior."));
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
 	const confirmPendingAction = async () => {
 		const action = pendingConfirmation;
 		if (!action) return;
@@ -141,7 +180,12 @@ export function OperatorPage() {
 						<p className="eyebrow">Painel do operador</p>
 						<h1>{round.name}</h1>
 					</div>
-					<button onClick={() => navigate(`/admin/eventos/${eventId}?code=${code}`)}>VOLTAR ÀS CONFIGURAÇÕES</button>
+					<div className="actions operator-header-actions">
+						<a className="button" href={displayPath} target="_blank" rel="noopener noreferrer">
+							ABRIR TELÃO
+						</a>
+						<button onClick={() => navigate(`/admin/eventos/${eventId}?code=${code}`)}>VOLTAR ÀS CONFIGURAÇÕES</button>
+					</div>
 				</header>
 				<div className="operator">
 					<section className="drawball">
@@ -154,7 +198,9 @@ export function OperatorPage() {
 							<section className="round-readiness" aria-labelledby="round-readiness-title">
 								<div>
 									<p className="eyebrow">Checklist de abertura</p>
-									<h2 id="round-readiness-title">{hasEligibleCards ? "Tudo pronto para iniciar" : "Há pendências para iniciar"}</h2>
+									<h2 id="round-readiness-title">
+										{hasEligibleCards ? "Tudo pronto para iniciar" : "Há pendências para iniciar"}
+									</h2>
 								</div>
 								<ul>
 									<li className={hasEligibleCards ? "is-ready" : "is-pending"}>
@@ -164,21 +210,35 @@ export function OperatorPage() {
 										{round.stages.length} {round.stages.length === 1 ? "etapa configurada" : "etapas configuradas"}
 									</li>
 									<li className={openingStage ? "is-ready" : "is-pending"}>
-										{openingStage ? `${openingStage.prizeName} · ${winningPatternLabel(openingStage.pattern)}` : "Defina o prêmio inicial"}
+										{openingStage
+											? `${openingStage.prizeName} · ${winningPatternLabel(openingStage.pattern)}`
+											: "Defina o prêmio inicial"}
 									</li>
 									<li className="is-ready">Marcação {markingModeLabel(event.data.markingMode)}</li>
 								</ul>
 							</section>
 						)}
-						{needsPrintedValidation &&
-							isCurrentRound &&
-							round.status !== "Ready" &&
-							round.status !== "Finished" &&
-							round.status !== "Cancelled" && (
-								<button onClick={() => navigate(`/operacao/${eventId}/${roundId}/conferir-cartelas`)}>
-									CONFERIR CARTELA IMPRESSA
-								</button>
-							)}
+						{canValidatePrintedCards && (
+							<section className="printed-card-validation" aria-labelledby="printed-card-validation-title">
+								<div>
+									<p className="eyebrow">Conferência de cartela física</p>
+									<h2 id="printed-card-validation-title">Ler QR Code da cartela</h2>
+									<p>O servidor confirma a regra usando apenas as pedras sorteadas nesta rodada.</p>
+								</div>
+								<QrCardScanner
+									onCardCodeRead={(cardCode) => void validatePrintedCard(cardCode)}
+									disabled={isValidatingPrintedCard}
+								/>
+								<FeedbackMessage
+									error={printedValidationError}
+									success={printedValidationSuccess}
+									onClose={() => {
+										setPrintedValidationError("");
+										setPrintedValidationSuccess("");
+									}}
+								/>
+							</section>
+						)}
 						<button
 							className="primary big"
 							disabled={!canStart && !canDraw}
@@ -244,7 +304,7 @@ export function OperatorPage() {
 									Prepare a próxima rodada antes de iniciar: as cartelas ativas serão reutilizadas; participantes podem
 									gerar novas cartelas e você pode registrar novas impressas.
 								</p>
-								<button className="primary big" onClick={() => navigate(`/admin/eventos/${eventId}?code=${code}`)}>
+								<button className="primary big" disabled={isSubmitting} onClick={prepareNextRound}>
 									PREPARAR PRÓXIMO SORTEIO
 								</button>
 							</>

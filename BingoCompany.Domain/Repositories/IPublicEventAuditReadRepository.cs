@@ -4,5 +4,5 @@ namespace BingoCompany.Domain.Repositories;
 
 public interface IPublicEventAuditReadRepository
 {
-	Task<PublicEventAuditResult?> Get(string publicCode, CancellationToken cancellationToken);
+	Task<PublicEventAuditResult?> Get(string publicCode, int page, int pageSize, CancellationToken cancellationToken);
 }

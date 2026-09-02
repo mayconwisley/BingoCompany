@@ -24,15 +24,17 @@ public sealed class PublicControllerTieBreakerTests
 		round.StartTieBreaker();
 		var ana = new Participant(bingoEvent.Id, "Ana");
 		var bruno = new Participant(bingoEvent.Id, "Bruno");
-		var anaWinner = new RoundWinner(round.Id, stage.Id, Guid.CreateVersion7(), ana.Id, 25);
+		var anaCard = new BingoCard(bingoEvent.Id, ana.Id, CardType.Digital, CreateCard());
+		var brunoCard = new BingoCard(bingoEvent.Id, bruno.Id, CardType.Digital, CreateCard());
+		var anaWinner = new RoundWinner(round.Id, stage.Id, anaCard.Id, ana.Id, 25);
 		anaWinner.AssignTieBreaker(71);
 		anaWinner.Confirm(DateTimeOffset.UtcNow);
-		var brunoWinner = new RoundWinner(round.Id, stage.Id, Guid.CreateVersion7(), bruno.Id, 25);
+		var brunoWinner = new RoundWinner(round.Id, stage.Id, brunoCard.Id, bruno.Id, 25);
 		brunoWinner.AssignTieBreaker(24);
 		brunoWinner.Confirm(DateTimeOffset.UtcNow);
 		round.FinishStage();
 
-		db.AddRange(bingoEvent, round, ana, bruno, anaWinner, brunoWinner);
+		db.AddRange(bingoEvent, round, ana, bruno, anaCard, brunoCard, anaWinner, brunoWinner);
 		await db.SaveChangesAsync();
 		var controller = PublicControllerFactory.Create(db);
 
@@ -42,6 +44,8 @@ public sealed class PublicControllerTieBreakerTests
 		var tieBreakers = winner.GetProperty("tieBreakers");
 
 		Assert.Equal("Ana", winner.GetProperty("participantName").GetString());
+		Assert.Equal(anaCard.PublicCode, tieBreakers[0].GetProperty("cardCode").GetString());
+		Assert.Equal(brunoCard.PublicCode, tieBreakers[1].GetProperty("cardCode").GetString());
 		Assert.True(tieBreakers[0].GetProperty("isWinner").GetBoolean());
 		Assert.False(tieBreakers[1].GetProperty("isWinner").GetBoolean());
 	}
@@ -62,14 +66,16 @@ public sealed class PublicControllerTieBreakerTests
 
 		var ana = new Participant(bingoEvent.Id, "Ana");
 		var bruno = new Participant(bingoEvent.Id, "Bruno");
-		var anaWinner = new RoundWinner(round.Id, stage.Id, Guid.CreateVersion7(), ana.Id, 25);
+		var anaCard = new BingoCard(bingoEvent.Id, ana.Id, CardType.Digital, CreateCard());
+		var brunoCard = new BingoCard(bingoEvent.Id, bruno.Id, CardType.Digital, CreateCard());
+		var anaWinner = new RoundWinner(round.Id, stage.Id, anaCard.Id, ana.Id, 25);
 		anaWinner.AssignTieBreaker(71);
 		anaWinner.Confirm(DateTimeOffset.UtcNow);
-		var brunoWinner = new RoundWinner(round.Id, stage.Id, Guid.CreateVersion7(), bruno.Id, 25);
+		var brunoWinner = new RoundWinner(round.Id, stage.Id, brunoCard.Id, bruno.Id, 25);
 		brunoWinner.AssignTieBreaker(24);
 		round.FinishStage();
 
-		db.AddRange(bingoEvent, round, ana, bruno, anaWinner, brunoWinner);
+		db.AddRange(bingoEvent, round, ana, bruno, anaCard, brunoCard, anaWinner, brunoWinner);
 		await db.SaveChangesAsync();
 		var controller = PublicControllerFactory.Create(db);
 
@@ -79,12 +85,23 @@ public sealed class PublicControllerTieBreakerTests
 
 		Assert.Equal(2, tieBreakers.GetArrayLength());
 		Assert.Equal("Ana", tieBreakers[0].GetProperty("participantName").GetString());
+		Assert.Equal(anaCard.PublicCode, tieBreakers[0].GetProperty("cardCode").GetString());
 		Assert.Equal(71, tieBreakers[0].GetProperty("number").GetInt32());
 		Assert.True(tieBreakers[0].GetProperty("isWinner").GetBoolean());
 		Assert.Equal("Bruno", tieBreakers[1].GetProperty("participantName").GetString());
+		Assert.Equal(brunoCard.PublicCode, tieBreakers[1].GetProperty("cardCode").GetString());
 		Assert.Equal(24, tieBreakers[1].GetProperty("number").GetInt32());
 		Assert.False(tieBreakers[1].GetProperty("isWinner").GetBoolean());
 	}
+
+	private static int[,] CreateCard() => new[,]
+	{
+		{ 1, 16, 31, 46, 61 },
+		{ 2, 17, 32, 47, 62 },
+		{ 3, 18, 0, 48, 63 },
+		{ 4, 19, 34, 49, 64 },
+		{ 5, 20, 35, 50, 65 }
+	};
 }
 
 file static class PublicControllerFactory

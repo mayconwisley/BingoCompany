@@ -13,11 +13,19 @@ vi.mock("../../features/bingo/api/bingoApi", () => ({
 		markPrizeDeclined: vi.fn(),
 		markPrizeDelivered: vi.fn(),
 		reveal: vi.fn(),
-		startRound: vi.fn()
+		startRound: vi.fn(),
+		validatePrintedWinner: vi.fn()
 	}
 }));
 vi.mock("../../features/bingo/hooks/useLiveBingo", () => ({ useLiveBingo: vi.fn() }));
 vi.mock("../../shared/ui/ThemeToggle", () => ({ ThemeToggle: () => null }));
+vi.mock("../../features/bingo/components/QrCardScanner", () => ({
+	QrCardScanner: ({ onCardCodeRead, disabled }: { onCardCodeRead: (cardCode: string) => void; disabled?: boolean }) => (
+		<button disabled={disabled} onClick={() => onCardCodeRead("CARTELA-QR")}>
+			Ler QR Code da cartela
+		</button>
+	)
+}));
 
 describe("OperatorPage", () => {
 	beforeEach(() => {
@@ -125,6 +133,45 @@ describe("OperatorPage", () => {
 		expect(await screen.findByText("G-46", { selector: "strong" })).toBeInTheDocument();
 	});
 
+	it("valida uma cartela física pelo QR Code dentro do painel no modo manual", async () => {
+		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
+			id: "event-1",
+			name: "Festa",
+			publicCode: "ABC",
+			status: "Running",
+			markingMode: "ManualRequired",
+			participants: 1,
+			cards: 1,
+			round: {
+				id: "round-1",
+				name: "Rodada 1",
+				sequence: 1,
+				status: "Drawing",
+				stages: [],
+				drawnNumbers: [10],
+				winnerDetectedCount: 0,
+				tieBreakerRequired: false
+			}
+		});
+		vi.mocked(bingoApi.validatePrintedWinner).mockResolvedValue({
+			participantName: "Ana",
+			cardCode: "CARTELA-QR",
+			tieBreakerRequired: false
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}>
+				<Routes>
+					<Route path="/operacao/:eventId/:roundId" element={<OperatorPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		fireEvent.click(await screen.findByRole("button", { name: "Ler QR Code da cartela" }));
+
+		expect(bingoApi.validatePrintedWinner).toHaveBeenCalledWith("event-1", "round-1", "CARTELA-QR");
+	});
+
 	it("volta para as configurações do evento", async () => {
 		render(
 			<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}>
@@ -137,6 +184,57 @@ describe("OperatorPage", () => {
 
 		fireEvent.click(await screen.findByRole("button", { name: "VOLTAR ÀS CONFIGURAÇÕES" }));
 
+		expect(await screen.findByText("Configurações do evento")).toBeInTheDocument();
+	});
+
+	it("abre o telão em outra aba", async () => {
+		render(
+			<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}>
+				<Routes>
+					<Route path="/operacao/:eventId/:roundId" element={<OperatorPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		const displayLink = await screen.findByRole("link", { name: "ABRIR TELÃO" });
+		expect(displayLink).toHaveAttribute("href", "/display/ABC");
+		expect(displayLink).toHaveAttribute("target", "_blank");
+	});
+
+	it("encerra a apresentação anterior antes de preparar o próximo sorteio", async () => {
+		vi.mocked(bingoApi.getPublicEvent).mockResolvedValue({
+			id: "event-1",
+			name: "Festa",
+			publicCode: "ABC",
+			status: "Running",
+			markingMode: "Automatic",
+			participants: 1,
+			cards: 1,
+			round: {
+				id: "round-1",
+				name: "Rodada 1",
+				sequence: 1,
+				status: "Finished",
+				stages: [],
+				drawnNumbers: [10],
+				winnerDetectedCount: 0,
+				tieBreakerRequired: false,
+				winner: { participantName: "Ana", prizeName: "Linha", pattern: "HorizontalLine", isPrizeDeliveryPending: false }
+			}
+		});
+
+		render(
+			<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}>
+				<Routes>
+					<Route path="/operacao/:eventId/:roundId" element={<OperatorPage />} />
+					<Route path="/admin/eventos/:eventId" element={<p>Configurações do evento</p>} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		fireEvent.click(await screen.findByRole("button", { name: "PREPARAR PRÓXIMO SORTEIO" }));
+
+		expect(bingoApi.closeWinnerPresentation).toHaveBeenCalledWith("event-1", "round-1");
 		expect(await screen.findByText("Configurações do evento")).toBeInTheDocument();
 	});
 

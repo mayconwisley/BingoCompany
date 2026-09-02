@@ -54,9 +54,10 @@ export function DisplayPage() {
 							<p>Pedras sorteadas para cada participante</p>
 							<ul>
 								{winner.tieBreakers.map((tieBreaker, index) => (
-									<li className={tieBreaker.isWinner ? "winner" : ""} key={tieBreaker.participantName}>
+									<li className={tieBreaker.isWinner ? "winner" : ""} key={tieBreaker.cardCode}>
 										<span>{tieBreaker.participantName}</span>
 										<TieBreakerStone number={tieBreaker.number} delay={index * 1200} />
+										<small>Cartela {tieBreaker.cardCode}</small>
 										{tieBreaker.isWinner && <em>Vencedor(a)</em>}
 									</li>
 								))}

@@ -4,5 +4,5 @@ namespace BingoCompany.Application.Interfaces;
 
 public interface IPublicEventAuditQueryService
 {
-	Task<PublicEventAuditResult?> Get(string publicCode, CancellationToken cancellationToken);
+	Task<PublicEventAuditResult?> Get(string publicCode, int page, int pageSize, CancellationToken cancellationToken);
 }

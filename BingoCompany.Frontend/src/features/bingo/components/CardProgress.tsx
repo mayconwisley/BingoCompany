@@ -8,6 +8,17 @@ type Props = {
 
 export function CardProgress({ prizeName, pattern, remainingNumbersToWin }: Props) {
 	if (!pattern || remainingNumbersToWin === undefined) return null;
+	const includesFreeCenter = [
+		"HorizontalLine",
+		"TwoHorizontalLines",
+		"FullCard",
+		"BDiagonal",
+		"ODiagonal",
+		"XPattern",
+		"TPattern",
+		"Cross",
+		"NColumn"
+	].includes(pattern);
 
 	const progressMessage =
 		remainingNumbersToWin === 0
@@ -21,6 +32,7 @@ export function CardProgress({ prizeName, pattern, remainingNumbersToWin }: Prop
 			<p>
 				{prizeName || "Prêmio atual"} · {winningPatternLabel(pattern)}
 			</p>
+			{includesFreeCenter && <small>A casa livre do centro já conta como marcada.</small>}
 		</section>
 	);
 }

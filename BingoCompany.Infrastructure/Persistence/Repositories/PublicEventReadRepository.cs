@@ -31,6 +31,9 @@ public sealed class PublicEventReadRepository(BingoDbContext db) : IPublicEventR
 		var participantNames = presentationWinners.Count == 0
 			? new Dictionary<Guid, string>()
 			: await db.Participants.Where(item => presentationWinners.Select(candidate => candidate.ParticipantId).Contains(item.Id)).ToDictionaryAsync(item => item.Id, item => item.Name, cancellationToken);
+		var cardCodes = presentationWinners.Count == 0
+			? new Dictionary<Guid, string>()
+			: await db.Cards.Where(item => presentationWinners.Select(candidate => candidate.CardId).Contains(item.Id)).ToDictionaryAsync(item => item.Id, item => item.PublicCode, cancellationToken);
 		var statistics = await CalculateStatistics(round, activeStage, bingoEvent.MarkingMode, cancellationToken);
 		var eligibleCards = round?.Status == RoundStatus.Ready
 			? await db.Cards.CountAsync(item => item.EventId == bingoEvent.Id && item.Status == CardStatus.Active && item.ParticipantId.HasValue, cancellationToken)
@@ -49,7 +52,7 @@ public sealed class PublicEventReadRepository(BingoDbContext db) : IPublicEventR
 				round.Status == RoundStatus.TieBreaker,
 				pendingPrizeWinner is not null,
 				statistics is null ? null : new PublicRoundStatisticsQueryResult(statistics.TotalCards, statistics.OneNumberAway, statistics.TwoNumbersAway, statistics.ThreeNumbersAway, statistics.AwardedCards),
-				winner is null ? null : new PublicWinnerQueryResult(participantNames.GetValueOrDefault(winner.ParticipantId, "Participante indisponível"), presentationStage!.PrizeName, presentationStage.Pattern, presentationStage.PrizeImageDataUrl, pendingPrizeWinner is not null, presentationWinners.Count > 1 ? presentationWinners.OrderByDescending(item => item.TieBreakerNumber).Select(item => new PublicTieBreakerQueryResult(participantNames.GetValueOrDefault(item.ParticipantId, "Participante indisponível"), item.TieBreakerNumber, item.Id == winner.Id)).ToArray() : []));
+				winner is null ? null : new PublicWinnerQueryResult(participantNames.GetValueOrDefault(winner.ParticipantId, "Participante indisponível"), presentationStage!.PrizeName, presentationStage.Pattern, presentationStage.PrizeImageDataUrl, pendingPrizeWinner is not null, presentationWinners.Count > 1 ? presentationWinners.OrderByDescending(item => item.TieBreakerNumber).Select(item => new PublicTieBreakerQueryResult(participantNames.GetValueOrDefault(item.ParticipantId, "Participante indisponível"), cardCodes.GetValueOrDefault(item.CardId, "Cartela indisponível"), item.TieBreakerNumber, item.Id == winner.Id)).ToArray() : []));
 
 		return new PublicEventQueryResult(bingoEvent.Id, bingoEvent.Name, bingoEvent.PublicCode, bingoEvent.Status, bingoEvent.MarkingMode, bingoEvent.IsCardPurchaseOpen, bingoEvent.CardPurchaseLimit, bingoEvent.CardPurchaseCancellationReason, bingoEvent.CardPurchaseLimit.HasValue ? Math.Max(0, bingoEvent.CardPurchaseLimit.Value - purchasedCards) : null, await db.Participants.CountAsync(item => item.EventId == bingoEvent.Id, cancellationToken), await db.Cards.CountAsync(item => item.EventId == bingoEvent.Id, cancellationToken), roundResult);
 	}

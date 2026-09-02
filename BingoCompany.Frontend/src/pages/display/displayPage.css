@@ -182,6 +182,10 @@
 	font-size: 1.4rem;
 	color: var(--warm);
 }
+.tie-breaker-results li small {
+	color: #d9e5e3;
+	font-weight: 700;
+}
 .tie-breaker-results .tie-breaker-stone {
 	animation: tie-breaker-roll 0.12s linear infinite;
 }

@@ -1,11 +1,22 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, render as renderComponent, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
 import { bingoApi } from "../../features/bingo/api/bingoApi";
+import { ApplicationThemeProvider } from "../../shared/ui/ApplicationTheme";
 import { DisplayPage } from "./DisplayPage";
 
 vi.mock("../../features/bingo/api/bingoApi", () => ({ bingoApi: { getPublicEvent: vi.fn() } }));
 vi.mock("../../features/bingo/hooks/useLiveBingo", () => ({ useLiveBingo: vi.fn() }));
+
+Object.defineProperty(window, "matchMedia", {
+	writable: true,
+	value: vi.fn().mockReturnValue({ matches: false })
+});
+
+function render(component: ReactNode) {
+	return renderComponent(<ApplicationThemeProvider>{component}</ApplicationThemeProvider>);
+}
 
 describe("DisplayPage", () => {
 	afterEach(() => vi.useRealTimers());
@@ -93,8 +104,8 @@ describe("DisplayPage", () => {
 					pattern: "HorizontalLine",
 					isPrizeDeliveryPending: false,
 					tieBreakers: [
-						{ participantName: "Ana", number: 71, isWinner: true },
-						{ participantName: "Bruno", number: 24, isWinner: false }
+						{ participantName: "Ana", cardCode: "CARTELA-ANA", number: 71, isWinner: true },
+						{ participantName: "Bruno", cardCode: "CARTELA-BRUNO", number: 24, isWinner: false }
 					]
 				}
 			}
@@ -112,6 +123,8 @@ describe("DisplayPage", () => {
 		expect(within(result).getByRole("heading", { name: "Resultado do desempate" })).toBeInTheDocument();
 		expect(within(result).getByText("Ana")).toBeInTheDocument();
 		expect(within(result).getByText("Bruno")).toBeInTheDocument();
+		expect(within(result).getByText("Cartela CARTELA-ANA")).toBeInTheDocument();
+		expect(within(result).getByText("Cartela CARTELA-BRUNO")).toBeInTheDocument();
 		expect(within(result).getAllByText(/^[BINGO]-\d+$/)).toHaveLength(2);
 		expect(within(result).getByText("Vencedor(a)")).toBeInTheDocument();
 	});

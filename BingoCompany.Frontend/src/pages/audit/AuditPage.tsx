@@ -1,67 +1,163 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import { bingoApi, winningPatternLabel } from "../../features/bingo";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
 import { PageState } from "../../shared/ui/PageState";
+import "./auditPage.css";
+
+const auditEntriesPageSize = 25;
+const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" });
 
 export function AuditPage() {
 	const { publicCode = "" } = useParams();
-	const loader = useCallback(() => bingoApi.getAudit(publicCode), [publicCode]);
+	const [page, setPage] = useState(1);
+	const loader = useCallback(() => bingoApi.getAudit(publicCode, page, auditEntriesPageSize), [page, publicCode]);
 	const audit = useAsyncResource(loader);
+
+	if (!audit.data)
+		return (
+			<AppShell>
+				<PageState loading={audit.loading} error={audit.error} onRetry={audit.reload} />
+			</AppShell>
+		);
+
+	const { eventInfo, participants, cards, rounds, entries } = audit.data;
+	const drawnNumbers = rounds.reduce((total, round) => total + round.drawnNumbers.length, 0);
 
 	return (
 		<AppShell>
-			<main>
-				<PageState loading={audit.loading} error={audit.error} />
-				{audit.data && (
-					<>
+			<main className="audit-page">
+				<header className="audit-page-header">
+					<div>
 						<p className="eyebrow">Consulta pública verificável</p>
 						<h1>Auditoria do evento</h1>
-						<section className="panel">
-							<h2>{audit.data.eventInfo.name}</h2>
-							<p>
-								{audit.data.participants.length} participantes · {audit.data.cards.length} cartelas
-							</p>
-						</section>
-						<section className="panel">
-							<h2>Rodadas e sequências</h2>
-							{audit.data.rounds.map((round) => (
-								<article key={round.sequence}>
-									<h3>{round.name}</h3>
-									<p>Hash SHA-256</p>
-									<code className="hash">{round.sequenceHash || "Rodada não iniciada"}</code>
-									<p>{round.drawnNumbers.length} pedras sorteadas</p>
-									{round.fullSequence && <p>Sequência completa: {round.fullSequence.join(", ")}</p>}
-									<ul>
-										{round.stages.map((stage) => (
-											<li key={stage.prizeName}>
-												{stage.prizeName} — {winningPatternLabel(stage.pattern)} {stage.isCompleted ? "✓" : ""}
-											</li>
-										))}
-									</ul>
-									{round.winners.map((winner) => (
-										<p key={`${winner.participantName}-${winner.prizeName}`}>
-											{winner.isWinner ? "Vencedor" : "Empatado"}: {winner.participantName} · {winner.prizeName}
-											{winner.tieBreakerNumber ? ` · desempate ${winner.tieBreakerNumber}` : ""}
-										</p>
+						<p>Confira a integridade dos sorteios, prêmios e ações registradas pela organização.</p>
+					</div>
+					<span className="audit-public-code">Evento {eventInfo.publicCode}</span>
+				</header>
+
+				<section className="audit-summary" aria-labelledby="audit-event-title">
+					<div>
+						<p className="eyebrow">Evento auditado</p>
+						<h2 id="audit-event-title">{eventInfo.name}</h2>
+						<p>Criado em {dateTimeFormatter.format(new Date(eventInfo.createdAt))}</p>
+					</div>
+					<dl>
+						<div>
+							<dt>Participantes</dt>
+							<dd>{participants.length}</dd>
+						</div>
+						<div>
+							<dt>Cartelas</dt>
+							<dd>{cards.length}</dd>
+						</div>
+						<div>
+							<dt>Pedras sorteadas</dt>
+							<dd>{drawnNumbers}</dd>
+						</div>
+						<div>
+							<dt>Rodadas</dt>
+							<dd>{rounds.length}</dd>
+						</div>
+					</dl>
+				</section>
+
+				<section className="audit-rounds" aria-labelledby="audit-rounds-title">
+					<div className="audit-section-heading">
+						<div>
+							<p className="eyebrow">Integridade do sorteio</p>
+							<h2 id="audit-rounds-title">Rodadas e sequências</h2>
+						</div>
+						<p>O hash é publicado antes da primeira pedra; a sequência é revelada após o encerramento.</p>
+					</div>
+					<div className="audit-round-grid">
+						{rounds.map((round) => (
+							<article className="audit-round-card" key={round.sequence}>
+								<div className="audit-round-card-header">
+									<div>
+										<span>Rodada {round.sequence}</span>
+										<h3>{round.name}</h3>
+									</div>
+									<strong>{round.drawnNumbers.length} pedras</strong>
+								</div>
+								<div className="audit-hash">
+									<span>Hash SHA-256</span>
+									<code>{round.sequenceHash || "Rodada não iniciada"}</code>
+								</div>
+								<ul className="audit-stages">
+									{round.stages.map((stage) => (
+										<li className={stage.isCompleted ? "is-completed" : ""} key={stage.prizeName}>
+											<span>{stage.prizeName}</span>
+											<small>{winningPatternLabel(stage.pattern)}</small>
+										</li>
 									))}
-								</article>
+								</ul>
+								{round.winners.length > 0 && (
+									<div className="audit-winners">
+										{round.winners.map((winner) => (
+											<p key={winner.cardCode}>
+												<strong>{winner.isWinner ? "Vencedor" : "Empatado"}</strong> {winner.participantName} ·{" "}
+												<span className="audit-winner-card-code">Cartela {winner.cardCode}</span> ·{" "}
+												{winner.prizeName}
+												{winner.tieBreakerNumber ? ` · desempate ${winner.tieBreakerNumber}` : ""}
+											</p>
+										))}
+									</div>
+								)}
+								{round.fullSequence && (
+									<details className="audit-sequence">
+										<summary>Ver sequência completa</summary>
+										<code>{round.fullSequence.join(", ")}</code>
+									</details>
+								)}
+							</article>
+						))}
+					</div>
+				</section>
+
+				<section className="audit-timeline" aria-labelledby="audit-timeline-title">
+					<div className="audit-section-heading">
+						<div>
+							<p className="eyebrow">Registro de ações</p>
+							<h2 id="audit-timeline-title">Linha do tempo</h2>
+						</div>
+						<p>
+							{entries.totalItems} registros · exibindo {entries.items.length} nesta página
+						</p>
+					</div>
+					{entries.items.length === 0 ? (
+						<p className="audit-empty">Nenhuma ação foi registrada para este evento.</p>
+					) : (
+						<ol>
+							{entries.items.map((entry) => (
+								<li key={`${entry.occurredAt}-${entry.action}`}>
+									<time dateTime={entry.occurredAt}>{dateTimeFormatter.format(new Date(entry.occurredAt))}</time>
+									<div>
+										<strong>{entry.action}</strong>
+										<p>{entry.details}</p>
+									</div>
+								</li>
 							))}
-						</section>
-						<section className="panel">
-							<h2>Linha do tempo</h2>
-							<ol>
-								{audit.data.entries.map((entry) => (
-									<li key={`${entry.occurredAt}-${entry.action}`}>
-										<strong>{entry.action}</strong> — {entry.details}{" "}
-										<small>{new Date(entry.occurredAt).toLocaleString("pt-BR")}</small>
-									</li>
-								))}
-							</ol>
-						</section>
-					</>
-				)}
+						</ol>
+					)}
+					{entries.totalPages > 1 && (
+						<nav className="pagination audit-pagination" aria-label="Paginação da linha do tempo">
+							<button disabled={entries.page === 1 || audit.loading} onClick={() => setPage((current) => current - 1)}>
+								Mais recentes
+							</button>
+							<span aria-live="polite">
+								Página {entries.page} de {entries.totalPages}
+							</span>
+							<button
+								disabled={entries.page >= entries.totalPages || audit.loading}
+								onClick={() => setPage((current) => current + 1)}
+							>
+								Mais antigos
+							</button>
+						</nav>
+					)}
+				</section>
 			</main>
 		</AppShell>
 	);

@@ -36,5 +36,5 @@ POST {{apiUrl}}/api/public/events/{{publicCode}}/cards/{{cardCode}}/activate
 Origin: {{origin}}
 
 ### Consultar auditoria pública
-GET {{apiUrl}}/api/public/events/{{publicCode}}/audit
+GET {{apiUrl}}/api/public/events/{{publicCode}}/audit?page=1&pageSize=25
 Accept: application/json
