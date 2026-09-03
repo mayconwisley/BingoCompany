@@ -160,7 +160,9 @@ A página **Minha cartela** apresenta o prêmio e regra atuais, o modo de marca�
 
 ### Quando houver compra de cartelas
 
-Se a organização habilitar a compra de cartelas digitais, o participante deve criar ou acessar uma **conta de participante** com nome, e-mail e senha. A compra usa essa conta para manter as cartelas disponíveis em **Minhas cartelas**. Depois de comprar, ative individualmente as cartelas que serão usadas; somente cartela ativa pode entrar na próxima rodada. A organização pode limitar a quantidade disponível ou cancelar a venda, sem afetar as inscrições comuns já abertas.
+Se a organização habilitar a reserva de cartelas digitais, o participante deve criar ou acessar uma **conta de participante** com nome, e-mail e senha. A reserva usa essa conta para manter as cartelas disponíveis em **Minhas cartelas** e respeita o estoque do lote e o limite por participante. Os pacotes rápidos de 1, 2, 3 e 5 cartelas são apenas uma conveniência de seleção; não representam pagamento em dinheiro. Depois de reservar, ative individualmente as cartelas que serão usadas; somente cartela ativa pode entrar na próxima rodada.
+
+A tela informa o estoque no formato “disponíveis de total”, alerta quando restam poucas cartelas e exibe o horário de encerramento programado. Quando o lote esgotar, uma conta autenticada pode entrar uma única vez na lista de espera. A organização também pode gerar um convite de uso único com cartelas bônus para colaboradores ou convidados; o código pode ser compartilhado pelo link ou QR Code do evento.
 
 Se a tela parecer desatualizada, atualize a página. Ela busca novamente o estado oficial quando a conexão em tempo real volta. A versão instalável do aplicativo pode manter a interface disponível após uma visita, mas não permite marcar, comprar, operar ou consultar estado de jogo sem conexão com o servidor.
 

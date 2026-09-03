@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { bingoApi, eventStatusLabel, PrizeStageEditor, QrCardScanner, roundStatusLabel } from "../../features/bingo";
+import {
+	bingoApi,
+	CardPurchaseManagementSection,
+	eventStatusLabel,
+	PrizeStageEditor,
+	QrCardScanner,
+	roundStatusLabel
+} from "../../features/bingo";
 import type { ParticipantType, PrizeDraft } from "../../features/bingo";
 import { useAsyncAction } from "../../shared/hooks/useAsyncAction";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
@@ -42,9 +49,7 @@ export function EventSetupPage() {
 	]);
 	const [editingRoundId, setEditingRoundId] = useState<string>();
 	const [printedQuantity, setPrintedQuantity] = useState(10);
-	const [cardPurchaseQuantity, setCardPurchaseQuantity] = useState(100);
 	const [registrationCardsQuantity, setRegistrationCardsQuantity] = useState(1);
-	const [cardPurchaseCancellationReason, setCardPurchaseCancellationReason] = useState("");
 	const [selectedCard, setSelectedCard] = useState("");
 	const [printedParticipantName, setPrintedParticipantName] = useState("");
 	const [printedParticipantType, setPrintedParticipantType] = useState<ParticipantType>("Employee");
@@ -68,11 +73,6 @@ export function EventSetupPage() {
 	const isCardPurchaseOpen = event.data?.isCardPurchaseOpen ?? false;
 	const isPublicRegistrationOpen =
 		event.data?.status === "RegistrationOpen" && !isCardPurchaseOpen && !event.data?.cardPurchaseCancellationReason;
-	const cardPurchaseRemaining = event.data?.cardPurchaseRemaining;
-	const cardPurchaseLimit = event.data?.cardPurchaseLimit;
-	useEffect(() => {
-		if (cardPurchaseLimit) setCardPurchaseQuantity(cardPurchaseLimit);
-	}, [cardPurchaseLimit]);
 	const hasEligibleCard = event.data?.cardList.some((card) => card.status === "Active" && Boolean(card.participantId)) ?? false;
 	const canFinishEvent =
 		event.data?.status === "Running" &&
@@ -319,11 +319,11 @@ export function EventSetupPage() {
 													className="primary"
 													disabled={action.isPending}
 													onClick={async () => {
-														await action.execute(
-															() => bingoApi.openRegistration(eventId, registrationCardsQuantity),
-															"Inscrições públicas abertas."
-														);
-														await event.reload();
+														const opened = await action.execute(async () => {
+															await bingoApi.openRegistration(eventId, registrationCardsQuantity);
+															return true;
+														}, "Inscrições públicas abertas.");
+														if (opened) await event.reload();
 													}}
 												>
 													Abrir inscrições públicas
@@ -338,119 +338,14 @@ export function EventSetupPage() {
 										)}
 									</section>
 
-									<section className="participant-action-group" aria-labelledby="card-purchase-title">
-										<div className="participant-action-heading">
-											<span aria-hidden="true">B</span>
-											<div>
-												<h3 id="card-purchase-title">Venda de cartelas</h3>
-												<p>Libere um lote digital com quantidade controlada para compra.</p>
-											</div>
-										</div>
-										{event.data.status === "Draft" && (
-											<div className="participant-action-config">
-												<label>
-													<span>Cartelas disponíveis</span>
-													<input
-														aria-label="Cartelas disponíveis para venda"
-														type="number"
-														min="1"
-														max="10000"
-														value={cardPurchaseQuantity}
-														onChange={(input) =>
-															setCardPurchaseQuantity(
-																Math.min(10000, Math.max(1, Number(input.target.value) || 1))
-															)
-														}
-													/>
-												</label>
-												<button
-													className="reveal"
-													disabled={isFinished || isCardPurchaseOpen || action.isPending}
-													onClick={async () => {
-														await action.execute(
-															() => bingoApi.openCardPurchase(eventId, cardPurchaseQuantity),
-															"Compra de cartelas aberta."
-														);
-														await event.reload();
-													}}
-												>
-													Abrir compra de cartelas
-												</button>
-											</div>
-										)}
-										{isCardPurchaseOpen && (
-											<>
-												<p className="participant-action-status" role="status">
-													{cardPurchaseRemaining ?? 0} cartela(s) disponível(is) para venda
-												</p>
-												<div className="participant-action-config">
-													<label>
-														<span>Novo limite</span>
-														<input
-															aria-label="Limite de cartelas para venda"
-															type="number"
-															min="1"
-															max="10000"
-															value={cardPurchaseQuantity}
-															onChange={(input) =>
-																setCardPurchaseQuantity(
-																	Math.min(10000, Math.max(1, Number(input.target.value) || 1))
-																)
-															}
-														/>
-													</label>
-													<button
-														disabled={
-															isFinished || action.isPending || cardPurchaseQuantity === cardPurchaseLimit
-														}
-														onClick={async () => {
-															await action.execute(
-																() => bingoApi.updateCardPurchase(eventId, cardPurchaseQuantity),
-																"Limite de venda atualizado."
-															);
-															await event.reload();
-														}}
-													>
-														Atualizar quantidade
-													</button>
-												</div>
-												<div className="participant-action-config participant-action-cancel">
-													<label>
-														<span>Motivo do cancelamento</span>
-														<input
-															aria-label="Motivo do cancelamento da venda"
-															value={cardPurchaseCancellationReason}
-															onChange={(input) => setCardPurchaseCancellationReason(input.target.value)}
-															placeholder="Ex.: alteração na programação"
-														/>
-													</label>
-													<button
-														className="reveal"
-														disabled={
-															isFinished ||
-															action.isPending ||
-															cardPurchaseCancellationReason.trim().length < 3
-														}
-														onClick={async () => {
-															await action.execute(
-																() => bingoApi.cancelCardPurchase(eventId, cardPurchaseCancellationReason),
-																"Venda cancelada e cartelas invalidadas."
-															);
-															setCardPurchaseCancellationReason("");
-															await event.reload();
-														}}
-													>
-														Cancelar venda de cartelas
-													</button>
-												</div>
-											</>
-										)}
-										{event.data.cardPurchaseCancellationReason && (
-											<p className="participant-action-status is-cancelled" role="status">
-												Venda cancelada: {event.data.cardPurchaseCancellationReason}
-											</p>
-										)}
-									</section>
+									<CardPurchaseManagementSection
+										eventId={eventId}
+										event={event.data}
+										registrationPath={registrationPath}
+										isFinished={isFinished}
+										copyPublicLink={copyPublicLink}
+										onReload={event.reload}
+									/>
 								</div>
 								{isFinished && (
 									<div className="awarded-cards" aria-labelledby="awarded-cards-title">
@@ -674,7 +569,7 @@ export function EventSetupPage() {
 												action.isPending
 											}
 											onClick={async () => {
-												await action.execute(
+												const registered = await action.execute(
 													() =>
 														bingoApi.registerPrintedCard(eventId, selectedCard, {
 															name: printedParticipantName,
@@ -684,6 +579,7 @@ export function EventSetupPage() {
 														}),
 													"Participante registrado e cartela ativada para a rodada."
 												);
+												if (!registered) return;
 												setPrintedParticipantName("");
 												setPrintedParticipantRegistration("");
 												setPrintedParticipantResponsible("");
@@ -743,11 +639,11 @@ export function EventSetupPage() {
 									className="reveal"
 									disabled={!canFinishEvent || action.isPending}
 									onClick={async () => {
-										await action.execute(
-											() => bingoApi.finishEvent(eventId),
-											"Evento encerrado e auditoria publicada."
-										);
-										await event.reload();
+										const finished = await action.execute(async () => {
+											await bingoApi.finishEvent(eventId);
+											return true;
+										}, "Evento encerrado e auditoria publicada.");
+										if (finished) await event.reload();
 									}}
 								>
 									Encerrar evento e publicar auditoria

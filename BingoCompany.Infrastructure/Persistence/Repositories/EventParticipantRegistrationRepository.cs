@@ -1,5 +1,4 @@
 using BingoCompany.Domain.Entities;
-using BingoCompany.Domain.Enums;
 using BingoCompany.Domain.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,14 +21,17 @@ public sealed class EventParticipantRegistrationRepository(BingoDbContext db) : 
 		return db.ParticipantAccounts.SingleOrDefaultAsync(item => item.Id == accountId, cancellationToken);
 	}
 
-	public Task<int> CountActivePurchasedCards(Guid eventId, CancellationToken cancellationToken)
+	public Task<int> CountActivePurchasedCards(Guid eventId, CancellationToken cancellationToken) => db
+		.PurchasedDigitalCards(eventId)
+		.CountAsync(cancellationToken);
+
+	public Task<int> CountPurchasedCards(Guid eventId, Guid participantAccountId, CancellationToken cancellationToken) => db
+		.PurchasedDigitalCards(eventId, participantAccountId)
+		.CountAsync(cancellationToken);
+
+	public Task<CardPurchaseInvitation?> GetInvitation(Guid eventId, string invitationCode, CancellationToken cancellationToken)
 	{
-		return db.Cards
-			.Join(db.Participants, card => card.ParticipantId, participant => participant.Id, (card, participant) => new { card, participant })
-			.CountAsync(item => item.card.EventId == eventId
-				&& item.card.Type == CardType.Digital
-				&& item.participant.ParticipantAccountId.HasValue
-				&& item.card.Status != CardStatus.Cancelled, cancellationToken);
+		return db.CardPurchaseInvitations.SingleOrDefaultAsync(item => item.EventId == eventId && item.Code == invitationCode, cancellationToken);
 	}
 
 	public void AddParticipant(Participant participant) => db.Participants.Add(participant);

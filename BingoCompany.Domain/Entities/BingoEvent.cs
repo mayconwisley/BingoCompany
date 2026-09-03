@@ -5,6 +5,7 @@ public sealed class BingoEvent
 	private readonly List<BingoRound> _rounds = [];
 	private readonly List<BingoCard> _cards = [];
 	private readonly List<Participant> _participants = [];
+	private readonly List<CardPurchaseInvitation> _cardPurchaseInvitations = [];
 	private BingoEvent() { }
 	public BingoEvent(Guid companyId, string name, int cardsPerParticipant = 1, CardMarkingMode markingMode = CardMarkingMode.Automatic)
 	{
@@ -24,12 +25,16 @@ public sealed class BingoEvent
 	public int CardsPerParticipant { get; private set; }
 	public bool IsCardPurchaseOpen { get; private set; }
 	public int? CardPurchaseLimit { get; private set; }
+	public int? CardPurchasePerParticipantLimit { get; private set; }
+	public DateTimeOffset? CardPurchaseClosesAt { get; private set; }
+	public int? CardPurchaseLowStockThreshold { get; private set; }
 	public string? CardPurchaseCancellationReason { get; private set; }
 	public CardMarkingMode MarkingMode { get; private set; }
 	public DateTimeOffset CreatedAt { get; private set; }
 	public IReadOnlyCollection<BingoRound> Rounds => _rounds;
 	public IReadOnlyCollection<BingoCard> Cards => _cards;
 	public IReadOnlyCollection<Participant> Participants => _participants;
+	public IReadOnlyCollection<CardPurchaseInvitation> CardPurchaseInvitations => _cardPurchaseInvitations;
 	public void OpenRegistration(int cardsPerParticipant = 1)
 	{
 		if (cardsPerParticipant is < 1 or > 100) throw new InvalidOperationException("Informe entre 1 e 100 cartelas por participante.");
@@ -37,24 +42,42 @@ public sealed class BingoEvent
 		CardsPerParticipant = cardsPerParticipant;
 		Status = EventStatus.RegistrationOpen;
 	}
-	public void OpenCardPurchase(int quantity)
+	public void OpenCardPurchase(int quantity, int perParticipantLimit = 5, DateTimeOffset? closesAt = null, int lowStockThreshold = 10)
 	{
 		if (quantity is < 1 or > 10_000) throw new InvalidOperationException("Informe entre 1 e 10000 cartelas para venda.");
+		if (perParticipantLimit is < 1 or > 100) throw new InvalidOperationException("Informe entre 1 e 100 cartelas por participante.");
+		if (closesAt.HasValue && closesAt.Value <= DateTimeOffset.UtcNow) throw new InvalidOperationException("O encerramento da venda deve estar no futuro.");
+		if (lowStockThreshold is < 0 or > 10_000) throw new InvalidOperationException("Informe um alerta de estoque entre 0 e 10000 cartelas.");
 		if (CardPurchaseCancellationReason is not null) throw new InvalidOperationException("A venda de cartelas foi cancelada e não pode ser reaberta.");
 		if (Status is not EventStatus.Draft) throw new InvalidOperationException("O evento não pode vender cartelas agora.");
 		Status = EventStatus.RegistrationOpen;
 
 		IsCardPurchaseOpen = true;
 		CardPurchaseLimit = quantity;
+		CardPurchasePerParticipantLimit = perParticipantLimit;
+		CardPurchaseClosesAt = closesAt;
+		CardPurchaseLowStockThreshold = Math.Min(lowStockThreshold, quantity);
+	}
+	public void UpdateCardPurchaseSettings(int quantity, int perParticipantLimit, DateTimeOffset? closesAt, int lowStockThreshold, int soldCards)
+	{
+		if (!IsCardPurchaseAvailableAt(DateTimeOffset.UtcNow)) throw new InvalidOperationException("A venda de cartelas não está aberta para alteração.");
+		if (quantity is < 1 or > 10_000) throw new InvalidOperationException("Informe entre 1 e 10000 cartelas para venda.");
+		if (quantity < soldCards) throw new InvalidOperationException("A quantidade não pode ser menor que as cartelas já vendidas.");
+		if (perParticipantLimit is < 1 or > 100) throw new InvalidOperationException("Informe entre 1 e 100 cartelas por participante.");
+		if (closesAt.HasValue && closesAt.Value <= DateTimeOffset.UtcNow) throw new InvalidOperationException("O encerramento da venda deve estar no futuro.");
+		if (lowStockThreshold is < 0 or > 10_000) throw new InvalidOperationException("Informe um alerta de estoque entre 0 e 10000 cartelas.");
+
+		CardPurchaseLimit = quantity;
+		CardPurchasePerParticipantLimit = perParticipantLimit;
+		CardPurchaseClosesAt = closesAt;
+		CardPurchaseLowStockThreshold = Math.Min(lowStockThreshold, quantity);
 	}
 	public void UpdateCardPurchaseLimit(int quantity, int soldCards)
 	{
-		if (!IsCardPurchaseOpen || Status != EventStatus.RegistrationOpen) throw new InvalidOperationException("A venda de cartelas não está aberta para alteração.");
-		if (quantity is < 1 or > 10_000) throw new InvalidOperationException("Informe entre 1 e 10000 cartelas para venda.");
-		if (quantity < soldCards) throw new InvalidOperationException("A quantidade não pode ser menor que as cartelas já vendidas.");
-
-		CardPurchaseLimit = quantity;
+		UpdateCardPurchaseSettings(quantity, CardPurchasePerParticipantLimit ?? 5, CardPurchaseClosesAt, CardPurchaseLowStockThreshold ?? 10, soldCards);
 	}
+	public bool IsCardPurchaseAvailableAt(DateTimeOffset instant) =>
+		IsCardPurchaseOpen && Status == EventStatus.RegistrationOpen && (!CardPurchaseClosesAt.HasValue || CardPurchaseClosesAt.Value > instant);
 	public void CancelCardPurchase(string reason)
 	{
 		if (!IsCardPurchaseOpen || Status != EventStatus.RegistrationOpen) throw new InvalidOperationException("A venda de cartelas não está aberta para cancelamento.");
@@ -78,4 +101,5 @@ public sealed class BingoEvent
 	public void AddRound(BingoRound round) => _rounds.Add(round);
 	public void AddParticipant(Participant participant) => _participants.Add(participant);
 	public void AddCard(BingoCard card) => _cards.Add(card);
+	public void AddCardPurchaseInvitation(CardPurchaseInvitation invitation) => _cardPurchaseInvitations.Add(invitation);
 }

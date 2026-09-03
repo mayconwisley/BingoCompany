@@ -11,6 +11,7 @@ export { DrawSuspense } from "./components/DrawSuspense";
 export { PrizeStageEditor } from "./components/PrizeStageEditor";
 export { QrCardScanner } from "./components/QrCardScanner";
 export { RegistrationQrCode } from "./components/RegistrationQrCode";
+export { CardPurchaseManagementSection } from "./components/CardPurchaseManagementSection";
 export { TieBreakerStone } from "./components/TieBreakerStone";
 export { useLiveBingo } from "./hooks/useLiveBingo";
 export type { CardMarkingMode, ParticipantType, PrizeDraft, PublicEvent } from "./model/types";

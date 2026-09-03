@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BingoCompany.Api.Controllers;
 
 [ApiController, Route("api/public/events")]
-public sealed partial class PublicController(IEventParticipantRegistrationService participantRegistrationService, IPublicEventQueryService publicEventQueryService, IPublicCardActivationService publicCardActivationService, IPublicEventAuditQueryService publicEventAuditQueryService) : ControllerBase
+public sealed partial class PublicController(IEventParticipantRegistrationService participantRegistrationService, IPublicEventQueryService publicEventQueryService, IPublicCardActivationService publicCardActivationService, IPublicEventAuditQueryService publicEventAuditQueryService, ICardPurchaseWaitlistService? cardPurchaseWaitlistService = null) : ControllerBase
 {
 	[HttpGet("{code}")]
 	public async Task<ActionResult<object>> Get(string code, CancellationToken cancellationToken = default)

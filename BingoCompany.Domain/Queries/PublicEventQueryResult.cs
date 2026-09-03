@@ -10,8 +10,12 @@ public sealed record PublicEventQueryResult(
 	CardMarkingMode MarkingMode,
 	bool IsCardPurchaseOpen,
 	int? CardPurchaseLimit,
+	int? CardPurchasePerParticipantLimit,
+	DateTimeOffset? CardPurchaseClosesAt,
+	int? CardPurchaseLowStockThreshold,
 	string? CardPurchaseCancellationReason,
 	int? CardPurchaseRemaining,
+	int CardPurchaseWaitlistEntries,
 	int Participants,
 	int Cards,
 	PublicRoundQueryResult? Round);

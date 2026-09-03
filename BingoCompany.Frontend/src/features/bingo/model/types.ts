@@ -24,9 +24,12 @@ export type EventSummary = {
 	cardsPerParticipant?: number;
 	markingMode: CardMarkingMode;
 	isCardPurchaseOpen?: boolean;
-	cardPurchaseLimit?: number;
-	cardPurchaseRemaining?: number;
-	cardPurchaseCancellationReason?: string;
+	cardPurchaseLimit?: number | null;
+	cardPurchasePerParticipantLimit?: number | null;
+	cardPurchaseClosesAt?: string | null;
+	cardPurchaseLowStockThreshold?: number | null;
+	cardPurchaseRemaining?: number | null;
+	cardPurchaseCancellationReason?: string | null;
 	createdAt: string;
 };
 export type EventPage = { items: EventSummary[]; page: number; pageSize: number; totalItems: number; totalPages: number };
@@ -37,9 +40,20 @@ export type EventDetails = {
 	status: string;
 	cardsPerParticipant?: number;
 	isCardPurchaseOpen?: boolean;
-	cardPurchaseLimit?: number;
-	cardPurchaseRemaining?: number;
-	cardPurchaseCancellationReason?: string;
+	cardPurchaseLimit?: number | null;
+	cardPurchasePerParticipantLimit?: number | null;
+	cardPurchaseClosesAt?: string | null;
+	cardPurchaseLowStockThreshold?: number | null;
+	cardPurchaseRemaining?: number | null;
+	cardPurchaseCancellationReason?: string | null;
+	cardPurchaseDashboard?: {
+		total: number;
+		reserved: number;
+		activated: number;
+		eligibleForNextRound: number;
+		awaitingActivation: number;
+		waitlistEntries: number;
+	};
 	participants: number;
 	cards: number;
 	participantList: { id: string; name: string; type: string }[];
@@ -81,9 +95,13 @@ export type PublicEvent = {
 	status: string;
 	markingMode: string;
 	isCardPurchaseOpen?: boolean;
-	cardPurchaseLimit?: number;
-	cardPurchaseRemaining?: number;
-	cardPurchaseCancellationReason?: string;
+	cardPurchaseLimit?: number | null;
+	cardPurchasePerParticipantLimit?: number | null;
+	cardPurchaseClosesAt?: string | null;
+	cardPurchaseLowStockThreshold?: number | null;
+	cardPurchaseRemaining?: number | null;
+	cardPurchaseCancellationReason?: string | null;
+	cardPurchaseWaitlistEntries?: number;
 	participants: number;
 	cards: number;
 	round?: {
@@ -139,6 +157,7 @@ export type JoinEventInput = {
 	employeeRegistration?: string;
 	responsibleEmployeeName?: string;
 	cardsQuantity?: number;
+	invitationCode?: string;
 };
 export type PublicAudit = {
 	eventInfo: { name: string; publicCode: string; status: string; createdAt: string };

@@ -34,12 +34,21 @@ export const bingoApi = {
 	createEvent: (request: CreateEventInput) => http<EventSummary>("/api/events", { method: "POST", body: JSON.stringify(request) }),
 	openRegistration: (eventId: string, cardsPerParticipant: number) =>
 		http<void>(`/api/events/${eventId}/registration/open`, { method: "POST", body: JSON.stringify({ cardsPerParticipant }) }),
-	openCardPurchase: (eventId: string, quantity: number) =>
-		http<void>(`/api/events/${eventId}/card-purchase/open`, { method: "POST", body: JSON.stringify({ quantity }) }),
-	updateCardPurchase: (eventId: string, quantity: number) =>
-		http<void>(`/api/events/${eventId}/card-purchase`, { method: "PUT", body: JSON.stringify({ quantity }) }),
+	openCardPurchase: (
+		eventId: string,
+		settings: { quantity: number; perParticipantLimit: number; closesAt?: string; lowStockThreshold: number }
+	) => http<void>(`/api/events/${eventId}/card-purchase/open`, { method: "POST", body: JSON.stringify(settings) }),
+	updateCardPurchase: (
+		eventId: string,
+		settings: { quantity: number; perParticipantLimit: number; closesAt?: string; lowStockThreshold: number }
+	) => http<void>(`/api/events/${eventId}/card-purchase`, { method: "PUT", body: JSON.stringify(settings) }),
 	cancelCardPurchase: (eventId: string, reason: string) =>
 		http<void>(`/api/events/${eventId}/card-purchase/cancel`, { method: "POST", body: JSON.stringify({ reason }) }),
+	createCardPurchaseInvitation: (eventId: string, bonusCards: number, expiresAt?: string) =>
+		http<{ code: string; bonusCards: number; expiresAt?: string }>(`/api/events/${eventId}/card-purchase/invitations`, {
+			method: "POST",
+			body: JSON.stringify({ bonusCards, expiresAt })
+		}),
 	joinEvent: (eventId: string, request: JoinEventInput) =>
 		http<RegistrationResult>(`/api/events/${eventId}/participants`, { method: "POST", body: JSON.stringify(request) }),
 	createRound: (eventId: string, name: string, stages: PrizeDraft[]) =>
@@ -86,6 +95,14 @@ export const bingoApi = {
 	getPublicEvent: (code: string) => http<PublicEvent>(`/api/public/events/${code}`),
 	join: (code: string, request: JoinEventInput) =>
 		http<RegistrationResult>(`/api/public/events/${code}/join`, { method: "POST", body: JSON.stringify(request) }),
+	joinCardPurchaseWaitlist: (code: string, requestedQuantity: number) =>
+		http<{ position: number; requestedQuantity: number; alreadyRegistered: boolean }>(
+			`/api/public/events/${code}/card-purchase/waitlist`,
+			{
+				method: "POST",
+				body: JSON.stringify({ requestedQuantity })
+			}
+		),
 	activateDigitalCard: (eventCode: string, cardCode: string) =>
 		http<void>(`/api/public/events/${eventCode}/cards/${cardCode}/activate`, { method: "POST" }),
 	getAudit: (code: string, page = 1, pageSize = 25, roundSequence?: number) => {
@@ -107,6 +124,8 @@ export type ParticipantCard = {
 	eventStatus: string;
 	publicCode: string;
 	status: string;
+	hasParticipatedInRound: boolean;
+	isEligibleForNextRound: boolean;
 	invalidationReason?: string;
 	eventCancellationReason?: string;
 	createdAt: string;

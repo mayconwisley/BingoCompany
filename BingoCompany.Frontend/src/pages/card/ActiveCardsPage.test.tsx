@@ -18,6 +18,8 @@ describe("ActiveCardsPage", () => {
 					eventStatus: "Finished",
 					publicCode: "CARTELA-1",
 					status: "Active",
+					hasParticipatedInRound: false,
+					isEligibleForNextRound: false,
 					createdAt: "2026-07-15T00:00:00Z"
 				}
 			],

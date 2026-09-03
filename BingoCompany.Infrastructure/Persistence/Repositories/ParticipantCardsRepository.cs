@@ -19,5 +19,16 @@ public sealed class ParticipantCardsRepository(BingoDbContext db) : IParticipant
 		join bingoEvent in db.Events.AsNoTracking() on card.EventId equals bingoEvent.Id
 		where participant.ParticipantAccountId == participantAccountId && (isActive ? card.Status == CardStatus.Active : card.Status != CardStatus.Active)
 		orderby bingoEvent.CreatedAt descending, card.CreatedAt descending
-		select new ParticipantCardSummary(bingoEvent.Id, bingoEvent.PublicCode, bingoEvent.Name, bingoEvent.Status, card.PublicCode, card.Status, card.InvalidationReason, bingoEvent.CardPurchaseCancellationReason, card.CreatedAt);
+		select new ParticipantCardSummary(
+			bingoEvent.Id,
+			bingoEvent.PublicCode,
+			bingoEvent.Name,
+			bingoEvent.Status,
+			card.PublicCode,
+			card.Status,
+			db.RoundEligibleCards.Any(eligibleCard => eligibleCard.CardId == card.Id),
+			card.Status == CardStatus.Active && (bingoEvent.Status == EventStatus.RegistrationOpen || db.Rounds.Any(round => round.EventId == bingoEvent.Id && round.Status == RoundStatus.Ready)),
+			card.InvalidationReason,
+			bingoEvent.CardPurchaseCancellationReason,
+			card.CreatedAt);
 }

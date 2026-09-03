@@ -20,17 +20,28 @@ public sealed class CompanyEventsReadRepository(BingoDbContext db) : ICompanyEve
 		var bingoEvent = await db.Events.AsNoTracking().Include(item => item.Rounds).ThenInclude(item => item.Stages).Include(item => item.Cards).Include(item => item.Participants).SingleOrDefaultAsync(item => item.Id == eventId, cancellationToken);
 		if (bingoEvent is null) return null;
 		var awardedCards = await GetAwardedCards(eventId, bingoEvent.Status, awardedCardsPage, awardedCardsPageSize, cancellationToken);
-		var purchasedCards = await db.Cards.Join(db.Participants, card => card.ParticipantId, participant => participant.Id, (card, participant) => new { card, participant }).CountAsync(item => item.card.EventId == eventId && item.card.Type == CardType.Digital && item.participant.ParticipantAccountId.HasValue && item.card.Status != CardStatus.Cancelled, cancellationToken);
+		var purchasedCardStatuses = await db.PurchasedDigitalCards(eventId).Select(item => item.Status).ToArrayAsync(cancellationToken);
+		var purchasedCards = purchasedCardStatuses.Length;
+		var activatedCards = purchasedCardStatuses.Count(status => status == CardStatus.Active);
+		var awaitingActivationCards = purchasedCardStatuses.Count(status => status == CardStatus.Assigned);
+		var waitlistEntries = await db.CardPurchaseWaitlistEntries.CountAsync(item => item.EventId == eventId, cancellationToken);
+		var dashboard = bingoEvent.CardPurchaseLimit.HasValue
+			? new CardPurchaseDashboard(bingoEvent.CardPurchaseLimit.Value, purchasedCards, activatedCards, activatedCards, awaitingActivationCards, waitlistEntries)
+			: null;
 		return new CompanyEventDetails(
 			bingoEvent.Id,
 			bingoEvent.Name,
 			bingoEvent.PublicCode,
 			bingoEvent.Status,
 			bingoEvent.CardsPerParticipant,
-			bingoEvent.IsCardPurchaseOpen,
+			bingoEvent.IsCardPurchaseAvailableAt(DateTimeOffset.UtcNow),
 			bingoEvent.CardPurchaseLimit,
+			bingoEvent.CardPurchasePerParticipantLimit,
+			bingoEvent.CardPurchaseClosesAt,
+			bingoEvent.CardPurchaseLowStockThreshold,
 			bingoEvent.CardPurchaseCancellationReason,
 			bingoEvent.CardPurchaseLimit.HasValue ? Math.Max(0, bingoEvent.CardPurchaseLimit.Value - purchasedCards) : null,
+			dashboard,
 			bingoEvent.Participants.Count,
 			bingoEvent.Cards.Count,
 			bingoEvent.Participants

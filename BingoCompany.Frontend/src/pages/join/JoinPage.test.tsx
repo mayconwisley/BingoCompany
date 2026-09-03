@@ -70,6 +70,9 @@ describe("JoinPage", () => {
 			status: "RegistrationOpen",
 			markingMode: "Automatic",
 			isCardPurchaseOpen: true,
+			cardPurchaseLimit: 50,
+			cardPurchaseRemaining: 50,
+			cardPurchasePerParticipantLimit: 5,
 			participants: 0,
 			cards: 0
 		});
@@ -87,11 +90,12 @@ describe("JoinPage", () => {
 		);
 
 		await screen.findByText("Festa");
+		expect(screen.getByText("50 de 50 cartelas disponíveis")).toBeInTheDocument();
 		expect(screen.queryByLabelText("Seu nome")).not.toBeInTheDocument();
 		expect(screen.queryByLabelText("Tipo de participante")).not.toBeInTheDocument();
 		expect(screen.queryByLabelText("Matrícula")).not.toBeInTheDocument();
 		fireEvent.change(screen.getByLabelText("Quantidade de cartelas digitais"), { target: { value: "4" } });
-		fireEvent.click(screen.getByRole("button", { name: "Comprar cartelas" }));
+		fireEvent.click(screen.getByRole("button", { name: "Reservar cartelas" }));
 
 		expect(await screen.findByText(/CARD001/)).toBeInTheDocument();
 		expect(bingoApi.join).toHaveBeenCalledWith("EVENTO", { name: "Ana", cardsQuantity: 4 });
@@ -117,6 +121,6 @@ describe("JoinPage", () => {
 
 		expect(await screen.findByText("As inscrições deste bingo estão fechadas.")).toBeInTheDocument();
 		expect(screen.queryByLabelText("Quantidade de cartelas digitais")).not.toBeInTheDocument();
-		expect(screen.queryByRole("button", { name: "Comprar cartelas" })).not.toBeInTheDocument();
+		expect(screen.queryByRole("button", { name: "Reservar cartelas" })).not.toBeInTheDocument();
 	});
 });

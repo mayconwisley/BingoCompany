@@ -7,4 +7,5 @@ public sealed record EventParticipantRegistrationRequest(
 	ParticipantType? Type,
 	string? EmployeeRegistration,
 	string? ResponsibleEmployeeName,
-	int? CardsQuantity);
+	int? CardsQuantity,
+	string? InvitationCode = null);

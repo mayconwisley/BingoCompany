@@ -18,6 +18,8 @@ public sealed class BingoDbContext(DbContextOptions<BingoDbContext> options) : D
 	public DbSet<RoundEligibleCard> RoundEligibleCards => Set<RoundEligibleCard>();
 	public DbSet<RoundWinner> RoundWinners => Set<RoundWinner>();
 	public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+	public DbSet<CardPurchaseInvitation> CardPurchaseInvitations => Set<CardPurchaseInvitation>();
+	public DbSet<CardPurchaseWaitlistEntry> CardPurchaseWaitlistEntries => Set<CardPurchaseWaitlistEntry>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{

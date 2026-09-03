@@ -1480,6 +1480,72 @@ main > h1 {
 	background: var(--accent-soft);
 	color: var(--text);
 }
+.purchase-stock {
+	display: grid;
+	gap: 0.25rem;
+	margin: 0 0 1rem;
+	padding: 0.9rem 1rem;
+	border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--line));
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+}
+.purchase-stock strong {
+	font-size: 1.08rem;
+}
+.purchase-stock span {
+	color: var(--muted);
+	font-size: 0.9rem;
+}
+.quantity-presets {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin: 0 0 1rem;
+}
+.quantity-presets button {
+	margin: 0;
+}
+.quantity-presets .is-selected {
+	border-color: var(--primary);
+	background: var(--primary);
+	color: var(--primary-contrast, #fff);
+}
+.purchase-dashboard {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.6rem;
+	margin: 1rem 0;
+}
+.purchase-dashboard div {
+	display: grid;
+	gap: 0.15rem;
+	padding: 0.7rem;
+	border: 1px solid var(--line);
+	border-radius: 10px;
+	background: var(--surface-alt);
+}
+.purchase-dashboard strong {
+	font-size: 1.2rem;
+}
+.purchase-dashboard span {
+	color: var(--muted);
+	font-size: 0.75rem;
+}
+.purchase-invitations {
+	margin-top: 1.25rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--line);
+}
+.purchase-invitations h4 {
+	margin: 0;
+}
+.purchase-invitation-result,
+.purchase-join-qr {
+	display: grid;
+	justify-items: start;
+	gap: 0.5rem;
+	margin-top: 1rem;
+}
 .error,
 .feedback-error {
 	color: var(--danger);

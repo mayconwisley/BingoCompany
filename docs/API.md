@@ -61,6 +61,7 @@ Não coloque cookie, senha, código de cartela ou dados de colaborador em logs d
 | `POST /api/public/events/{code}/join` | Inscreve um participante e gera cartela digital. Limite: 20 requisições/minuto por IP. |
 | `GET /api/public/events/{code}/audit?page=1&pageSize=25&roundSequence=2` | Histórico público, cartelas, rodadas, resultados e auditoria. A linha do tempo é paginada e filtrada por rodada no backend quando `roundSequence` é informado; a sequência completa somente é exposta ao fim da rodada. |
 | `POST /api/public/events/{code}/cards/{cardCode}/activate` | Ativa uma cartela digital comprada pela conta de participante. |
+| `POST /api/public/events/{code}/card-purchase/waitlist` | Inclui a conta autenticada na lista de espera quando o lote estiver esgotado. |
 
 O corpo de inscrição pública é:
 
@@ -69,7 +70,9 @@ O corpo de inscrição pública é:
   "name": "Ana Participante",
   "type": "Employee",
   "employeeRegistration": "opcional",
-  "responsibleEmployeeName": "necessário para familiar/convidado quando aplicável"
+  "responsibleEmployeeName": "necessário para familiar/convidado quando aplicável",
+  "cardsQuantity": 3,
+  "invitationCode": "opcional"
 }
 ```
 
@@ -85,9 +88,10 @@ O limite de inscrição pública é por IP, portanto uma página de divulgação
 | `POST /api/events` | Cria evento. |
 | `GET /api/events/{eventId}?awardedCardsPage=1&awardedCardsPageSize=3` | Detalhes administrativos de um evento. Para evento finalizado, `awardedCards` é paginado no backend; o tamanho padrão e usado pela interface é 3, com máximo 100. |
 | `POST /api/events/{eventId}/registration/open` | Abre inscrições de um evento em preparação. |
-| `POST /api/events/{eventId}/card-purchase/open` | Abre a venda de até `quantity` cartelas digitais para contas de participante. |
-| `PUT /api/events/{eventId}/card-purchase` | Atualiza o limite da venda enquanto permitido. |
+| `POST /api/events/{eventId}/card-purchase/open` | Abre a reserva de até `quantity` cartelas; aceita `perParticipantLimit`, `closesAt` e `lowStockThreshold`. |
+| `PUT /api/events/{eventId}/card-purchase` | Atualiza limite, máximo por participante, alerta de estoque e encerramento programado. |
 | `POST /api/events/{eventId}/card-purchase/cancel` | Cancela a venda e registra o motivo. |
+| `POST /api/events/{eventId}/card-purchase/invitations` | Cria convite de uso único com cartelas bônus (`bonusCards` e `expiresAt`). |
 | `POST /api/events/{eventId}/participants` | Inscreve participante pelo painel administrativo. |
 | `POST /api/events/{eventId}/cards/printed` | Gera de 1 a 1.000 cartelas impressas. |
 | `GET /api/events/{eventId}/cards/printed` | Lista cartelas impressas e seu QR Code. |
@@ -116,7 +120,7 @@ Quando o evento está finalizado, a resposta administrativa contém a página `a
 
 Em `ManualRequired`, a API aceita somente a marca da pedra atual e válida da cartela. Em `AssistedManual`, aceita apenas números da própria cartela que já foram sorteados. Em ambos, uma marca duplicada ou inválida não é uma vitória: a fonte de verdade é o `CardMark` persistido pelo backend. Não implemente “bingo” no cliente a partir da cor da interface.
 
-Para abrir a venda de cartelas, envie `{ "quantity": 50 }`. Para cancelá-la, envie `{ "reason": "Motivo visível para participantes" }`. O cadastro direto em cartela impressa usa o mesmo corpo de inscrição pública. A conta de participante pode comprar somente até o limite ainda disponível e precisa ativar cada cartela comprada antes de ela concorrer.
+Para abrir a reserva de cartelas, envie `{ "quantity": 50, "perParticipantLimit": 5, "closesAt": "2026-09-03T18:00:00Z", "lowStockThreshold": 10 }`; os campos opcionais mantêm os padrões de 5 e 10. A API retorna estoque restante, alerta de baixo estoque, encerramento e quantidade na lista de espera. A conta de participante pode reservar somente até o limite individual e precisa ativar cada cartela adquirida antes de ela concorrer. Um `invitationCode` válido no corpo de inscrição libera as cartelas bônus do convite e o código é consumido uma única vez.
 
 ## Rodadas e prêmios
 

@@ -10,6 +10,7 @@ public static class DependencyInjection
 	{
 		services.AddSingleton<IBingoRoundGameplayService, BingoRoundGameplayService>();
 		services.AddScoped<IEventCardPurchaseService, EventCardPurchaseService>();
+		services.AddScoped<ICardPurchaseWaitlistService, CardPurchaseWaitlistService>();
 		services.AddScoped<ICardStateQueryService, CardStateQueryService>();
 		services.AddScoped<IEventParticipantRegistrationService, EventParticipantRegistrationService>();
 		services.AddScoped<ICompanyEventAuthorizationService, CompanyEventAuthorizationService>();

@@ -8,6 +8,8 @@ public interface IEventParticipantRegistrationRepository
 	Task<BingoEvent?> GetEventByPublicCode(string publicCode, CancellationToken cancellationToken);
 	Task<ParticipantAccount?> GetParticipantAccount(Guid accountId, CancellationToken cancellationToken);
 	Task<int> CountActivePurchasedCards(Guid eventId, CancellationToken cancellationToken);
+	Task<int> CountPurchasedCards(Guid eventId, Guid participantAccountId, CancellationToken cancellationToken);
+	Task<CardPurchaseInvitation?> GetInvitation(Guid eventId, string invitationCode, CancellationToken cancellationToken);
 	void AddParticipant(Participant participant);
 	void AddCards(IReadOnlyCollection<BingoCard> cards);
 	void AddAuditEntry(AuditEntry entry);

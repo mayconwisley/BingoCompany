@@ -39,7 +39,10 @@ public sealed class PublicEventReadRepository(BingoDbContext db) : IPublicEventR
 			? await db.Cards.CountAsync(item => item.EventId == bingoEvent.Id && item.Status == CardStatus.Active && item.ParticipantId.HasValue, cancellationToken)
 			: round is null ? 0 : await db.RoundEligibleCards.CountAsync(item => item.RoundId == round.Id, cancellationToken);
 		var purchasedCards = bingoEvent.CardPurchaseLimit.HasValue
-			? await db.Cards.Join(db.Participants, card => card.ParticipantId, participant => participant.Id, (card, participant) => new { card, participant }).CountAsync(item => item.card.EventId == bingoEvent.Id && item.card.Type == CardType.Digital && item.participant.ParticipantAccountId.HasValue, cancellationToken)
+			? await db.PurchasedDigitalCards(bingoEvent.Id).CountAsync(cancellationToken)
+			: 0;
+		var waitlistEntries = bingoEvent.CardPurchaseLimit.HasValue
+			? await db.CardPurchaseWaitlistEntries.CountAsync(item => item.EventId == bingoEvent.Id, cancellationToken)
 			: 0;
 
 		var roundResult = round is null
@@ -54,7 +57,7 @@ public sealed class PublicEventReadRepository(BingoDbContext db) : IPublicEventR
 				statistics is null ? null : new PublicRoundStatisticsQueryResult(statistics.TotalCards, statistics.OneNumberAway, statistics.TwoNumbersAway, statistics.ThreeNumbersAway, statistics.AwardedCards),
 				winner is null ? null : new PublicWinnerQueryResult(participantNames.GetValueOrDefault(winner.ParticipantId, "Participante indisponível"), presentationStage!.PrizeName, presentationStage.Pattern, presentationStage.PrizeImageDataUrl, pendingPrizeWinner is not null, presentationWinners.Count > 1 ? presentationWinners.OrderByDescending(item => item.TieBreakerNumber).Select(item => new PublicTieBreakerQueryResult(participantNames.GetValueOrDefault(item.ParticipantId, "Participante indisponível"), cardCodes.GetValueOrDefault(item.CardId, "Cartela indisponível"), item.TieBreakerNumber, item.Id == winner.Id)).ToArray() : []));
 
-		return new PublicEventQueryResult(bingoEvent.Id, bingoEvent.Name, bingoEvent.PublicCode, bingoEvent.Status, bingoEvent.MarkingMode, bingoEvent.IsCardPurchaseOpen, bingoEvent.CardPurchaseLimit, bingoEvent.CardPurchaseCancellationReason, bingoEvent.CardPurchaseLimit.HasValue ? Math.Max(0, bingoEvent.CardPurchaseLimit.Value - purchasedCards) : null, await db.Participants.CountAsync(item => item.EventId == bingoEvent.Id, cancellationToken), await db.Cards.CountAsync(item => item.EventId == bingoEvent.Id, cancellationToken), roundResult);
+		return new PublicEventQueryResult(bingoEvent.Id, bingoEvent.Name, bingoEvent.PublicCode, bingoEvent.Status, bingoEvent.MarkingMode, bingoEvent.IsCardPurchaseAvailableAt(DateTimeOffset.UtcNow), bingoEvent.CardPurchaseLimit, bingoEvent.CardPurchasePerParticipantLimit, bingoEvent.CardPurchaseClosesAt, bingoEvent.CardPurchaseLowStockThreshold, bingoEvent.CardPurchaseCancellationReason, bingoEvent.CardPurchaseLimit.HasValue ? Math.Max(0, bingoEvent.CardPurchaseLimit.Value - purchasedCards) : null, waitlistEntries, await db.Participants.CountAsync(item => item.EventId == bingoEvent.Id, cancellationToken), await db.Cards.CountAsync(item => item.EventId == bingoEvent.Id, cancellationToken), roundResult);
 	}
 
 	private async Task<PublicRoundStatisticsQueryResult?> CalculateStatistics(BingoRound? round, PrizeStage? stage, CardMarkingMode markingMode, CancellationToken cancellationToken)

@@ -11,6 +11,20 @@ import { PageState } from "../../shared/ui/PageState";
 
 const CardsPerPage = 5;
 
+const cardStatusLabel = (card: {
+	status: string;
+	hasParticipatedInRound: boolean;
+	isEligibleForNextRound: boolean;
+	eventStatus: string;
+}) => {
+	if (card.status === "Cancelled") return "Cancelada";
+	if (card.status === "Assigned") return "Adquirida — ative antes da rodada";
+	if (card.hasParticipatedInRound && card.isEligibleForNextRound) return "Usada anteriormente — apta para a próxima rodada";
+	if (card.hasParticipatedInRound) return "Usada";
+	if (card.isEligibleForNextRound) return "Ativada — apta para a próxima rodada";
+	return card.eventStatus === "Finished" ? "Ativada — evento encerrado" : "Ativada";
+};
+
 export function MyCardsPage() {
 	const { session } = useSession();
 	const navigate = useNavigate();
@@ -165,8 +179,12 @@ export function MyCardsPage() {
 											{eventCards.map((card) => (
 												<article key={`${card.eventId}-${card.publicCode}`}>
 													<div className="card-purchase-code">
-														<span>Cartela ativa</span>
+														<span>{cardStatusLabel(card)}</span>
 														<code>{card.publicCode}</code>
+														{card.hasParticipatedInRound && <small className="badge">Usada</small>}
+														{card.isEligibleForNextRound && (
+															<small className="badge">Apta para próxima rodada</small>
+														)}
 													</div>
 													<Link className="button" to={`/cartela/${card.eventId}/${card.publicCode}`}>
 														Abrir cartela
@@ -189,10 +207,7 @@ export function MyCardsPage() {
 										<article key={`${card.eventId}-${card.publicCode}`}>
 											<div className="card-purchase-code">
 												<span>
-													{card.eventName} ·{" "}
-													{card.eventStatus === "Finished" && card.status === "Cancelled"
-														? "Não utilizada — invalidada"
-														: card.status}
+													{card.eventName} · {cardStatusLabel(card)}
 												</span>
 												<code>{card.publicCode}</code>
 												{card.status === "Cancelled" && (

@@ -27,12 +27,12 @@ public sealed class EventConfigurationService(IEventConfigurationRepository repo
 		return true;
 	}
 
-	public async Task<bool> OpenCardPurchase(Guid eventId, int quantity, CancellationToken cancellationToken)
+	public async Task<bool> OpenCardPurchase(Guid eventId, int quantity, int perParticipantLimit, DateTimeOffset? closesAt, int lowStockThreshold, CancellationToken cancellationToken)
 	{
 		var bingoEvent = await repository.GetEvent(eventId, cancellationToken);
 		if (bingoEvent is null) return false;
-		bingoEvent.OpenCardPurchase(quantity);
-		repository.AddAuditEntry(new AuditEntry(eventId, "Compra de cartelas aberta", $"Venda de até {quantity} cartelas digitais liberada."));
+		bingoEvent.OpenCardPurchase(quantity, perParticipantLimit, closesAt, lowStockThreshold);
+		repository.AddAuditEntry(new AuditEntry(eventId, "Compra de cartelas aberta", $"Venda de até {quantity} cartelas digitais; máximo de {perParticipantLimit} por participante."));
 		await repository.SaveChanges(cancellationToken);
 		return true;
 	}

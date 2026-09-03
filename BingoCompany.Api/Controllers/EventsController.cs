@@ -44,7 +44,7 @@ public sealed partial class EventsController(IHubContext<BingoHub> hub, IEventPa
 	{
 		try
 		{
-			if (!await cardPurchaseService.UpdateLimit(eventId, request.Quantity, HttpContext.RequestAborted)) return NotFound();
+			if (!await cardPurchaseService.UpdateSettings(eventId, request.Quantity, request.PerParticipantLimit ?? 5, request.ClosesAt, request.LowStockThreshold ?? 10, HttpContext.RequestAborted)) return NotFound();
 			return NoContent();
 		}
 		catch (InvalidOperationException exception)
@@ -59,6 +59,23 @@ public sealed partial class EventsController(IHubContext<BingoHub> hub, IEventPa
 		{
 			if (await cardPurchaseService.Cancel(eventId, request.Reason, HttpContext.RequestAborted) is null) return NotFound();
 			return NoContent();
+		}
+		catch (InvalidOperationException exception)
+		{
+			return Conflict(exception.Message);
+		}
+	}
+	[HttpPost("{eventId:guid}/card-purchase/invitations")]
+	public async Task<ActionResult<object>> CreateCardPurchaseInvitation(Guid eventId, CreateCardPurchaseInvitationRequest request)
+	{
+		try
+		{
+			var invitation = await cardPurchaseService.CreateInvitation(eventId, request.BonusCards, request.ExpiresAt, HttpContext.RequestAborted);
+			return invitation is null ? NotFound() : Ok(invitation);
+		}
+		catch (ArgumentOutOfRangeException exception)
+		{
+			return BadRequest(exception.Message);
 		}
 		catch (InvalidOperationException exception)
 		{
@@ -82,7 +99,7 @@ public sealed partial class EventsController(IHubContext<BingoHub> hub, IEventPa
 	{
 		try
 		{
-			return await eventConfigurationService.OpenCardPurchase(eventId, request.Quantity, HttpContext.RequestAborted) ? NoContent() : NotFound();
+			return await eventConfigurationService.OpenCardPurchase(eventId, request.Quantity, request.PerParticipantLimit ?? 5, request.ClosesAt, request.LowStockThreshold ?? 10, HttpContext.RequestAborted) ? NoContent() : NotFound();
 		}
 		catch (InvalidOperationException exception)
 		{
