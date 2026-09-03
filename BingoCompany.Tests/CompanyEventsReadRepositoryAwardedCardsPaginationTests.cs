@@ -48,6 +48,9 @@ public sealed class CompanyEventsReadRepositoryAwardedCardsPaginationTests
 		Assert.Equal(3, result.AwardedCards.PageSize);
 		Assert.Equal(4, result.AwardedCards.TotalItems);
 		Assert.Equal(2, result.AwardedCards.TotalPages);
+		Assert.Equal(4, result.Participants);
+		Assert.Equal(4, result.Cards);
+		Assert.Equal(4, result.EligibleCards);
 		var awardedCard = Assert.Single(result.AwardedCards.Items);
 		Assert.Equal("Rodada 4", awardedCard.RoundName);
 		Assert.Equal("Prêmio 4", awardedCard.PrizeName);

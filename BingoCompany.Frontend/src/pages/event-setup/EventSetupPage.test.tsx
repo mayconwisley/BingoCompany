@@ -16,8 +16,7 @@ const finishedEvent: EventDetails = {
 	status: "Finished",
 	participants: 1,
 	cards: 1,
-	participantList: [],
-	cardList: [],
+	eligibleCards: 0,
 	awardedCards: { items: [], page: 1, pageSize: 3, totalItems: 0, totalPages: 0 },
 	rounds: [
 		{
@@ -274,9 +273,7 @@ describe("EventSetupPage", () => {
 		vi.mocked(bingoApi.getEvent).mockResolvedValue({
 			...finishedEvent,
 			status: "Running",
-			cardList: [
-				{ publicCode: "CARTELA1", type: "Digital", status: "Active", fingerprint: "fingerprint", participantId: "participant-1" }
-			],
+			eligibleCards: 1,
 			rounds: [
 				{ ...finishedEvent.rounds[0], name: "Rodada finalizada", createdAt: "2026-07-14T11:00:00Z" },
 				{ id: "round-2", name: "Rodada em sorteio", status: "Drawing", createdAt: "2026-07-14T12:00:00Z", stages: [] }

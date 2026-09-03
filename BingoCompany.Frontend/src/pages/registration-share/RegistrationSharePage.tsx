@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { bingoApi, RegistrationQrCode } from "../../features/bingo";
+import { bingoApi } from "../../features/bingo";
+import { RegistrationQrCode } from "../../features/bingo/qr";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
 import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";

@@ -100,6 +100,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 var app = builder.Build();
+const double SlowRequestThresholdMilliseconds = 500;
 using (var scope = app.Services.CreateScope())
 {
 	var db = scope.ServiceProvider.GetRequiredService<BingoDbContext>();
@@ -123,12 +124,25 @@ app.Use(async (context, next) =>
 	});
 
 	await next();
-	app.Logger.LogInformation(
-		"HTTP {Method} {Path} respondeu {StatusCode} em {ElapsedMilliseconds} ms.",
-		context.Request.Method,
-		context.Request.Path,
-		context.Response.StatusCode,
-		Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds);
+	var elapsedMilliseconds = Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds;
+	if (elapsedMilliseconds >= SlowRequestThresholdMilliseconds)
+	{
+		app.Logger.LogWarning(
+			"HTTP {Method} {Path} respondeu {StatusCode} em {ElapsedMilliseconds} ms.",
+			context.Request.Method,
+			context.Request.Path,
+			context.Response.StatusCode,
+			elapsedMilliseconds);
+	}
+	else if (app.Logger.IsEnabled(LogLevel.Debug))
+	{
+		app.Logger.LogDebug(
+			"HTTP {Method} {Path} respondeu {StatusCode} em {ElapsedMilliseconds} ms.",
+			context.Request.Method,
+			context.Request.Path,
+			context.Response.StatusCode,
+			elapsedMilliseconds);
+	}
 });
 if (!app.Environment.IsDevelopment()) app.UseHttpsRedirection();
 app.UseAuthentication();

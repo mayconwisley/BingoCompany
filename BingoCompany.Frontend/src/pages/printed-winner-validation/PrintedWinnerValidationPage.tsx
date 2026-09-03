@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { bingoApi, QrCardScanner } from "../../features/bingo";
+import { bingoApi } from "../../features/bingo";
+import { QrCardScanner } from "../../features/bingo/qr";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
 import { AppShell } from "../../shared/ui/AppShell";
 import { FeedbackMessage } from "../../shared/ui/FeedbackMessage";

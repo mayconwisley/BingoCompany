@@ -62,7 +62,7 @@ export function AppShell({ children, showAdministration = true }: Props) {
 		<div className="app-shell">
 			<nav className="topbar">
 				<Link className="brand" to="/" aria-label="Bingo Company, página inicial">
-					<img className="brand-logo" src={`${import.meta.env.BASE_URL}assets/bingo-company-logo.png`} alt="" />
+					<img className="brand-logo" src={`${import.meta.env.BASE_URL}assets/bingo-company-logo-512.png`} alt="" />
 					<span>
 						BINGO <b>COMPANY</b>
 					</span>

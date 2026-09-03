@@ -7,9 +7,9 @@ import { RegistrationSharePage } from "./RegistrationSharePage";
 const { getPublicEvent } = vi.hoisted(() => ({ getPublicEvent: vi.fn() }));
 
 vi.mock("../../features/bingo", () => ({
-	bingoApi: { getPublicEvent },
-	RegistrationQrCode: () => <img alt="QR Code de inscrição" />
+	bingoApi: { getPublicEvent }
 }));
+vi.mock("../../features/bingo/qr", () => ({ RegistrationQrCode: () => <img alt="QR Code de inscrição" /> }));
 vi.mock("../../shared/ui/AppShell", () => ({ AppShell: ({ children }: { children: ReactNode }) => children }));
 
 describe("RegistrationSharePage", () => {

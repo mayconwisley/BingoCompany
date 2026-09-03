@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 
-type Props = { registrationPath: string };
+type Props = {
+	registrationPath: string;
+	description?: string;
+};
 
-export function RegistrationQrCode({ registrationPath }: Props) {
+export function RegistrationQrCode({ registrationPath, description = "Aponte a câmera para se inscrever e gerar sua cartela." }: Props) {
 	const [imageUrl, setImageUrl] = useState("");
 
 	useEffect(() => {
@@ -15,7 +18,7 @@ export function RegistrationQrCode({ registrationPath }: Props) {
 	return imageUrl ? (
 		<figure className="registration-qr">
 			<img src={imageUrl} alt="QR Code para inscrição no bingo" />
-			<figcaption>Aponte a câmera para se inscrever e gerar sua cartela.</figcaption>
+			<figcaption>{description}</figcaption>
 		</figure>
 	) : null;
 }

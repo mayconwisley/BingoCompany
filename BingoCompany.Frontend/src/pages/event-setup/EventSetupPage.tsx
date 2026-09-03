@@ -1,14 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import {
-	bingoApi,
-	CardPurchaseManagementSection,
-	eventStatusLabel,
-	PrizeStageEditor,
-	QrCardScanner,
-	roundStatusLabel
-} from "../../features/bingo";
+import { bingoApi, eventStatusLabel, PrizeStageEditor, roundStatusLabel } from "../../features/bingo";
+import { CardPurchaseManagementSection } from "../../features/bingo/components/CardPurchaseManagementSection";
 import type { ParticipantType, PrizeDraft } from "../../features/bingo";
+import { QrCardScanner } from "../../features/bingo/qr";
 import { useAsyncAction } from "../../shared/hooks/useAsyncAction";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";
@@ -66,14 +61,12 @@ export function EventSetupPage() {
 			setCopiedLink("Não foi possível copiar o link. Copie-o pela barra de endereço.");
 		}
 	};
-	const printedCards = event.data?.cardList.filter((card) => card.type === "Printed") ?? [];
-	const selectedCardState = printedCards.find((card) => card.publicCode === selectedCard)?.status;
 	const isFinished = event.data?.status === "Finished";
 	const registrationsOpen = event.data?.status === "RegistrationOpen";
 	const isCardPurchaseOpen = event.data?.isCardPurchaseOpen ?? false;
 	const isPublicRegistrationOpen =
 		event.data?.status === "RegistrationOpen" && !isCardPurchaseOpen && !event.data?.cardPurchaseCancellationReason;
-	const hasEligibleCard = event.data?.cardList.some((card) => card.status === "Active" && Boolean(card.participantId)) ?? false;
+	const hasEligibleCard = (event.data?.eligibleCards ?? 0) > 0;
 	const canFinishEvent =
 		event.data?.status === "Running" &&
 		event.data.rounds.length > 0 &&
@@ -491,106 +484,97 @@ export function EventSetupPage() {
 									Gerar lote para impressão
 								</button>
 							</div>
-							{printedCards.length > 0 && (
-								<>
-									<h3>Registrar e ativar cartela</h3>
-									<QrCardScanner onCardCodeRead={onCardCodeRead} disabled={isFinished} />
+							<>
+								<h3>Registrar e ativar cartela</h3>
+								<QrCardScanner onCardCodeRead={onCardCodeRead} disabled={isFinished} />
+								<label>
+									Cartela
+									<input
+										aria-label="Cartela impressa"
+										disabled={isFinished}
+										value={selectedCard}
+										onChange={(input) => setSelectedCard(input.target.value)}
+										placeholder="Leia o QR Code ou informe o código"
+									/>
+								</label>
+								<label>
+									Nome do participante
+									<input
+										aria-label="Nome do participante da cartela impressa"
+										disabled={isFinished}
+										value={printedParticipantName}
+										onChange={(input) => setPrintedParticipantName(input.target.value)}
+									/>
+								</label>
+								<label>
+									Tipo de participante
+									<select
+										aria-label="Tipo do participante da cartela impressa"
+										disabled={isFinished}
+										value={printedParticipantType}
+										onChange={(input) => {
+											const value = input.target.value;
+											if (value === "Employee" || value === "FamilyMember" || value === "Guest")
+												setPrintedParticipantType(value);
+										}}
+									>
+										<option value="Employee">Colaborador</option>
+										<option value="FamilyMember">Familiar</option>
+										<option value="Guest">Convidado</option>
+									</select>
+								</label>
+								{printedParticipantType === "Employee" ? (
 									<label>
-										Cartela
-										<select
-											aria-label="Cartela impressa"
-											disabled={isFinished}
-											value={selectedCard}
-											onChange={(input) => setSelectedCard(input.target.value)}
-										>
-											<option value="">Selecione</option>
-											{printedCards.map((card) => (
-												<option key={card.publicCode} value={card.publicCode}>
-													{card.publicCode} · {card.status}
-												</option>
-											))}
-										</select>
-									</label>
-									<label>
-										Nome do participante
+										Matrícula <small>(opcional)</small>
 										<input
-											aria-label="Nome do participante da cartela impressa"
+											aria-label="Matrícula do participante da cartela impressa"
 											disabled={isFinished}
-											value={printedParticipantName}
-											onChange={(input) => setPrintedParticipantName(input.target.value)}
+											value={printedParticipantRegistration}
+											onChange={(input) => setPrintedParticipantRegistration(input.target.value)}
 										/>
 									</label>
+								) : (
 									<label>
-										Tipo de participante
-										<select
-											aria-label="Tipo do participante da cartela impressa"
+										Colaborador responsável
+										<input
+											aria-label="Colaborador responsável da cartela impressa"
 											disabled={isFinished}
-											value={printedParticipantType}
-											onChange={(input) => {
-												const value = input.target.value;
-												if (value === "Employee" || value === "FamilyMember" || value === "Guest")
-													setPrintedParticipantType(value);
-											}}
-										>
-											<option value="Employee">Colaborador</option>
-											<option value="FamilyMember">Familiar</option>
-											<option value="Guest">Convidado</option>
-										</select>
+											value={printedParticipantResponsible}
+											onChange={(input) => setPrintedParticipantResponsible(input.target.value)}
+										/>
 									</label>
-									{printedParticipantType === "Employee" ? (
-										<label>
-											Matrícula <small>(opcional)</small>
-											<input
-												aria-label="Matrícula do participante da cartela impressa"
-												disabled={isFinished}
-												value={printedParticipantRegistration}
-												onChange={(input) => setPrintedParticipantRegistration(input.target.value)}
-											/>
-										</label>
-									) : (
-										<label>
-											Colaborador responsável
-											<input
-												aria-label="Colaborador responsável da cartela impressa"
-												disabled={isFinished}
-												value={printedParticipantResponsible}
-												onChange={(input) => setPrintedParticipantResponsible(input.target.value)}
-											/>
-										</label>
-									)}
-									<div className="actions">
-										<button
-											disabled={
-												isFinished ||
-												!selectedCard ||
-												selectedCardState !== "Printed" ||
-												!printedParticipantName.trim() ||
-												(printedParticipantType !== "Employee" && !printedParticipantResponsible.trim()) ||
-												action.isPending
-											}
-											onClick={async () => {
-												const registered = await action.execute(
-													() =>
-														bingoApi.registerPrintedCard(eventId, selectedCard, {
-															name: printedParticipantName,
-															type: printedParticipantType,
-															employeeRegistration: printedParticipantRegistration || undefined,
-															responsibleEmployeeName: printedParticipantResponsible || undefined
-														}),
-													"Participante registrado e cartela ativada para a rodada."
-												);
-												if (!registered) return;
-												setPrintedParticipantName("");
-												setPrintedParticipantRegistration("");
-												setPrintedParticipantResponsible("");
-												await event.reload();
-											}}
-										>
-											Registrar e ativar cartela
-										</button>
-									</div>
-								</>
-							)}
+								)}
+								<div className="actions">
+									<button
+										disabled={
+											isFinished ||
+											!selectedCard.trim() ||
+											!printedParticipantName.trim() ||
+											(printedParticipantType !== "Employee" && !printedParticipantResponsible.trim()) ||
+											action.isPending
+										}
+										onClick={async () => {
+											const registered = await action.execute(
+												() =>
+													bingoApi.registerPrintedCard(eventId, selectedCard.trim(), {
+														name: printedParticipantName,
+														type: printedParticipantType,
+														employeeRegistration: printedParticipantRegistration || undefined,
+														responsibleEmployeeName: printedParticipantResponsible || undefined
+													}),
+												"Participante registrado e cartela ativada para a rodada."
+											);
+											if (!registered) return;
+											setPrintedParticipantName("");
+											setPrintedParticipantRegistration("");
+											setPrintedParticipantResponsible("");
+											await event.reload();
+										}}
+									>
+										Registrar e ativar cartela
+									</button>
+								</div>
+							</>
 						</section>
 						{event.data.rounds.length > 0 && (
 							<section className="panel event-rounds-panel">

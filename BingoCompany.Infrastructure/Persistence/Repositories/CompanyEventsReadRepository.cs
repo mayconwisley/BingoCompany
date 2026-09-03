@@ -17,14 +17,21 @@ public sealed class CompanyEventsReadRepository(BingoDbContext db) : ICompanyEve
 
 	public async Task<CompanyEventDetails?> Get(Guid eventId, int awardedCardsPage, int awardedCardsPageSize, CancellationToken cancellationToken)
 	{
-		var bingoEvent = await db.Events.AsNoTracking().Include(item => item.Rounds).ThenInclude(item => item.Stages).Include(item => item.Cards).Include(item => item.Participants).SingleOrDefaultAsync(item => item.Id == eventId, cancellationToken);
+		var bingoEvent = await db.Events.AsNoTracking()
+			.AsSplitQuery()
+			.Include(item => item.Rounds)
+			.ThenInclude(item => item.Stages)
+			.SingleOrDefaultAsync(item => item.Id == eventId, cancellationToken);
 		if (bingoEvent is null) return null;
 		var awardedCards = await GetAwardedCards(eventId, bingoEvent.Status, awardedCardsPage, awardedCardsPageSize, cancellationToken);
-		var purchasedCardStatuses = await db.PurchasedDigitalCards(eventId).Select(item => item.Status).ToArrayAsync(cancellationToken);
-		var purchasedCards = purchasedCardStatuses.Length;
-		var activatedCards = purchasedCardStatuses.Count(status => status == CardStatus.Active);
-		var awaitingActivationCards = purchasedCardStatuses.Count(status => status == CardStatus.Assigned);
-		var waitlistEntries = await db.CardPurchaseWaitlistEntries.CountAsync(item => item.EventId == eventId, cancellationToken);
+		var purchasedCardStatuses = await db.PurchasedDigitalCards(eventId).AsNoTracking().GroupBy(item => item.Status).Select(group => new { Status = group.Key, Count = group.Count() }).ToArrayAsync(cancellationToken);
+		var purchasedCards = purchasedCardStatuses.Sum(item => item.Count);
+		var activatedCards = purchasedCardStatuses.Where(item => item.Status == CardStatus.Active).Sum(item => item.Count);
+		var awaitingActivationCards = purchasedCardStatuses.Where(item => item.Status == CardStatus.Assigned).Sum(item => item.Count);
+		var waitlistEntries = await db.CardPurchaseWaitlistEntries.AsNoTracking().CountAsync(item => item.EventId == eventId, cancellationToken);
+		var participants = await db.Participants.AsNoTracking().CountAsync(item => item.EventId == eventId, cancellationToken);
+		var cards = await db.Cards.AsNoTracking().CountAsync(item => item.EventId == eventId, cancellationToken);
+		var eligibleCards = await db.Cards.AsNoTracking().CountAsync(item => item.EventId == eventId && item.Status == CardStatus.Active && item.ParticipantId.HasValue, cancellationToken);
 		var dashboard = bingoEvent.CardPurchaseLimit.HasValue
 			? new CardPurchaseDashboard(bingoEvent.CardPurchaseLimit.Value, purchasedCards, activatedCards, activatedCards, awaitingActivationCards, waitlistEntries)
 			: null;
@@ -42,16 +49,9 @@ public sealed class CompanyEventsReadRepository(BingoDbContext db) : ICompanyEve
 			bingoEvent.CardPurchaseCancellationReason,
 			bingoEvent.CardPurchaseLimit.HasValue ? Math.Max(0, bingoEvent.CardPurchaseLimit.Value - purchasedCards) : null,
 			dashboard,
-			bingoEvent.Participants.Count,
-			bingoEvent.Cards.Count,
-			bingoEvent.Participants
-				.OrderBy(item => item.Name)
-				.Select(item => new CompanyEventParticipant(item.Id, item.Name, item.Type))
-				.ToArray(),
-			bingoEvent.Cards
-				.OrderByDescending(item => item.CreatedAt)
-				.Select(item => new CompanyEventCard(item.PublicCode, item.Type, item.Status, item.Fingerprint, item.ParticipantId))
-				.ToArray(),
+			participants,
+			cards,
+			eligibleCards,
 			awardedCards,
 			bingoEvent.Rounds
 				.OrderBy(item => item.CreatedAt)

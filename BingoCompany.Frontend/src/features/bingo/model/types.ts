@@ -56,8 +56,7 @@ export type EventDetails = {
 	};
 	participants: number;
 	cards: number;
-	participantList: { id: string; name: string; type: string }[];
-	cardList: { publicCode: string; type: string; status: string; fingerprint: string; participantId?: string }[];
+	eligibleCards: number;
 	awardedCards: {
 		items: { winnerId: string; publicCode: string; participantName: string; roundName: string; prizeName: string }[];
 		page: number;

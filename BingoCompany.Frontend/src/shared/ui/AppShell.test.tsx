@@ -44,7 +44,10 @@ describe("AppShell", () => {
 			</MemoryRouter>
 		);
 
-		expect(container.querySelector(".brand-logo")).toHaveAttribute("src", `${import.meta.env.BASE_URL}assets/bingo-company-logo.png`);
+		expect(container.querySelector(".brand-logo")).toHaveAttribute(
+			"src",
+			`${import.meta.env.BASE_URL}assets/bingo-company-logo-512.png`
+		);
 	});
 
 	it("organiza cabeçalho, conteúdo e rodapé em um contêiner de página", () => {

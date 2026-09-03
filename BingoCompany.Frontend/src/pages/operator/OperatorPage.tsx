@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { bingoApi, bingoBallLabel, markingModeLabel, QrCardScanner, useLiveBingo, winningPatternLabel } from "../../features/bingo";
+import { bingoApi, bingoBallLabel, markingModeLabel, useLiveBingo, winningPatternLabel } from "../../features/bingo";
+import { QrCardScanner } from "../../features/bingo/qr";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
 import { useAsyncResource } from "../../shared/hooks/useAsyncResource";
 import { AppShell } from "../../shared/ui/AppShell";

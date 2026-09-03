@@ -153,32 +153,39 @@ export function CardPurchaseManagementSection({ eventId, event, registrationPath
 							: "Reserva de cartelas encerrada"}
 					</p>
 					{event.cardPurchaseDashboard && (
-						<section className="purchase-dashboard" aria-label="Indicadores da reserva de cartelas">
-							<div>
-								<strong>{event.cardPurchaseDashboard.total}</strong>
-								<span>disponibilizadas</span>
-							</div>
-							<div>
-								<strong>{event.cardPurchaseDashboard.reserved}</strong>
-								<span>reservadas</span>
-							</div>
-							<div>
-								<strong>{event.cardPurchaseDashboard.activated}</strong>
-								<span>ativadas</span>
-							</div>
-							<div>
-								<strong>{event.cardPurchaseDashboard.eligibleForNextRound}</strong>
-								<span>aptas para rodada</span>
-							</div>
-							<div>
-								<strong>{event.cardPurchaseDashboard.awaitingActivation}</strong>
-								<span>aguardando ativação</span>
-							</div>
-							<div>
-								<strong>{event.cardPurchaseDashboard.waitlistEntries}</strong>
-								<span>lista de espera</span>
-							</div>
-						</section>
+						<>
+							<section className="purchase-dashboard" aria-label="Resumo da reserva de cartelas">
+								<div>
+									<strong>{event.cardPurchaseDashboard.total}</strong>
+									<span>disponibilizadas</span>
+								</div>
+								<div>
+									<strong>{event.cardPurchaseDashboard.reserved}</strong>
+									<span>reservadas</span>
+								</div>
+								<div>
+									<strong>{event.cardPurchaseDashboard.activated}</strong>
+									<span>ativadas</span>
+								</div>
+							</section>
+							<details className="purchase-secondary-metrics">
+								<summary>Ver indicadores adicionais</summary>
+								<section className="purchase-dashboard" aria-label="Indicadores adicionais da reserva de cartelas">
+									<div>
+										<strong>{event.cardPurchaseDashboard.eligibleForNextRound}</strong>
+										<span>aptas para rodada</span>
+									</div>
+									<div>
+										<strong>{event.cardPurchaseDashboard.awaitingActivation}</strong>
+										<span>aguardando ativação</span>
+									</div>
+									<div>
+										<strong>{event.cardPurchaseDashboard.waitlistEntries}</strong>
+										<span>lista de espera</span>
+									</div>
+								</section>
+							</details>
+						</>
 					)}
 					{event.cardPurchaseClosesAt && (
 						<p className="action-hint">
@@ -189,125 +196,144 @@ export function CardPurchaseManagementSection({ eventId, event, registrationPath
 							.
 						</p>
 					)}
-					<div className="participant-action-config">
-						<label>
-							<span>Novo limite</span>
-							<input
-								aria-label="Limite de cartelas para venda"
-								type="number"
-								min="1"
-								max="10000"
-								value={quantity}
-								onChange={(input) => setQuantity(Math.min(10000, Math.max(1, Number(input.target.value) || 1)))}
-							/>
-						</label>
-						<label>
-							<span>Máximo por participante</span>
-							<input
-								aria-label="Novo máximo de cartelas por participante"
-								type="number"
-								min="1"
-								max="100"
-								value={perParticipantLimit}
-								onChange={(input) => setPerParticipantLimit(Math.min(100, Math.max(1, Number(input.target.value) || 1)))}
-							/>
-						</label>
-						<label>
-							<span>Encerramento programado</span>
-							<input
-								aria-label="Novo encerramento programado da venda"
-								type="datetime-local"
-								value={closesAt}
-								onChange={(input) => setClosesAt(input.target.value)}
-							/>
-						</label>
-						<label>
-							<span>Alerta de estoque baixo</span>
-							<input
-								aria-label="Novo alerta de estoque baixo"
-								type="number"
-								min="0"
-								max="10000"
-								value={lowStockThreshold}
-								onChange={(input) => setLowStockThreshold(Math.min(10000, Math.max(0, Number(input.target.value) || 0)))}
-							/>
-						</label>
-						<button disabled={isFinished || action.isPending || !isOpen} onClick={() => void updatePurchase()}>
-							Atualizar configurações
-						</button>
-					</div>
-					<section className="purchase-invitations" aria-labelledby="purchase-invitations-title">
-						<h4 id="purchase-invitations-title">Promoções e convites</h4>
-						<p>Gere um convite de uso único para liberar cartela bônus para colaboradores ou convidados.</p>
+					<details className="purchase-management-details">
+						<summary>Configurar reserva</summary>
 						<div className="participant-action-config">
 							<label>
-								<span>Cartelas bônus</span>
+								<span>Novo limite</span>
 								<input
-									aria-label="Cartelas bônus do convite"
+									aria-label="Limite de cartelas para venda"
+									type="number"
+									min="1"
+									max="10000"
+									value={quantity}
+									onChange={(input) => setQuantity(Math.min(10000, Math.max(1, Number(input.target.value) || 1)))}
+								/>
+							</label>
+							<label>
+								<span>Máximo por participante</span>
+								<input
+									aria-label="Novo máximo de cartelas por participante"
 									type="number"
 									min="1"
 									max="100"
-									value={bonusCards}
-									onChange={(input) => setBonusCards(Math.min(100, Math.max(1, Number(input.target.value) || 1)))}
+									value={perParticipantLimit}
+									onChange={(input) =>
+										setPerParticipantLimit(Math.min(100, Math.max(1, Number(input.target.value) || 1)))
+									}
 								/>
 							</label>
-							<button type="button" disabled={action.isPending || !isOpen} onClick={() => void createInvitation()}>
-								Criar convite — cartela bônus para colaboradores
+							<label>
+								<span>Encerramento programado</span>
+								<input
+									aria-label="Novo encerramento programado da venda"
+									type="datetime-local"
+									value={closesAt}
+									onChange={(input) => setClosesAt(input.target.value)}
+								/>
+							</label>
+							<label>
+								<span>Alerta de estoque baixo</span>
+								<input
+									aria-label="Novo alerta de estoque baixo"
+									type="number"
+									min="0"
+									max="10000"
+									value={lowStockThreshold}
+									onChange={(input) =>
+										setLowStockThreshold(Math.min(10000, Math.max(0, Number(input.target.value) || 0)))
+									}
+								/>
+							</label>
+							<button disabled={isFinished || action.isPending || !isOpen} onClick={() => void updatePurchase()}>
+								Atualizar configurações
 							</button>
 						</div>
-						{latestInvitation && (
-							<div className="purchase-invitation-result">
-								<p>
-									<strong>Convite criado:</strong> <code>{latestInvitation.code}</code> · {latestInvitation.bonusCards}{" "}
-									cartela(s) bônus.
-								</p>
-								<RegistrationQrCode
-									registrationPath={`${registrationPath}?convite=${encodeURIComponent(latestInvitation.code)}`}
-								/>
-								<button
-									type="button"
-									onClick={() =>
-										void copyPublicLink(
-											`${registrationPath}?convite=${encodeURIComponent(latestInvitation.code)}`,
-											"Link do convite"
-										)
-									}
-								>
-									Copiar link do convite
+					</details>
+					<details className="purchase-invitations">
+						<summary>Convites promocionais</summary>
+						<div className="purchase-details-content">
+							<div className="purchase-invitations-heading">
+								<h4>Convite promocional</h4>
+								<p>Crie um link de uso único com cartelas extras para uma pessoa específica.</p>
+							</div>
+							<p className="purchase-invitation-guidance" role="note">
+								Quem receber o convite faz a inscrição em uma página pública. O link não dá acesso às configurações do
+								evento.
+							</p>
+							<div className="purchase-invitation-create">
+								<label>
+									<span>Cartelas extras</span>
+									<input
+										aria-label="Cartelas extras do convite"
+										type="number"
+										min="1"
+										max="100"
+										value={bonusCards}
+										onChange={(input) => setBonusCards(Math.min(100, Math.max(1, Number(input.target.value) || 1)))}
+									/>
+								</label>
+								<button type="button" disabled={action.isPending || !isOpen} onClick={() => void createInvitation()}>
+									Gerar link promocional
 								</button>
 							</div>
-						)}
-						<div className="purchase-join-qr">
-							<RegistrationQrCode registrationPath={registrationPath} />
-							<button type="button" onClick={() => void copyPublicLink(registrationPath, "Link de reserva")}>
-								Copiar link de reserva
-							</button>
+							{latestInvitation && (
+								<div className="purchase-invitation-result">
+									<p>
+										<strong>Link promocional pronto:</strong> <code>{latestInvitation.code}</code> ·{" "}
+										{latestInvitation.bonusCards} cartela(s) extra(s).
+									</p>
+									<RegistrationQrCode
+										registrationPath={`${registrationPath}?convite=${encodeURIComponent(latestInvitation.code)}`}
+										description="Aponte a câmera para abrir a inscrição pública com o benefício do convite."
+									/>
+									<button
+										type="button"
+										onClick={() =>
+											void copyPublicLink(
+												`${registrationPath}?convite=${encodeURIComponent(latestInvitation.code)}`,
+												"Link promocional"
+											)
+										}
+									>
+										Copiar link promocional
+									</button>
+								</div>
+							)}
 						</div>
-					</section>
-					<div className="participant-action-config participant-action-cancel">
-						<label>
-							<span>Motivo do cancelamento</span>
-							<input
-								aria-label="Motivo do cancelamento da venda"
-								value={cancellationReason}
-								onChange={(input) => setCancellationReason(input.target.value)}
-								placeholder="Ex.: alteração na programação"
-							/>
-						</label>
-						<button
-							className="reveal"
-							disabled={
-								isFinished ||
-								!isOpen ||
-								Boolean(event.cardPurchaseCancellationReason) ||
-								action.isPending ||
-								cancellationReason.trim().length < 3
-							}
-							onClick={() => void cancelPurchase()}
-						>
-							Cancelar venda de cartelas
-						</button>
-					</div>
+					</details>
+					<details className="purchase-cancellation">
+						<summary>Encerrar venda de cartelas</summary>
+						<div className="purchase-details-content">
+							<div>
+								<p>Use somente se a reserva precisar ser interrompida. As cartelas reservadas serão invalidadas.</p>
+							</div>
+							<div className="participant-action-config participant-action-cancel">
+								<label>
+									<span>Motivo do cancelamento</span>
+									<input
+										aria-label="Motivo do cancelamento da venda"
+										value={cancellationReason}
+										onChange={(input) => setCancellationReason(input.target.value)}
+										placeholder="Ex.: alteração na programação"
+									/>
+								</label>
+								<button
+									className="reveal"
+									disabled={
+										isFinished ||
+										!isOpen ||
+										Boolean(event.cardPurchaseCancellationReason) ||
+										action.isPending ||
+										cancellationReason.trim().length < 3
+									}
+									onClick={() => void cancelPurchase()}
+								>
+									Cancelar venda de cartelas
+								</button>
+							</div>
+						</div>
+					</details>
 				</>
 			)}
 			{event.cardPurchaseCancellationReason && (

@@ -520,12 +520,18 @@ main > h1 {
 	font-size: 1rem;
 }
 .event-setup .event-workspace {
-	grid-template-columns: minmax(20rem, 0.82fr) minmax(0, 1.42fr);
+	grid-template-columns: 1fr;
 	gap: 1.25rem;
 	align-items: stretch;
 }
 .event-setup .event-workspace > .panel {
+	min-width: 0;
 	padding: clamp(1.35rem, 3vw, 2rem);
+}
+@media (min-width: 1440px) {
+	.event-setup .event-workspace {
+		grid-template-columns: minmax(32rem, 1fr) minmax(0, 1.15fr);
+	}
 }
 .round-setup-panel {
 	border-color: color-mix(in srgb, var(--primary) 25%, var(--line));
@@ -646,6 +652,7 @@ main > h1 {
 .participants-panel {
 	position: relative;
 	overflow: hidden;
+	container-type: inline-size;
 }
 .participants-panel::before {
 	position: absolute;
@@ -758,12 +765,16 @@ main > h1 {
 }
 .participant-action-config {
 	display: grid;
-	grid-template-columns: minmax(7rem, 0.7fr) minmax(10rem, 1fr);
+	grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr);
 	align-items: end;
 	gap: 0.6rem;
 	margin-top: 0.9rem;
 	padding-top: 0.9rem;
 	border-top: 1px solid var(--line);
+}
+.participant-action-config > label,
+.purchase-invitation-create > label {
+	min-width: 0;
 }
 .participant-action-config label > span {
 	display: block;
@@ -772,6 +783,8 @@ main > h1 {
 	line-height: 1.3;
 }
 .event-setup .participants-panel .participant-action-config input {
+	box-sizing: border-box;
+	max-width: 100%;
 	margin: 0.4rem 0 0;
 }
 .event-setup .participants-panel .participant-action-group button {
@@ -779,7 +792,7 @@ main > h1 {
 	margin: 0;
 }
 .participant-action-cancel {
-	grid-template-columns: minmax(10rem, 1.35fr) minmax(10rem, 0.65fr);
+	grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
 }
 .participant-action-status {
 	margin: 0.85rem 0 0;
@@ -1531,20 +1544,150 @@ main > h1 {
 	color: var(--muted);
 	font-size: 0.75rem;
 }
-.purchase-invitations {
-	margin-top: 1.25rem;
-	padding-top: 1rem;
-	border-top: 1px solid var(--line);
+.purchase-secondary-metrics {
+	margin-top: -0.35rem;
 }
-.purchase-invitations h4 {
+.purchase-secondary-metrics summary {
+	padding: 0.5rem 0;
+	color: var(--primary-strong);
+	font-size: 0.78rem;
+	font-weight: 800;
+	cursor: pointer;
+}
+.purchase-management-details,
+.purchase-invitations,
+.purchase-cancellation {
+	margin-top: 0.85rem;
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	background: var(--surface-alt);
+}
+.purchase-management-details > summary,
+.purchase-invitations > summary,
+.purchase-cancellation > summary {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	min-height: 3rem;
+	padding: 0.75rem 0.9rem;
+	font-size: 0.82rem;
+	font-weight: 800;
+	cursor: pointer;
+	list-style: none;
+}
+.purchase-management-details > summary::-webkit-details-marker,
+.purchase-invitations > summary::-webkit-details-marker,
+.purchase-cancellation > summary::-webkit-details-marker {
+	display: none;
+}
+.purchase-management-details > summary::after,
+.purchase-invitations > summary::after,
+.purchase-cancellation > summary::after {
+	content: "+";
+	color: var(--primary-strong);
+	font-size: 1.15rem;
+}
+.purchase-management-details[open] > summary,
+.purchase-invitations[open] > summary,
+.purchase-cancellation[open] > summary {
+	border-bottom: 1px solid var(--line);
+}
+.purchase-management-details[open] > summary::after,
+.purchase-invitations[open] > summary::after,
+.purchase-cancellation[open] > summary::after {
+	content: "−";
+}
+.purchase-details-content {
+	padding: 0.9rem;
+}
+.purchase-management-details .participant-action-config {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	margin: 0;
+	padding: 0.9rem;
+	border-top: 0;
 }
-.purchase-invitation-result,
-.purchase-join-qr {
+.purchase-management-details .participant-action-config > button {
+	grid-column: 1 / -1;
+}
+@container (max-width: 42rem) {
+	.participant-action-config,
+	.participant-action-cancel,
+	.purchase-invitation-create,
+	.printed-card-generator {
+		grid-template-columns: 1fr;
+	}
+	.purchase-management-details .participant-action-config {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+.purchase-invitations {
+	border-color: color-mix(in srgb, var(--primary) 25%, var(--line));
+}
+.purchase-invitations-heading p {
+	margin: 0.35rem 0 0;
+	color: var(--muted);
+	font-size: 0.82rem;
+	line-height: 1.45;
+}
+.purchase-invitation-guidance {
+	margin: 1rem 0 0;
+	padding: 0.7rem 0.8rem;
+	border-radius: 10px;
+	color: var(--text);
+	background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+	font-size: 0.8rem;
+	line-height: 1.45;
+}
+.purchase-invitation-create {
 	display: grid;
-	justify-items: start;
+	grid-template-columns: minmax(0, 0.65fr) minmax(0, 1fr);
+	align-items: end;
+	gap: 0.65rem;
+	margin-top: 1rem;
+}
+.purchase-invitation-create label > span {
+	display: block;
+	font-size: 0.72rem;
+	font-weight: 800;
+}
+.event-setup .participants-panel .purchase-invitation-create input {
+	box-sizing: border-box;
+	max-width: 100%;
+	margin: 0.4rem 0 0;
+}
+.purchase-invitation-create button {
+	min-height: 3rem;
+}
+.purchase-invitation-result {
+	display: grid;
+	justify-items: center;
 	gap: 0.5rem;
 	margin-top: 1rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--line);
+	text-align: center;
+}
+.purchase-invitation-result p {
+	margin: 0;
+	font-size: 0.82rem;
+}
+.purchase-cancellation {
+	border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--line));
+	background: color-mix(in srgb, var(--danger) 6%, var(--surface-alt));
+}
+
+.purchase-cancellation > summary {
+	color: var(--danger);
+}
+.purchase-cancellation .purchase-details-content > div:first-child p {
+	margin: 0.35rem 0 0;
+	color: var(--muted);
+	font-size: 0.82rem;
+	line-height: 1.45;
+}
+.purchase-cancellation .participant-action-config {
+	margin-top: 0.8rem;
+	padding-top: 0.8rem;
 }
 .error,
 .feedback-error {
@@ -2268,6 +2411,7 @@ main > h1 {
 	.participant-link-actions,
 	.participant-action-config,
 	.participant-action-cancel,
+	.purchase-invitation-create,
 	.printed-card-generator {
 		grid-template-columns: 1fr;
 	}
