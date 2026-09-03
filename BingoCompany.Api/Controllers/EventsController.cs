@@ -15,6 +15,8 @@ public sealed partial class EventsController(IHubContext<BingoHub> hub, IEventPa
 {
 	private const int DefaultEventsPageSize = 12;
 	private const int MaximumEventsPageSize = 100;
+	private const int DefaultAwardedCardsPageSize = 3;
+	private const int MaximumAwardedCardsPageSize = 100;
 	[HttpGet]
 	public async Task<ActionResult<object>> List([FromQuery] int page = 1, [FromQuery] int pageSize = DefaultEventsPageSize)
 	{
@@ -30,9 +32,11 @@ public sealed partial class EventsController(IHubContext<BingoHub> hub, IEventPa
 		return CreatedAtAction(nameof(Get), new { eventId = bingoEvent.Id }, bingoEvent);
 	}
 	[HttpGet("{eventId:guid}")]
-	public async Task<ActionResult<object>> Get(Guid eventId)
+	public async Task<ActionResult<object>> Get(Guid eventId, [FromQuery] int awardedCardsPage = 1, [FromQuery] int awardedCardsPageSize = DefaultAwardedCardsPageSize)
 	{
-		var result = await companyEventsQueryService.Get(eventId, HttpContext.RequestAborted);
+		var normalizedPage = Math.Max(awardedCardsPage, 1);
+		var normalizedPageSize = Math.Clamp(awardedCardsPageSize, 1, MaximumAwardedCardsPageSize);
+		var result = await companyEventsQueryService.Get(eventId, normalizedPage, normalizedPageSize, HttpContext.RequestAborted);
 		return result is null ? NotFound() : Ok(result);
 	}
 	[HttpPut("{eventId:guid}/card-purchase")]

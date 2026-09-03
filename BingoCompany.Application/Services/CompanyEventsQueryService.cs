@@ -8,5 +8,5 @@ public sealed class CompanyEventsQueryService(ICompanyEventsReadRepository repos
 {
 	public Task<CompanyEventsPage> List(Guid companyId, int page, int pageSize, CancellationToken cancellationToken) => repository.List(companyId, page, pageSize, cancellationToken);
 
-	public Task<CompanyEventDetails?> Get(Guid eventId, CancellationToken cancellationToken) => repository.Get(eventId, cancellationToken);
+	public Task<CompanyEventDetails?> Get(Guid eventId, int awardedCardsPage, int awardedCardsPageSize, CancellationToken cancellationToken) => repository.Get(eventId, awardedCardsPage, awardedCardsPageSize, cancellationToken);
 }

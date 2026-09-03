@@ -83,7 +83,7 @@ O limite de inscrição pública é por IP, portanto uma página de divulgação
 | --- | --- |
 | `GET /api/events?page=1&pageSize=12` | Lista paginada dos eventos da empresa. `pageSize` é limitado a 100. |
 | `POST /api/events` | Cria evento. |
-| `GET /api/events/{eventId}` | Detalhes administrativos de um evento. |
+| `GET /api/events/{eventId}?awardedCardsPage=1&awardedCardsPageSize=3` | Detalhes administrativos de um evento. Para evento finalizado, `awardedCards` é paginado no backend; o tamanho padrão e usado pela interface é 3, com máximo 100. |
 | `POST /api/events/{eventId}/registration/open` | Abre inscrições de um evento em preparação. |
 | `POST /api/events/{eventId}/card-purchase/open` | Abre a venda de até `quantity` cartelas digitais para contas de participante. |
 | `PUT /api/events/{eventId}/card-purchase` | Atualiza o limite da venda enquanto permitido. |
@@ -111,6 +111,8 @@ Criação de evento:
 ```
 
 `markingMode` aceita `Automatic`, `ManualRequired` ou `AssistedManual`. A criação de cartelas impressas recebe `{ "quantity": 10 }` e permite de 1 a 1.000 cartelas por requisição; novos lotes podem ser criados para o mesmo evento. A associação recebe `{ "participantId": "GUID" }`; a marcação recebe `{ "number": 42 }`.
+
+Quando o evento está finalizado, a resposta administrativa contém a página `awardedCards` no formato `{ items, page, pageSize, totalItems, totalPages }`. Solicite a página seguinte com `awardedCardsPage`; a interface oficial fixa `awardedCardsPageSize=3` para manter a configuração utilizável mesmo em eventos com muitos prêmios. A lista é ordenada por rodada e etapa, e não carrega todos os vencedores antes de paginar.
 
 Em `ManualRequired`, a API aceita somente a marca da pedra atual e válida da cartela. Em `AssistedManual`, aceita apenas números da própria cartela que já foram sorteados. Em ambos, uma marca duplicada ou inválida não é uma vitória: a fonte de verdade é o `CardMark` persistido pelo backend. Não implemente “bingo” no cliente a partir da cor da interface.
 

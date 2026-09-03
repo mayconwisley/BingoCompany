@@ -150,14 +150,25 @@ export function AdminPage() {
 											>
 												Configurar
 											</Link>
-											<Link
-												className="button"
-												to={`/display/${event.publicCode}`}
-												target="_blank"
-												rel="noopener noreferrer"
-											>
-												Abrir telão
-											</Link>
+											{event.status === "Finished" ? (
+												<button
+													className="button"
+													disabled
+													title="O telão não está disponível para eventos finalizados."
+													type="button"
+												>
+													Abrir telão
+												</button>
+											) : (
+												<Link
+													className="button"
+													to={`/display/${event.publicCode}`}
+													target="_blank"
+													rel="noopener noreferrer"
+												>
+													Abrir telão
+												</Link>
+											)}
 										</div>
 									</article>
 								))}

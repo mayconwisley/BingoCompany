@@ -29,7 +29,8 @@ export type DrawResult = {
 
 export const bingoApi = {
 	listEvents: (page = 1, pageSize = 12) => http<EventPage>(`/api/events?page=${page}&pageSize=${pageSize}`),
-	getEvent: (eventId: string) => http<EventDetails>(`/api/events/${eventId}`),
+	getEvent: (eventId: string, awardedCardsPage = 1) =>
+		http<EventDetails>(`/api/events/${eventId}?awardedCardsPage=${awardedCardsPage}&awardedCardsPageSize=3`),
 	createEvent: (request: CreateEventInput) => http<EventSummary>("/api/events", { method: "POST", body: JSON.stringify(request) }),
 	openRegistration: (eventId: string, cardsPerParticipant: number) =>
 		http<void>(`/api/events/${eventId}/registration/open`, { method: "POST", body: JSON.stringify({ cardsPerParticipant }) }),

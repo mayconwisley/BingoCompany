@@ -72,6 +72,33 @@ describe("AdminPage", () => {
 		expect(displayLink).toHaveAttribute("target", "_blank");
 		expect(displayLink).toHaveAttribute("rel", "noopener noreferrer");
 	});
+	it("desativa o acesso ao telão para evento finalizado", async () => {
+		vi.mocked(bingoApi.listEvents).mockResolvedValue({
+			items: [
+				{
+					id: "1",
+					name: "Festa encerrada",
+					publicCode: "FINALIZADO",
+					status: "Finished",
+					markingMode: "Automatic",
+					createdAt: "2026-07-13T14:30:00Z"
+				}
+			],
+			page: 1,
+			pageSize: 12,
+			totalItems: 1,
+			totalPages: 1
+		});
+
+		render(
+			<MemoryRouter>
+				<AdminPage />
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByRole("button", { name: "Abrir telão" })).toBeDisabled();
+		expect(screen.queryByRole("link", { name: "Abrir telão" })).not.toBeInTheDocument();
+	});
 	it("envia o modo de marcação selecionado ao criar o evento", async () => {
 		vi.mocked(bingoApi.createEvent).mockResolvedValue({
 			id: "2",

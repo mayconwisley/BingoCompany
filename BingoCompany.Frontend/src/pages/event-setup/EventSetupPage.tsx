@@ -30,7 +30,8 @@ export function EventSetupPage() {
 	const displayPath = `/display/${code}`;
 	const auditPath = `/auditoria/${code}`;
 	const printCardsPath = `/admin/eventos/${eventId}/impressao`;
-	const loader = useCallback(() => bingoApi.getEvent(eventId), [eventId]);
+	const [awardedCardsPage, setAwardedCardsPage] = useState(1);
+	const loader = useCallback(() => bingoApi.getEvent(eventId, awardedCardsPage), [awardedCardsPage, eventId]);
 	const event = useAsyncResource(loader);
 	const action = useAsyncAction();
 	const hasInitializedRoundName = useRef(false);
@@ -454,10 +455,10 @@ export function EventSetupPage() {
 								{isFinished && (
 									<div className="awarded-cards" aria-labelledby="awarded-cards-title">
 										<h3 id="awarded-cards-title">Cartelas premiadas</h3>
-										{event.data.awardedCards.length > 0 ? (
-											<ul>
-												{event.data.awardedCards.map((card) => (
-													<li key={`${card.publicCode}-${card.roundName}-${card.prizeName}`}>
+										{event.data.awardedCards.items.length > 0 ? (
+											<ul aria-label="Lista de cartelas premiadas">
+												{event.data.awardedCards.items.map((card) => (
+													<li key={card.winnerId}>
 														<span className="awarded-card-icon" aria-hidden="true">
 															★
 														</span>
@@ -473,6 +474,29 @@ export function EventSetupPage() {
 											</ul>
 										) : (
 											<p>Nenhuma cartela foi premiada neste evento.</p>
+										)}
+										{event.data.awardedCards.totalPages > 1 && (
+											<nav className="awarded-cards-pagination" aria-label="Paginação de cartelas premiadas">
+												<button
+													disabled={event.loading || event.data.awardedCards.page === 1}
+													onClick={() => setAwardedCardsPage((currentPage) => currentPage - 1)}
+													type="button"
+												>
+													Anterior
+												</button>
+												<span aria-live="polite">
+													Página {event.data.awardedCards.page} de {event.data.awardedCards.totalPages}
+												</span>
+												<button
+													disabled={
+														event.loading || event.data.awardedCards.page >= event.data.awardedCards.totalPages
+													}
+													onClick={() => setAwardedCardsPage((currentPage) => currentPage + 1)}
+													type="button"
+												>
+													Próxima
+												</button>
+											</nav>
 										)}
 									</div>
 								)}

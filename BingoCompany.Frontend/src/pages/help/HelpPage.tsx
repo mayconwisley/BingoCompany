@@ -104,8 +104,8 @@ export function HelpPage() {
 					<p>
 						<strong>Em preparação:</strong> ainda permite abrir inscrições. <strong>Inscrições abertas:</strong> participantes
 						podem gerar cartelas. <strong>Em andamento:</strong> começou ao iniciar a primeira rodada.{" "}
-						<strong>Finalizado:</strong> não aceita mais alterações, inscrições, telão nem novas cartelas; a auditoria permanece
-						disponível.
+						<strong>Finalizado:</strong> não aceita mais alterações, inscrições nem novas cartelas; o atalho de telão fica
+						desativado na administração e a auditoria permanece disponível.
 					</p>
 				</section>
 
@@ -267,8 +267,8 @@ export function HelpPage() {
 						</li>
 						<li>
 							Confira o indicador de conexão e use “SORTEAR PRÓXIMA PEDRA” apenas quando estiver <strong>Conectado</strong>.
-							Clique uma vez, aguarde a confirmação e só então faça outra ação. A última pedra, a quantidade sorteada, cartelas e
-							telão são atualizados em tempo real.
+							Clique uma vez, aguarde a confirmação e só então faça outra ação. A última pedra, a quantidade sorteada,
+							cartelas e telão são atualizados em tempo real.
 						</li>
 						<li>
 							Ao detectar uma ou mais cartelas vencedoras, o sorteio pausa. Use “REVELAR VENCEDOR”; se houver empate, o botão
@@ -299,19 +299,28 @@ export function HelpPage() {
 					<p className="eyebrow">Confiabilidade da operação</p>
 					<h2>Conexão, confirmação e recuperação</h2>
 					<p>
-						Enquanto uma ação está sendo enviada, o botão fica como <strong>PROCESSANDO</strong>; isso impede dois cliques no mesmo
-						comando. Se a conexão estiver reconectando ou indisponível, iniciar a rodada e sortear ficam bloqueados. Esse cuidado
-						evita que a operação avance a partir de uma tela sem a última atualização.
+						Enquanto uma ação está sendo enviada, o botão fica como <strong>PROCESSANDO</strong>; isso impede dois cliques no
+						mesmo comando. Se a conexão estiver reconectando ou indisponível, iniciar a rodada e sortear ficam bloqueados. Esse
+						cuidado evita que a operação avance a partir de uma tela sem a última atualização.
 					</p>
 					<ol>
-						<li>Se houver timeout, falha ou reconexão, não repita imediatamente o sorteio e não abra outra operação para tentar de novo.</li>
+						<li>
+							Se houver timeout, falha ou reconexão, não repita imediatamente o sorteio e não abra outra operação para tentar
+							de novo.
+						</li>
 						<li>Aguarde o estado voltar a “Conectado” ou atualize a página.</li>
-						<li>Confira a última pedra e o histórico fornecidos pelo sistema. Se a pedra apareceu, o comando já foi concluído.</li>
-						<li>Somente depois execute a próxima ação permitida pela rodada. Em caso de conflito, recarregar é a recuperação correta.</li>
+						<li>
+							Confira a última pedra e o histórico fornecidos pelo sistema. Se a pedra apareceu, o comando já foi concluído.
+						</li>
+						<li>
+							Somente depois execute a próxima ação permitida pela rodada. Em caso de conflito, recarregar é a recuperação
+							correta.
+						</li>
 					</ol>
 					<p>
-						A versão instalável do aplicativo pode manter a interface disponível depois de uma visita, mas não guarda estado de jogo,
-						pedras, marcações ou comandos. Para participar, marcar ou operar, a conexão com o sistema continua obrigatória.
+						A versão instalável do aplicativo pode manter a interface disponível depois de uma visita, mas não guarda estado de
+						jogo, pedras, marcações ou comandos. Para participar, marcar ou operar, a conexão com o sistema continua
+						obrigatória.
 					</p>
 				</section>
 
@@ -371,13 +380,13 @@ export function HelpPage() {
 						</dd>
 						<dt>A operação mostra reconectando ou falhou ao sortear.</dt>
 						<dd>
-							Aguarde o indicador voltar a Conectado e atualize a operação. Confira a última pedra no histórico antes de tocar em
-							qualquer botão novamente; não repita um sorteio apenas porque houve demora na resposta.
+							Aguarde o indicador voltar a Conectado e atualize a operação. Confira a última pedra no histórico antes de tocar
+							em qualquer botão novamente; não repita um sorteio apenas porque houve demora na resposta.
 						</dd>
 						<dt>Toquei para marcar e apareceu um erro.</dt>
 						<dd>
-							Aguarde a mensagem, atualize a cartela e confirme se a marca foi salva. Tente de novo somente se aquele número ainda
-							estiver habilitado pela cartela.
+							Aguarde a mensagem, atualize a cartela e confirme se a marca foi salva. Tente de novo somente se aquele número
+							ainda estiver habilitado pela cartela.
 						</dd>
 						<dt>Posso editar ou excluir uma rodada?</dt>
 						<dd>

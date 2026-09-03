@@ -189,7 +189,7 @@ O hash SHA-256 é publicado no início da rodada para demonstrar que a sequênci
 
 ## 11. Encerrar o evento
 
-Depois que todas as rodadas estiverem finalizadas ou canceladas, use **Encerrar evento e publicar auditoria**. Essa ação torna o evento imutável: não é mais possível inscrever pessoas, gerar ou ativar cartelas, alterar rodadas ou abrir o telão.
+Depois que todas as rodadas estiverem finalizadas ou canceladas, use **Encerrar evento e publicar auditoria**. Essa ação torna o evento imutável: não é mais possível inscrever pessoas, gerar ou ativar cartelas, alterar rodadas ou iniciar nova operação. O atalho **Abrir telão** fica desativado na administração. Na configuração, as cartelas premiadas permanecem para consulta administrativa e são apresentadas em páginas de três itens.
 
 ## Dúvidas rápidas
 

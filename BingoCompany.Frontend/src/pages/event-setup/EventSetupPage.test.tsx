@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
@@ -18,7 +18,7 @@ const finishedEvent: EventDetails = {
 	cards: 1,
 	participantList: [],
 	cardList: [],
-	awardedCards: [],
+	awardedCards: { items: [], page: 1, pageSize: 3, totalItems: 0, totalPages: 0 },
 	rounds: [
 		{
 			id: "round-1",
@@ -81,7 +81,21 @@ describe("EventSetupPage", () => {
 		vi.mocked(bingoApi.getEvent).mockResolvedValue({
 			...finishedEvent,
 			cards: 12,
-			awardedCards: [{ publicCode: "BINGO-12", participantName: "Ana", roundName: "Rodada 1", prizeName: "Vale-presente" }]
+			awardedCards: {
+				items: [
+					{
+						winnerId: "winner-1",
+						publicCode: "BINGO-12",
+						participantName: "Ana",
+						roundName: "Rodada 1",
+						prizeName: "Vale-presente"
+					}
+				],
+				page: 1,
+				pageSize: 3,
+				totalItems: 1,
+				totalPages: 1
+			}
 		});
 
 		render(
@@ -96,6 +110,164 @@ describe("EventSetupPage", () => {
 		expect(screen.getByRole("heading", { name: "Cartelas premiadas" })).toBeInTheDocument();
 		expect(screen.getByText("BINGO-12")).toBeInTheDocument();
 		expect(screen.getByText("Rodada 1 · Vale-presente")).toBeInTheDocument();
+	});
+
+	it("carrega as cartelas premiadas em páginas de três itens", async () => {
+		vi.mocked(bingoApi.getEvent)
+			.mockResolvedValueOnce({
+				...finishedEvent,
+				awardedCards: {
+					items: [
+						{
+							winnerId: "winner-1",
+							publicCode: "CARTELA-1",
+							participantName: "Ana",
+							roundName: "Rodada 1",
+							prizeName: "Prêmio 1"
+						},
+						{
+							winnerId: "winner-2",
+							publicCode: "CARTELA-2",
+							participantName: "Bruno",
+							roundName: "Rodada 1",
+							prizeName: "Prêmio 2"
+						},
+						{
+							winnerId: "winner-3",
+							publicCode: "CARTELA-3",
+							participantName: "Carla",
+							roundName: "Rodada 2",
+							prizeName: "Prêmio 3"
+						}
+					],
+					page: 1,
+					pageSize: 3,
+					totalItems: 4,
+					totalPages: 2
+				}
+			})
+			.mockResolvedValueOnce({
+				...finishedEvent,
+				awardedCards: {
+					items: [
+						{
+							winnerId: "winner-4",
+							publicCode: "CARTELA-4",
+							participantName: "Diego",
+							roundName: "Rodada 2",
+							prizeName: "Prêmio 4"
+						}
+					],
+					page: 2,
+					pageSize: 3,
+					totalItems: 4,
+					totalPages: 2
+				}
+			});
+
+		render(
+			<MemoryRouter initialEntries={["/admin/eventos/event-1?code=EVENTO1"]}>
+				<Routes>
+					<Route path="/admin/eventos/:eventId" element={<EventSetupPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		expect(await screen.findByText("CARTELA-1")).toBeInTheDocument();
+		expect(screen.getByText("CARTELA-3")).toBeInTheDocument();
+		expect(screen.queryByText("CARTELA-4")).not.toBeInTheDocument();
+		expect(screen.getByText("Página 1 de 2")).toBeInTheDocument();
+
+		fireEvent.click(screen.getByRole("button", { name: "Próxima" }));
+
+		await waitFor(() => expect(bingoApi.getEvent).toHaveBeenLastCalledWith("event-1", 2));
+		expect(await screen.findByText("CARTELA-4")).toBeInTheDocument();
+		expect(screen.queryByText("CARTELA-1")).not.toBeInTheDocument();
+	});
+
+	it("substitui a página anterior mesmo quando as cartelas têm os mesmos dados visíveis", async () => {
+		const firstPage = {
+			...finishedEvent,
+			awardedCards: {
+				items: [
+					{
+						winnerId: "winner-1",
+						publicCode: "CARTELA-REPETIDA",
+						participantName: "Teste",
+						roundName: "Rodada 1",
+						prizeName: "Vale-presente"
+					},
+					{
+						winnerId: "winner-2",
+						publicCode: "CARTELA-REPETIDA",
+						participantName: "Teste",
+						roundName: "Rodada 1",
+						prizeName: "Vale-presente"
+					},
+					{
+						winnerId: "winner-3",
+						publicCode: "CARTELA-REPETIDA",
+						participantName: "Teste",
+						roundName: "Rodada 1",
+						prizeName: "Vale-presente"
+					}
+				],
+				page: 1,
+				pageSize: 3,
+				totalItems: 6,
+				totalPages: 2
+			}
+		};
+		const secondPage = {
+			...finishedEvent,
+			awardedCards: {
+				items: [
+					{
+						winnerId: "winner-4",
+						publicCode: "CARTELA-REPETIDA",
+						participantName: "Teste",
+						roundName: "Rodada 1",
+						prizeName: "Vale-presente"
+					},
+					{
+						winnerId: "winner-5",
+						publicCode: "CARTELA-REPETIDA",
+						participantName: "Teste",
+						roundName: "Rodada 1",
+						prizeName: "Vale-presente"
+					},
+					{
+						winnerId: "winner-6",
+						publicCode: "CARTELA-REPETIDA",
+						participantName: "Teste",
+						roundName: "Rodada 1",
+						prizeName: "Vale-presente"
+					}
+				],
+				page: 2,
+				pageSize: 3,
+				totalItems: 6,
+				totalPages: 2
+			}
+		};
+		vi.mocked(bingoApi.getEvent).mockResolvedValueOnce(firstPage).mockResolvedValueOnce(secondPage).mockResolvedValueOnce(firstPage);
+
+		render(
+			<MemoryRouter initialEntries={["/admin/eventos/event-1?code=EVENTO1"]}>
+				<Routes>
+					<Route path="/admin/eventos/:eventId" element={<EventSetupPage />} />
+				</Routes>
+			</MemoryRouter>
+		);
+
+		const awardedCardsList = await screen.findByRole("list", { name: "Lista de cartelas premiadas" });
+		expect(within(awardedCardsList).getAllByRole("listitem")).toHaveLength(3);
+		fireEvent.click(screen.getByRole("button", { name: "Próxima" }));
+		await waitFor(() => expect(screen.getByText("Página 2 de 2")).toBeInTheDocument());
+		expect(within(awardedCardsList).getAllByRole("listitem")).toHaveLength(3);
+		fireEvent.click(screen.getByRole("button", { name: "Anterior" }));
+		await waitFor(() => expect(screen.getByText("Página 1 de 2")).toBeInTheDocument());
+		expect(within(awardedCardsList).getAllByRole("listitem")).toHaveLength(3);
 	});
 
 	it("ordena as rodadas pela criação e bloqueia a operação da rodada finalizada", async () => {
