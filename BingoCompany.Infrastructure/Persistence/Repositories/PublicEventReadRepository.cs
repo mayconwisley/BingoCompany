@@ -26,7 +26,7 @@ public sealed class PublicEventReadRepository(BingoDbContext db) : IPublicEventR
 		var presentationStage = pendingPrizeWinner is null
 			? round?.Stages.OrderByDescending(item => item.Sequence).FirstOrDefault(item => item.IsCompleted && !item.IsWinnerPresentationClosed)
 			: round!.Stages.Single(item => item.Id == pendingPrizeWinner.StageId);
-		var presentationWinners = presentationStage is null ? [] : await db.RoundWinners.AsNoTracking().Where(item => item.RoundId == round!.Id && item.StageId == presentationStage.Id).ToListAsync(cancellationToken);
+		var presentationWinners = presentationStage is null ? [] : await db.RoundWinners.AsNoTracking().Where(item => item.RoundId == round!.Id && item.StageId == presentationStage.Id && !item.PrizeDeclinedAt.HasValue).ToListAsync(cancellationToken);
 		var winner = pendingPrizeWinner ?? SelectWinner(presentationWinners);
 		var winnerParticipantIds = presentationWinners.Select(candidate => candidate.ParticipantId).Distinct().ToArray();
 		var winnerCardIds = presentationWinners.Select(candidate => candidate.CardId).Distinct().ToArray();
@@ -53,7 +53,7 @@ public sealed class PublicEventReadRepository(BingoDbContext db) : IPublicEventR
 				round.Id, round.Name, round.Sequence, round.Status, round.SequenceHash, activeStage?.PrizeName, activeStage?.PrizeImageDataUrl, presentationStage?.PrizeImageDataUrl, eligibleCards,
 				round.Stages.OrderBy(item => item.Sequence).Select(item => new PublicPrizeStageQueryResult(item.PrizeName, item.Pattern, item.PrizeImageDataUrl, item.IsActive, item.IsCompleted)).ToArray(),
 				round.DrawnNumbers.OrderBy(item => item.Sequence).Select(item => item.Number).ToArray(),
-				activeStage is null || round.Status == RoundStatus.Drawing ? 0 : await db.RoundWinners.CountAsync(item => item.RoundId == round.Id && item.StageId == activeStage.Id, cancellationToken),
+				activeStage is null || round.Status == RoundStatus.Drawing ? 0 : await db.RoundWinners.CountAsync(item => item.RoundId == round.Id && item.StageId == activeStage.Id && !item.PrizeDeclinedAt.HasValue, cancellationToken),
 				round.Status == RoundStatus.TieBreaker,
 				pendingPrizeWinner is not null,
 				statistics is null ? null : new PublicRoundStatisticsQueryResult(statistics.TotalCards, statistics.OneNumberAway, statistics.TwoNumbersAway, statistics.ThreeNumbersAway, statistics.AwardedCards),

@@ -94,6 +94,59 @@ public sealed class PublicControllerTieBreakerTests
 		Assert.False(tieBreakers[1].GetProperty("isWinner").GetBoolean());
 	}
 
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task Get_AfterDeclinedPrize_OnlyPresentsTheNextWinner(bool delivered)
+	{
+		var options = new DbContextOptionsBuilder<BingoDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+		await using var db = new BingoDbContext(options);
+		var bingoEvent = new BingoEvent(Guid.CreateVersion7(), "Evento público");
+		var round = new BingoRound(bingoEvent.Id, 1, "Rodada");
+		var stage = new PrizeStage(round.Id, 1, "Prêmio", WinningPattern.HorizontalLine);
+		round.AddStage(stage);
+		round.Start(Enumerable.Range(1, 75).ToArray(), "hash");
+		var ana = new Participant(bingoEvent.Id, "Ana");
+		var bruno = new Participant(bingoEvent.Id, "Bruno");
+		var anaCard = new BingoCard(bingoEvent.Id, ana.Id, CardType.Digital, CreateCard());
+		var brunoCard = new BingoCard(bingoEvent.Id, bruno.Id, CardType.Digital, CreateCard());
+		var declinedWinner = new RoundWinner(round.Id, stage.Id, anaCard.Id, ana.Id, 25);
+		round.DetectWinner();
+		declinedWinner.Confirm(DateTimeOffset.UtcNow);
+		declinedWinner.MarkPrizeDeclined(DateTimeOffset.UtcNow);
+		round.ResumeDrawingAfterPrizeDeclined();
+		db.AddRange(bingoEvent, round, ana, bruno, anaCard, brunoCard, declinedWinner);
+		await db.SaveChangesAsync();
+		var repository = new BingoCompany.Infrastructure.Persistence.Repositories.PublicEventReadRepository(db);
+
+		var resumed = await repository.Get(bingoEvent.PublicCode, CancellationToken.None);
+		Assert.Null(resumed!.Round!.Winner);
+		Assert.Equal(0, resumed.Round.WinnerDetectedCount);
+
+		var nextWinner = new RoundWinner(round.Id, stage.Id, brunoCard.Id, bruno.Id, 26);
+		round.DetectWinner();
+		db.RoundWinners.Add(nextWinner);
+		await db.SaveChangesAsync();
+		var detected = await repository.Get(bingoEvent.PublicCode, CancellationToken.None);
+		Assert.Equal(1, detected!.Round!.WinnerDetectedCount);
+		Assert.Null(detected.Round.Winner);
+
+		nextWinner.Confirm(DateTimeOffset.UtcNow);
+		if (delivered)
+		{
+			nextWinner.MarkPrizeDelivered(DateTimeOffset.UtcNow);
+			round.FinishStage();
+		}
+		await db.SaveChangesAsync();
+
+		var revealed = await repository.Get(bingoEvent.PublicCode, CancellationToken.None);
+		Assert.Equal("Bruno", revealed!.Round!.Winner!.ParticipantName);
+		Assert.Empty(revealed.Round.Winner.TieBreakers);
+		Assert.Equal(!delivered, revealed.Round.HasPrizeDeliveryPending);
+		Assert.Equal(2, await db.RoundWinners.CountAsync());
+		Assert.NotNull(declinedWinner.PrizeDeclinedAt);
+	}
+
 	private static int[,] CreateCard() => new[,]
 	{
 		{ 1, 16, 31, 46, 61 },
