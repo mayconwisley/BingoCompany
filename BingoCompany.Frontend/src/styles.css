@@ -2102,7 +2102,10 @@ main > h1 {
 	height: 44px;
 	border-radius: 50%;
 	background: var(--surface-alt);
+	font-size: 0.875rem;
 	font-weight: 700;
+	white-space: nowrap;
+	flex-shrink: 0;
 }
 .operator {
 	display: grid;
