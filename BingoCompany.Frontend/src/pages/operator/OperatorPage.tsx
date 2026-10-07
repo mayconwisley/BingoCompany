@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { bingoApi, bingoBallLabel, markingModeLabel, useLiveBingo, winningPatternLabel } from "../../features/bingo";
 import { QrCardScanner } from "../../features/bingo/qr";
 import { getErrorMessage } from "../../shared/api/getErrorMessage";
@@ -201,9 +201,9 @@ export function OperatorPage() {
 					</div>
 					<div className="actions operator-header-actions">
 						<ConnectionBadge status={connection} />
-						<a className="button" href={displayPath} target="_blank" rel="noopener noreferrer">
+						<Link className="button" to={displayPath} target="_blank" rel="noopener noreferrer">
 							ABRIR TELÃO
-						</a>
+						</Link>
 						<button onClick={() => navigate(`/admin/eventos/${eventId}?code=${code}`)}>VOLTAR ÀS CONFIGURAÇÕES</button>
 					</div>
 				</header>

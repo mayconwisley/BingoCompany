@@ -206,9 +206,9 @@ describe("OperatorPage", () => {
 		expect(await screen.findByText("Configurações do evento")).toBeInTheDocument();
 	});
 
-	it("abre o telão em outra aba", async () => {
+	it("abre o telão em outra aba preservando o prefixo da aplicação", async () => {
 		render(
-			<MemoryRouter initialEntries={["/operacao/event-1/round-1?code=ABC"]}>
+			<MemoryRouter basename="/bingo" initialEntries={["/bingo/operacao/event-1/round-1?code=ABC"]}>
 				<Routes>
 					<Route path="/operacao/:eventId/:roundId" element={<OperatorPage />} />
 				</Routes>
@@ -216,7 +216,7 @@ describe("OperatorPage", () => {
 		);
 
 		const displayLink = await screen.findByRole("link", { name: "ABRIR TELÃO" });
-		expect(displayLink).toHaveAttribute("href", "/display/ABC");
+		expect(displayLink).toHaveAttribute("href", "/bingo/display/ABC");
 		expect(displayLink).toHaveAttribute("target", "_blank");
 	});
 
